@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { etapaProjeto, resumir, situacaoMP, situacaoVeto } from './presidente.ts';
-import { maioriaPorPartido } from './senado.ts';
+import { citaSenador, maioriaPorPartido } from './senado.ts';
 import { assuntoDoVeto, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
 
 test('normaliza votos do Senado', () => {
@@ -101,4 +101,14 @@ test('resultado e textos de veto', () => {
   assert.equal(situacaoVeto('PREJUDICADO'), 'prejudicado');
   assert.equal(situacaoVeto('REJEITADO_PLENARIO'), 'derrubado');
   assert.equal(situacaoVeto(''), 'aguardando');
+});
+
+test('reconhece o senador no campo de autoria', () => {
+  assert.equal(citaSenador('Senador Alan Rick (REPUBLICANOS/AC)', 'Alan Rick', 'Alan Rick Miranda'), true);
+  assert.equal(citaSenador('Senador Marcos Pontes (PL/SP)', 'Astronauta Marcos Pontes', 'Marcos Cesar Pontes'), true);
+  assert.equal(citaSenador('Senador Marcos Rogério (PL/RO)', 'Astronauta Marcos Pontes', 'Marcos Cesar Pontes'), false);
+  assert.equal(citaSenador('Senadora Damares Alves (REPUBLICANOS/DF)', 'Damares Alves', 'Damares Regina Alves'), true);
+  assert.equal(citaSenador('Senador Marcos Cesar Pontes', 'Astronauta Marcos Pontes', 'Marcos Cesar Pontes'), true);
+  assert.equal(citaSenador('Senador Davi Alcolumbre (UNIÃO/AP)', 'Alan Rick', 'Alan Rick Miranda'), false);
+  assert.equal(citaSenador('', 'Alan Rick', 'Alan Rick Miranda'), false);
 });

@@ -120,74 +120,58 @@ async function detalhes(codigo: string) {
   return out;
 }
 
-/** Preenchido quando a API avisa que o endpoint de autorias será desativado. */
-export let avisoDescontinuacao: string | null = null;
-
 const SIGLAS_PROPOSICAO = ['PL', 'PLS', 'PEC', 'PLP', 'PDL', 'PRS'];
+const PARTICULAS = new Set(['da', 'de', 'do', 'das', 'dos', 'e']);
 
-/** Contagem de qual fonte de autorias foi usada, para o diagnóstico. */
-export const fonteAutorias = { processo: 0, autorias: 0 };
+/** Diagnóstico das autorias: quantos senadores tiveram proposições e exemplos dos que ficaram sem. */
+export const diagAutorias = { comItens: 0, semItens: [] as string[] };
 
 /**
- * Proposições de autoria do senador. Usa o serviço /processo (substituto do autorias.json,
- * descontinuado). Como o parâmetro de autor não é documentado com clareza, confere se cada item
- * cita o senador na autoria; se nada sobrar, volta para o serviço antigo.
+ * O campo de autoria traz o nome como o Senado o escreve ("Senador Fulano (PL/SP)"),
+ * que nem sempre é igual ao nome parlamentar. Aceita o nome parlamentar, o nome civil,
+ * ou o sobrenome mais metade das palavras do nome parlamentar.
  */
-async function proposicoesDoSenador(codigo: string, nome: string): Promise<Proposicao[]> {
-  try {
-    const j = await getJson<any>(`${LEGIS}/processo?codigoParlamentarAutor=${codigo}`);
-    const alvo = semAcento(nome);
-    const itens = lista<Json>(Array.isArray(j) ? j : j?.processos).filter((p) => semAcento(String(p.autoria ?? '')).includes(alvo));
-    if (itens.length) {
-      fonteAutorias.processo++;
-      return itens
-        .map((p): Proposicao => {
-          const norma = p.normaGerada ? String(p.normaGerada) : '';
-          return {
-            id: String(p.id ?? p.codigoMateria),
-            materia: String(p.identificacao ?? '').replace(/(\d)(?=(\d{3})+\/)/g, '$1.'),
-            ementa: p.ementa ?? '',
-            data: isoData(p.dataApresentacao) ?? '',
-            situacao: norma ? `Virou ${norma}` : p.dataDeliberacao ? 'Deliberada' : 'Em tramitação',
-            virouLei: !!norma,
-            url: p.codigoMateria ? `https://www25.senado.leg.br/web/atividade/materias/-/materia/${p.codigoMateria}` : null,
-          };
-        })
-        .filter((p) => SIGLAS_PROPOSICAO.some((s) => p.materia.startsWith(s + ' ')))
-        .sort((a, b) => b.data.localeCompare(a.data));
-    }
-  } catch {}
-  fonteAutorias.autorias++;
-  return autorias(codigo);
+export function citaSenador(autoria: string, nome: string, nomeCompleto: string): boolean {
+  const a = semAcento(autoria);
+  if (!a) return false;
+  if (a.includes(semAcento(nome)) || a.includes(semAcento(nomeCompleto))) return true;
+  const palavras = semAcento(nome)
+    .split(/\s+/)
+    .filter((w) => w.length > 1 && !PARTICULAS.has(w));
+  // Apelidos ("Astronauta", "Dr.") nem sempre aparecem: basta o sobrenome e metade das palavras.
+  const tem = (w: string) => new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '')}\\b`).test(a);
+  return palavras.length > 0 && tem(palavras.at(-1)!) && palavras.filter(tem).length * 2 >= palavras.length;
 }
 
-async function autorias(codigo: string): Promise<Proposicao[]> {
+/**
+ * Proposições de autoria do senador, pelo serviço /processo (o antigo autorias.json foi
+ * descontinuado). Confere se cada item cita o senador na autoria, para o caso de a API
+ * ignorar o filtro de autor.
+ */
+async function proposicoesDoSenador(codigo: string, nome: string, nomeCompleto: string): Promise<Proposicao[]> {
+  let brutos: Json[] = [];
   try {
-    const j = await getJson<Json>(`${LEGIS}/senador/${codigo}/autorias.json`);
-    const desc = j?.MateriasAutoriaParlamentar?.Metadados?.Descontinuacao;
-    if (desc) avisoDescontinuacao = `autorias.json descontinuado (desativação: ${desc.DataDesativacaoCompleta}; substituto: ${desc.UrlServicoSubstituto})`;
-    const itens = lista(j?.MateriasAutoriaParlamentar?.Parlamentar?.Autorias?.Autoria);
-    return itens
-      .filter((a: Json) => a.IndicadorAutorPrincipal !== 'Não')
-      .map((a: Json): Proposicao => {
-        const m = a.Materia ?? {};
-        const sigla = m.Sigla ?? m.SiglaSubtipoMateria ?? '';
-        const situacao = m.SituacaoAtual?.DescricaoSituacao ?? m.DescricaoSituacao ?? 'Em tramitação';
-        return {
-          id: String(m.Codigo ?? m.CodigoMateria),
-          materia: identificacao(sigla, m.Numero ?? m.NumeroMateria ?? 0, m.Ano ?? m.AnoMateria ?? ''),
-          ementa: m.Ementa ?? m.EmentaMateria ?? '',
-          data: isoData(m.Data ?? m.DataApresentacao) ?? '',
-          situacao,
-          virouLei: /norma juridica|transformad/.test(semAcento(situacao)),
-          url: m.Codigo ? `https://www25.senado.leg.br/web/atividade/materias/-/materia/${m.Codigo}` : null,
-        };
-      })
-      .filter((p) => SIGLAS_PROPOSICAO.some((s) => p.materia.startsWith(s + ' ')))
-      .sort((a, b) => b.data.localeCompare(a.data));
-  } catch {
-    return [];
-  }
+    const j = await getJson<any>(`${LEGIS}/processo?codigoParlamentarAutor=${codigo}`);
+    brutos = lista<Json>(Array.isArray(j) ? j : j?.processos);
+  } catch {}
+  const itens = brutos.filter((p) => citaSenador(String(p.autoria ?? ''), nome, nomeCompleto));
+  if (itens.length) diagAutorias.comItens++;
+  else diagAutorias.semItens.push(`${nome}: ${brutos.length} itens da API, autoria ex.: ${String(brutos[0]?.autoria ?? '—').slice(0, 80)}`);
+  return itens
+    .map((p): Proposicao => {
+      const norma = p.normaGerada ? String(p.normaGerada) : '';
+      return {
+        id: String(p.id ?? p.codigoMateria),
+        materia: String(p.identificacao ?? '').replace(/(\d)(?=(\d{3})+\/)/g, '$1.'),
+        ementa: p.ementa ?? '',
+        data: isoData(p.dataApresentacao) ?? '',
+        situacao: norma ? `Virou ${norma}` : p.dataDeliberacao ? 'Deliberada' : 'Em tramitação',
+        virouLei: !!norma,
+        url: p.codigoMateria ? `https://www25.senado.leg.br/web/atividade/materias/-/materia/${p.codigoMateria}` : null,
+      };
+    })
+    .filter((p) => SIGLAS_PROPOSICAO.some((s) => p.materia.startsWith(s + ' ')))
+    .sort((a, b) => b.data.localeCompare(a.data));
 }
 
 // ---------------------------------------------------------------- votações
@@ -297,7 +281,7 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
 
   console.log('Senado: detalhes, comissões e autorias…');
   const det = await emParalelo(base, 4, (s) => detalhes(s.codigo));
-  const props = await emParalelo(base, 4, (s) => proposicoesDoSenador(s.codigo, s.nome));
+  const props = await emParalelo(base, 4, (s) => proposicoesDoSenador(s.codigo, s.nome, s.nomeCompleto));
 
   console.log(`Senado: votações nominais desde ${inicio}…`);
   const vots = await votacoes(inicio, hoje);
