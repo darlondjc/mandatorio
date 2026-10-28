@@ -22,6 +22,7 @@ export function linhaRanking(s: Senador): LinhaRanking {
     primeiraVotacao: r.primeiraVotacao ?? null,
     participacao: s.participacao ?? null,
     exercicioDesde: s.exercicioDesde ?? null,
+    cotas: s.cotas,
   };
 }
 

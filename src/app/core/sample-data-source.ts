@@ -246,6 +246,15 @@ function gerar(): Base {
     };
   });
 
+  // Cota por ano (2023 a 2026), com o ano eleitoral mais baixo para quem é candidato.
+  for (const s of senadores) {
+    const rr = rng(Number(s.codigo) + 7);
+    s.cotas = {};
+    for (const ano of [2023, 2024, 2025, 2026]) {
+      const total = ano === 2026 ? s.resumo.cotaAno : Math.round(s.resumo.cotaAno * (0.9 + rr() * 0.6));
+      s.cotas[ano] = { total, exercicio: s.emExercicio ? 1 : ano < 2026 ? 1 : 0.3 };
+    }
+  }
   const emExercicio = senadores.filter((s) => s.emExercicio);
   const mediaCota = Math.round(emExercicio.reduce((s, x) => s + x.resumo.cotaAno, 0) / emExercicio.length);
   for (const [sigla] of PARTIDOS) {
@@ -386,6 +395,7 @@ export class SampleDataSource extends DataSource {
       cotaAno: 2026,
       atualizadoEm: p.atualizadoEm,
       votacoes: VOTACOES,
+      anosCota: [2026, 2025, 2024, 2023],
       linhas: this.dados.senadores.filter((s) => s.emExercicio).map(linhaRanking),
     };
   }

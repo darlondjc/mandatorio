@@ -179,6 +179,25 @@ export function mandatoDaLegislatura(mandatos: Json[], legislatura: number) {
 }
 
 /** Diagnóstico de quem saiu: quantos, e um exemplo do que veio da API. */
+/**
+ * Fração do ano (até hoje, se for o ano corrente) em que o senador esteve em exercício,
+ * de 0 a 1, com duas casas. Períodos com fim null estão em curso.
+ */
+export function fracaoExercicio(periodos: { inicio: string; fim: string | null }[], ano: number, hoje: string): number {
+  const dia = 864e5;
+  const ini = Date.parse(`${ano}-01-01`);
+  const fim = Math.min(Date.parse(`${ano}-12-31`), Date.parse(hoje.slice(0, 10)));
+  if (fim < ini) return 0;
+  const total = (fim - ini) / dia + 1;
+  let dentro = 0;
+  for (const p of periodos) {
+    const a = Math.max(ini, Date.parse(p.inicio));
+    const b = Math.min(fim, p.fim ? Date.parse(p.fim) : fim);
+    if (b >= a) dentro += (b - a) / dia + 1;
+  }
+  return Math.round(Math.min(1, dentro / total) * 100) / 100;
+}
+
 export const diagSaidas = { total: 0, exemplos: [] as string[], suplentes: [] as string[], semMandato: [] as string[] };
 
 const SIGLAS_PROPOSICAO = ['PL', 'PLS', 'PEC', 'PLP', 'PDL', 'PRS'];
@@ -393,11 +412,14 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
   const todosDet = [...det, ...detEx];
   const props = await emParalelo(todos, 4, (s) => proposicoesDoSenador(s.codigo, s.nome, s.nomeCompleto));
 
-  // Em exercício: ano atual e anterior. Quem saiu: todos os anos da legislatura, porque os
-  // gastos dele podem ter parado antes.
+  // Todos os anos dos mandatos em curso (desde o mais antigo, no máximo 8 anos atrás), para
+  // todos os senadores: dá para comparar anos e não só o corrente, que pode ser atípico (ano
+  // eleitoral, por exemplo).
   console.log('Senado: cota parlamentar (CEAPS)…');
   const anoInicio = Number(inicio.slice(0, 4)) || anoAtual - 1;
-  const anosCeaps = Array.from({ length: anoAtual - Math.min(anoInicio, anoAtual - 1) + 1 }, (_, i) => anoAtual - i);
+  const inicioMandatos = Math.min(anoInicio, ...todos.map((s) => Number(s.mandato.inicio.slice(0, 4))).filter(Boolean));
+  const anoPrimeiraCota = Math.max(anoAtual - 8, Math.min(inicioMandatos, anoAtual - 1));
+  const anosCeaps = Array.from({ length: anoAtual - anoPrimeiraCota + 1 }, (_, i) => anoAtual - i);
   const ceaps = new Map<number, Map<string, GastoAno>>();
   for (const ano of anosCeaps) ceaps.set(ano, await despesas(ano));
 
@@ -526,12 +548,26 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
     .sort((a, b) => (b.saida.data ?? '').localeCompare(a.saida.data ?? '') || a.nome.localeCompare(b.nome, 'pt-BR'));
 
   const gastosPorSenador = new Map<string, GastoAno[]>();
-  for (const [i, s] of todos.entries()) {
-    const anos = i < base.length ? [anoAtual, anoAtual - 1] : anosCeaps;
+  for (const s of todos) {
     gastosPorSenador.set(
       s.codigo,
-      anos.map((a) => ceaps.get(a)!.get(s.codigo)).filter((g): g is GastoAno => !!g),
+      anosCeaps.map((a) => ceaps.get(a)!.get(s.codigo)).filter((g): g is GastoAno => !!g),
     );
+  }
+
+  // Cota de cada ano com a fração do ano em exercício, para o ranking comparar só quem
+  // esteve no cargo o ano (quase) todo. Sem os períodos da API, conta desde a primeira votação.
+  for (const s of senadores) {
+    const periodos = s.exercicios?.length
+      ? s.exercicios
+      : [{ inicio: s.exercicioDesde ?? s.resumo.primeiraVotacao ?? s.mandato.inicio, fim: s.saida?.data ?? null }];
+    const cotas: NonNullable<Senador['cotas']> = {};
+    for (const ano of anosCeaps) {
+      const total = ceaps.get(ano)!.get(s.codigo)?.total ?? 0;
+      const exercicio = fracaoExercicio(periodos, ano, hoje);
+      if (total > 0 || exercicio > 0) cotas[ano] = { total, exercicio };
+    }
+    s.cotas = cotas;
   }
 
   return {

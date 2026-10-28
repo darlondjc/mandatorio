@@ -7,6 +7,7 @@ import { perfilTematico, VOLTADO_A } from '../../core/temas';
 import { DescricaoCurtaPipe } from '../../shared/descricao-curta';
 import { Photo } from '../../shared/avatar';
 import { compararCriterios, concordancia } from './comparacao';
+import { criterioGastos, CRITERIOS } from '../rankings/criterios';
 import { Opcao, SeletorSenador } from './seletor-senador';
 
 @Component({
@@ -52,9 +53,22 @@ export class CompararPage {
     return s ? (this.plenario.value()?.cadeiras ?? []).filter((c) => c.uf === s.uf && c.codigo !== s.codigo) : [];
   });
 
+  /** Ano dos gastos na comparação; null = o ano corrente da coleta. */
+  protected readonly anoGastos = signal<number | null>(null);
+
+  /** Anos em que pelo menos um dos dois tem cota registrada, do mais recente ao mais antigo. */
+  protected readonly anosGastos = computed(() => {
+    const [a, b] = [this.senadorA.value(), this.senadorB.value()];
+    const anos = new Set([...Object.keys(a?.cotas ?? {}), ...Object.keys(b?.cotas ?? {})].map(Number));
+    return [...anos].sort((x, y) => y - x);
+  });
+
   protected readonly criterios = computed(() => {
     const [r, a, b] = [this.ranking.value(), this.senadorA.value(), this.senadorB.value()];
-    return r && a && b ? compararCriterios(r, linhaRanking(a), linhaRanking(b)) : [];
+    if (!r || !a || !b) return [];
+    const ano = this.anoGastos();
+    const lista = ano == null || ano === r.cotaAno ? CRITERIOS : CRITERIOS.map((c) => (c.id === 'gastos' ? criterioGastos(ano) : c));
+    return compararCriterios(r, linhaRanking(a), linhaRanking(b), lista);
   });
 
   protected readonly votos = computed(() => {

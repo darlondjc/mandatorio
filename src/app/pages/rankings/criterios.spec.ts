@@ -1,5 +1,5 @@
 import type { LinhaRanking, RankingSenado } from '../../core/models';
-import { classificar, CRITERIOS, posicoesDoSenador } from './criterios';
+import { classificar, criterioGastos, CRITERIOS, posicoesDoSenador } from './criterios';
 
 const linha = (codigo: string, partido: string, extra: Partial<LinhaRanking>): LinhaRanking => ({
   codigo, nome: `Senador ${codigo}`, partido, uf: 'DF', sexo: 'M', foto: null,
@@ -119,5 +119,27 @@ describe('projetos que viraram lei', () => {
     expect(c.ranqueados.map((p) => p.linha.codigo)).toEqual(['b', 'a']);
     expect(crit('leis').nota(c.ranqueados[0].linha, r)).toBe('de 30 apresentados');
     expect(crit('leis').aba).toBe('projetos');
+  });
+});
+
+describe('gastos por ano', () => {
+  const comCotas = (codigo: string, cotas: LinhaRanking['cotas'], extra: Partial<LinhaRanking> = {}) => linha(codigo, 'X', { cotas, ...extra });
+  const r = { ...ranking([
+    comCotas('a', { '2025': { total: 400_000, exercicio: 1 }, '2026': { total: 90_000, exercicio: 1 } }, { cota: 90_000 }),
+    comCotas('b', { '2025': { total: 300_000, exercicio: 0.95 }, '2026': { total: 200_000, exercicio: 1 } }, { cota: 200_000 }),
+    comCotas('c', { '2025': { total: 100_000, exercicio: 0.5 } }, { cota: 0 }),
+  ]), atualizadoEm: '2026-10-28', anosCota: [2026, 2025] };
+
+  it('ordena pelo ano escolhido e diz o período', () => {
+    const g = classificar(r, criterioGastos(2025), 'desc');
+    expect(g.ranqueados.map((p) => p.linha.codigo)).toEqual(['a', 'b']);
+    expect(criterioGastos(2025).periodo(r)).toEqual({ curto: '2025', completo: 'Cota de 2025, ano inteiro' });
+    expect(classificar(r, criterioGastos(), 'desc').ranqueados[0].linha.codigo).toBe('b');
+  });
+
+  it('deixa de fora quem esteve em exercício menos de 90% do ano, não quem teve uma licença curta', () => {
+    const g = classificar(r, criterioGastos(2025), 'desc');
+    expect(g.fora.map((f) => [f.linha.codigo, f.motivo])).toEqual([['c', 'em exercício em 50% de 2025']]);
+    expect(g.ranqueados.some((p) => p.linha.codigo === 'b')).toBe(true); // 95%: entra
   });
 });

@@ -8,7 +8,7 @@ import { situacaoExercicio } from '../../core/ranking';
 import { Avatar } from '../../shared/avatar';
 import { Tabs } from '../../shared/tabs';
 import { Icon } from '../../shared/icon';
-import { classificar, CRITERIOS, Ordem, tomDaOrdem } from './criterios';
+import { classificar, criterioGastos, CRITERIOS, Ordem, tomDaOrdem } from './criterios';
 
 @Component({
   selector: 'mt-rankings-page',
@@ -27,6 +27,8 @@ export class RankingsPage {
   readonly ordem = input<string>();
   readonly partido = input('', { transform: (v: string | undefined) => v ?? '' });
   readonly uf = input('', { transform: (v: string | undefined) => v ?? '' });
+  /** Ano dos gastos (?ano=2025); sem ele, o ano corrente. */
+  readonly ano = input<string>();
 
   protected readonly abas = CRITERIOS.filter((c) => !c.aba).map((c) => ({ id: c.id, rotulo: c.rotulo }));
   /** Aba ativa: a de uma variante é a do critério principal (Viraram lei fica em Projetos). */
@@ -36,7 +38,20 @@ export class RankingsPage {
     const doGrupo = CRITERIOS.filter((c) => (c.aba ?? c.id) === this.abaAtiva());
     return doGrupo.length > 1 ? doGrupo : [];
   });
-  protected readonly atual = computed(() => CRITERIOS.find((c) => c.id === this.criterio()) ?? CRITERIOS[0]);
+  protected readonly atual = computed(() => {
+    const c = CRITERIOS.find((x) => x.id === this.criterio()) ?? CRITERIOS[0];
+    const ano = Number(this.ano());
+    return c.id === 'gastos' && this.anosGastos().includes(ano) && ano !== this.ranking.value()?.cotaAno ? criterioGastos(ano) : c;
+  });
+  /** Anos com cota coletada, para o chaveador da aba Gastos. */
+  protected readonly anosGastos = computed(() => {
+    const r = this.ranking.value();
+    return r ? (r.anosCota?.length ? r.anosCota : [r.cotaAno]) : [];
+  });
+  protected readonly anoGastos = computed(() => {
+    const ano = Number(this.ano());
+    return this.anosGastos().includes(ano) ? ano : this.ranking.value()?.cotaAno;
+  });
   protected readonly sentido = computed<Ordem>(() => (this.ordem() === 'asc' ? 'asc' : 'desc'));
 
   constructor() {
@@ -86,7 +101,11 @@ export class RankingsPage {
   }
 
   protected trocarCriterio(id: string) {
-    this.navegar({ criterio: id === CRITERIOS[0].id ? null : id, ordem: null });
+    this.navegar({ criterio: id === CRITERIOS[0].id ? null : id, ordem: null, ano: null });
+  }
+
+  protected trocarAno(ano: number) {
+    this.navegar({ ano: ano === this.ranking.value()?.cotaAno ? null : String(ano) });
   }
 
   protected trocarOrdem(o: Ordem) {

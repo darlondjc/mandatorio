@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { dimensoesImagem } from './fotos.ts';
 import { etapaProjeto, lerCadastro, resumir, situacaoMP, situacaoVeto } from './presidente.ts';
-import { citaSenador, maioriaPorPartido, mandatoDaLegislatura } from './senado.ts';
+import { citaSenador, fracaoExercicio, maioriaPorPartido, mandatoDaLegislatura } from './senado.ts';
 import { assuntoDoVeto, descricaoVotacao, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
 
 test('normaliza votos do Senado', () => {
@@ -181,4 +181,16 @@ test('lê largura e altura do cabeçalho de JPEG e PNG', () => {
   new DataView(png.buffer).setUint32(20, 800);
   assert.deepEqual(dimensoesImagem(png), { largura: 640, altura: 800 });
   assert.equal(dimensoesImagem(Uint8Array.from([1, 2, 3])), null);
+});
+
+test('fração do ano em exercício', () => {
+  const todo = [{ inicio: '2019-02-01', fim: null }];
+  assert.equal(fracaoExercicio(todo, 2024, '2026-10-28'), 1);
+  // Ano corrente: conta só até hoje.
+  assert.equal(fracaoExercicio(todo, 2026, '2026-10-28'), 1);
+  // Entrou em 11/03/2026: ~ 77% do período de jan a 28/out.
+  assert.equal(fracaoExercicio([{ inicio: '2026-03-11', fim: null }], 2026, '2026-10-28'), 0.77);
+  // Licença de um mês no meio do ano.
+  assert.equal(fracaoExercicio([{ inicio: '2023-02-01', fim: '2025-05-31' }, { inicio: '2025-07-01', fim: null }], 2025, '2026-10-28'), 0.92);
+  assert.equal(fracaoExercicio(todo, 2018, '2026-10-28'), 0);
 });

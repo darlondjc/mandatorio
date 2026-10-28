@@ -15,8 +15,8 @@ export interface LinhaComparada {
   largura: { a: number; b: number };
 }
 
-export function compararCriterios(ranking: RankingSenado, a: LinhaRanking, b: LinhaRanking): LinhaComparada[] {
-  return CRITERIOS.map((criterio) => {
+export function compararCriterios(ranking: RankingSenado, a: LinhaRanking, b: LinhaRanking, criterios: Criterio[] = CRITERIOS): LinhaComparada[] {
+  return criterios.map((criterio) => {
     const lado = (l: LinhaRanking) => {
       const valor = criterio.valor(l);
       return { valor, texto: criterio.formatar(valor), nota: criterio.nota(l, ranking), fora: motivoFora(ranking, criterio, l) };

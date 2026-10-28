@@ -68,11 +68,55 @@ function periodoVotacoes(r: RankingSenado) {
 const MESES_LONGOS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
 /** Gastos: a cota de um ano; se for o ano corrente, só até o mês da última coleta. */
-function periodoCota(r: RankingSenado) {
-  const emCurso = r.atualizadoEm.startsWith(String(r.cotaAno));
-  const curto = emCurso ? `jan a ${mesAno(r.atualizadoEm)}` : String(r.cotaAno);
+function periodoCota(r: RankingSenado, ano = r.cotaAno) {
+  const emCurso = r.atualizadoEm.startsWith(String(ano));
+  const curto = emCurso ? `jan a ${mesAno(r.atualizadoEm)}` : String(ano);
   const mes = MESES_LONGOS[Number(r.atualizadoEm.slice(5, 7)) - 1];
-  return { curto, completo: emCurso ? `Cota de ${r.cotaAno}, de janeiro a ${mes} (ano em curso)` : `Cota de ${r.cotaAno}` };
+  return { curto, completo: emCurso ? `Cota de ${ano}, de janeiro a ${mes} (ano em curso)` : `Cota de ${ano}, ano inteiro` };
+}
+
+/** Mínimo do ano em exercício para entrar no ranking de gastos: compara períodos parecidos. */
+export const MIN_EXERCICIO_ANO = 0.9;
+
+/**
+ * Gastos de um ano (sem ano: o da coleta, o corrente). Fica de fora quem esteve em exercício
+ * menos de 90% do ano: chegou, saiu ou se afastou por um tempo relevante. Uma licença curta
+ * não tira ninguém do ranking.
+ */
+export function criterioGastos(ano?: number): Criterio {
+  const anoDe = (r: RankingSenado) => ano ?? r.cotaAno;
+  const total = (l: LinhaRanking) => (ano == null ? l.cota : (l.cotas?.[ano]?.total ?? 0));
+  return {
+    id: 'gastos',
+    rotulo: 'Gastos',
+    ordens: ['Quem mais gastou', 'Quem menos gastou'],
+    frases: ['que mais gastou', 'que menos gastou'],
+    boa: 'asc',
+    periodo: (r) => periodoCota(r, anoDe(r)),
+    explicacao: () =>
+      `Total reembolsado pela cota parlamentar (CEAPS) no período: passagens, combustível, aluguel de escritório, divulgação e outros. Não inclui salário nem verba de gabinete. Para comparar períodos parecidos, fica de fora quem esteve em exercício menos de ${MIN_EXERCICIO_ANO * 100}% do ano (chegou, saiu ou se afastou por um tempo) e quem não tem gasto registrado.`,
+    valor: total,
+    formatar: dinheiroCurto,
+    chave: (v) => v,
+    formatarMedia: dinheiroCurto,
+    nota: (l) => dinheiro(total(l)),
+    fora: (l, c) => {
+      const a = anoDe(c.ranking);
+      const cota = l.cotas?.[a];
+      if (cota) {
+        if (cota.exercicio < MIN_EXERCICIO_ANO) {
+          const emCurso = c.ranking.atualizadoEm.startsWith(String(a));
+          return `em exercício em ${Math.round(cota.exercicio * 100)}% de ${a}${emCurso ? ' até agora' : ''}`;
+        }
+        return cota.total > 0 ? null : `sem gastos registrados em ${a}`;
+      }
+      if (ano != null && ano !== c.ranking.cotaAno) return `sem dados de ${a}`;
+      // Dados de antes da coleta por ano: regra antiga, pela data em que entrou no cargo.
+      const desde = l.exercicioDesde ?? l.primeiraVotacao;
+      if (desde && desde > `${a}-02-01`) return `em exercício só desde ${mesAno(desde)}`;
+      return poucas(l) ?? (l.cota <= 0 ? `sem gastos registrados em ${a}` : null);
+    },
+  };
 }
 
 export const CRITERIOS: Criterio[] = [
@@ -117,27 +161,7 @@ export const CRITERIOS: Criterio[] = [
           ? `poucos votos comparáveis: ${l.comparaveis}`
           : null,
   },
-  {
-    id: 'gastos',
-    rotulo: 'Gastos',
-    ordens: ['Quem mais gastou', 'Quem menos gastou'],
-    frases: ['que mais gastou', 'que menos gastou'],
-    boa: 'asc',
-    periodo: periodoCota,
-    explicacao: () =>
-      `Total reembolsado pela cota parlamentar (CEAPS) no período: passagens, combustível, aluguel de escritório, divulgação e outros. Não inclui salário nem verba de gabinete. Para comparar períodos iguais, fica de fora quem não esteve em exercício o ano todo (chegou ou voltou depois de janeiro) e quem não tem gasto registrado no ano.`,
-    valor: (l) => l.cota,
-    formatar: dinheiroCurto,
-    chave: (v) => v,
-    formatarMedia: dinheiroCurto,
-    nota: (l) => dinheiro(l.cota),
-    fora: (l, c) => {
-      // Quem entrou ou voltou no meio do ano gastou só parte dele: compararia períodos diferentes.
-      const desde = l.exercicioDesde ?? l.primeiraVotacao;
-      if (desde && desde > `${c.ranking.cotaAno}-02-01`) return `em exercício só desde ${mesAno(desde)}`;
-      return poucas(l) ?? (l.cota <= 0 ? `sem gastos registrados em ${c.ranking.cotaAno}` : null);
-    },
-  },
+  criterioGastos(),
   {
     id: 'projetos',
     rotulo: 'Projetos',

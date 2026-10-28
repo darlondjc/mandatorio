@@ -115,6 +115,8 @@ export interface Senador {
   titular?: { codigo: string; nome: string } | null;
   /** Períodos em exercício neste mandato, do mais antigo ao atual (fim null = em curso). */
   exercicios?: { inicio: DataISO; fim: DataISO | null; motivo: string | null }[];
+  /** Cota parlamentar por ano ("2025"), com a fração do ano em exercício (0 a 1). */
+  cotas?: Record<string, CotaAno>;
   mandato: { inicio: DataISO; fim: DataISO; legislaturas: number[]; ordem: number };
   nascimento: DataISO | null;
   naturalidade: string | null;
@@ -302,6 +304,12 @@ export interface Votacao {
 }
 
 /** rankings/senado: uma linha por senador em exercício, só com o necessário para ordenar. */
+export interface CotaAno {
+  total: number;
+  /** Fração do ano (até a coleta, no ano corrente) em que esteve em exercício. */
+  exercicio: number;
+}
+
 export interface LinhaRanking {
   codigo: string;
   nome: string;
@@ -323,6 +331,7 @@ export interface LinhaRanking {
   primeiraVotacao?: DataISO | null;
   participacao?: string | null;
   exercicioDesde?: DataISO | null;
+  cotas?: Record<string, CotaAno>;
 }
 
 export interface RankingSenado {
@@ -333,5 +342,7 @@ export interface RankingSenado {
   atualizadoEm: string;
   /** Votações nominais da legislatura até agora. */
   votacoes?: number;
+  /** Anos com cota parlamentar coletada, do mais recente ao mais antigo. */
+  anosCota?: number[];
   linhas: LinhaRanking[];
 }
