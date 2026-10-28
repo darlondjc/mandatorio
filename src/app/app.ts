@@ -3,6 +3,7 @@ import { SwUpdate } from '@angular/service-worker';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { DataSource } from './core/data-source';
+import { Historico } from './core/historico';
 import { data } from './core/format';
 import { Icon } from './shared/icon';
 
@@ -15,6 +16,8 @@ import { Icon } from './shared/icon';
 })
 export class App {
   private readonly ds = inject(DataSource);
+  // Começa a registrar o caminho desde a primeira página.
+  private readonly historico = inject(Historico);
   protected readonly exemplo = this.ds.exemplo;
   protected readonly menuAberto = signal(false);
   protected readonly atualizado = signal<string | null>(null);

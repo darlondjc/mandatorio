@@ -28,14 +28,14 @@
       </div>
       <div class="mt-row">
         <label class="mt-sr" for="rk-partido">Partido</label>
-        <select id="rk-partido" class="filtro" [value]="partido()" (change)="partido.set($any($event.target).value)">
+        <select id="rk-partido" class="filtro" [value]="partido()" (change)="filtrar('partido', $any($event.target).value)">
           <option value="">Todos os partidos</option>
           @for (p of partidos(); track p) {
             <option [value]="p">{{ p }}</option>
           }
         </select>
         <label class="mt-sr" for="rk-uf">Estado</label>
-        <select id="rk-uf" class="filtro" [value]="uf()" (change)="uf.set($any($event.target).value)">
+        <select id="rk-uf" class="filtro" [value]="uf()" (change)="filtrar('uf', $any($event.target).value)">
           <option value="">Todos os estados</option>
           @for (u of ufs(); track u) {
             <option [value]="u">{{ ufNome(u) }}</option>

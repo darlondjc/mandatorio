@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, resource } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
 import { data, ufNome } from '../../core/format';
+import { Historico } from '../../core/historico';
 import { Avatar } from '../../shared/avatar';
 import { Tabs } from '../../shared/tabs';
 import { classificar, CRITERIOS, Ordem } from './criterios';
@@ -18,16 +19,26 @@ export class RankingsPage {
   private readonly router = inject(Router);
   protected readonly ranking = resource({ loader: () => this.ds.ranking() });
 
-  /** ?criterio=…&ordem=asc, para dar para compartilhar o link. */
+  /** ?criterio=…&ordem=asc&partido=…&uf=…: o link guarda a vista, e o "Voltar" do perfil volta a ela. */
   readonly criterio = input<string>();
   readonly ordem = input<string>();
+  readonly partido = input('', { transform: (v: string | undefined) => v ?? '' });
+  readonly uf = input('', { transform: (v: string | undefined) => v ?? '' });
 
   protected readonly abas = CRITERIOS.map((c) => ({ id: c.id, rotulo: c.rotulo }));
   protected readonly atual = computed(() => CRITERIOS.find((c) => c.id === this.criterio()) ?? CRITERIOS[0]);
   protected readonly sentido = computed<Ordem>(() => (this.ordem() === 'asc' ? 'asc' : 'desc'));
 
-  protected readonly partido = signal('');
-  protected readonly uf = signal('');
+  constructor() {
+    const historico = inject(Historico);
+    let restaurou = false;
+    effect(() => {
+      if (!restaurou && this.classificacao()) {
+        restaurou = true;
+        historico.restaurarRolagem();
+      }
+    });
+  }
 
   protected readonly ufNome = ufNome;
   protected readonly data = data;
@@ -60,9 +71,12 @@ export class RankingsPage {
     this.navegar({ ordem: o === 'desc' ? null : o });
   }
 
+  protected filtrar(campo: 'partido' | 'uf', valor: string) {
+    this.navegar({ [campo]: valor || null });
+  }
+
   protected limparFiltros() {
-    this.partido.set('');
-    this.uf.set('');
+    this.navegar({ partido: null, uf: null });
   }
 
   private navegar(queryParams: Record<string, string | null>) {

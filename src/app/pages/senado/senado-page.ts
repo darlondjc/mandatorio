@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, resource, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, resource, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
 import { corPartido, data, ufNome } from '../../core/format';
+import { Historico } from '../../core/historico';
 import type { Cadeira } from '../../core/models';
 import { Avatar } from '../../shared/avatar';
 import { ModoCor, SeatMap } from '../../shared/seat-map';
@@ -43,6 +44,17 @@ export class SenadoPage {
       .filter((c) => !this.partido() || c.partido === this.partido())
       .filter((c) => !this.uf() || c.uf === this.uf())
       .filter((c) => !termo || normalizar(`${c.nome} ${c.partido} ${c.uf} ${ufNome(c.uf)}`).includes(termo));
+  }
+
+  constructor() {
+    const historico = inject(Historico);
+    let restaurou = false;
+    effect(() => {
+      if (!restaurou && this.plenario.value()) {
+        restaurou = true;
+        historico.restaurarRolagem();
+      }
+    });
   }
 
   protected alternarPartido(sigla: string) {

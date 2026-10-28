@@ -1,4 +1,3 @@
-import { Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
@@ -6,6 +5,7 @@ import { data, ROTULO_VOTO, ufNome } from '../../core/format';
 import { Cadeira, PartidoBancada, Voto } from '../../core/models';
 import { SeatMap } from '../../shared/seat-map';
 import { Segmento, SplitBar } from '../../shared/split-bar';
+import { Voltar } from '../../shared/voltar';
 
 /** Cor de cada voto no plenário. Ausente é a cadeira vazia. */
 const COR_VOTO: Record<Voto, string> = {
@@ -19,7 +19,7 @@ const ORDEM_VOTOS: Voto[] = ['sim', 'nao', 'abstencao', 'secreto', 'ausente'];
 
 @Component({
   selector: 'mt-votacao-page',
-  imports: [RouterLink, SeatMap, SplitBar],
+  imports: [RouterLink, SeatMap, SplitBar, Voltar],
   templateUrl: './votacao-page.html',
   styleUrl: './votacao-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,7 +28,6 @@ export class VotacaoPage {
   readonly id = input.required<string>();
 
   private readonly ds = inject(DataSource);
-  private readonly location = inject(Location);
 
   protected readonly votacao = resource({ params: () => this.id(), loader: ({ params }) => this.ds.votacao(params) });
   /** O plenário atual dá a ordem dos partidos e diz quem ainda tem página de senador. */
@@ -113,9 +112,5 @@ export class VotacaoPage {
 
   protected alternarFiltro(v: Voto) {
     this.filtro.update((atual) => (atual === v ? null : v));
-  }
-
-  protected voltar() {
-    this.location.back();
   }
 }

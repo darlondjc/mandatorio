@@ -7,6 +7,7 @@ import { Voto, VotoSenador } from '../../core/models';
 import { Photo } from '../../shared/avatar';
 import { Segmento, SplitBar } from '../../shared/split-bar';
 import { Aba, Tabs } from '../../shared/tabs';
+import { Voltar } from '../../shared/voltar';
 
 type FiltroVoto = 'abertas' | 'divergiu' | 'ausente' | 'secretas';
 
@@ -19,7 +20,7 @@ const ABAS: Aba[] = [
 
 @Component({
   selector: 'mt-senador-page',
-  imports: [RouterLink, Photo, SplitBar, Tabs],
+  imports: [RouterLink, Photo, SplitBar, Tabs, Voltar],
   templateUrl: './senador-page.html',
   styleUrl: './senador-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

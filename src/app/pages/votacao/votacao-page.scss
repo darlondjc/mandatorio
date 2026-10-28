@@ -1,9 +1,5 @@
 :host { display: flex; flex-direction: column; gap: 22px; max-width: 1200px; }
 
-.voltar {
-  align-self: flex-start; padding: 0; border: 0; background: none; cursor: pointer;
-  color: var(--brand-700); font: 600 15px var(--font-sans);
-}
 
 .cabecalho { display: flex; flex-direction: column; gap: 12px; }
 .ementa { font-size: 28px; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; max-width: 900px; }
