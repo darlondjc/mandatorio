@@ -6,6 +6,7 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Sincronizacao, VotoSenador } from '../../src/app/core/models.ts';
+import { diagnostico } from './http.ts';
 import { coletarPresidentes } from './presidente.ts';
 import { coletarSenado } from './senado.ts';
 
@@ -39,40 +40,82 @@ async function gravar(itens: Gravacao[]) {
   console.log(`${itens.length} documentos gravados no Firestore.`);
 }
 
+/** Anotação do GitHub Actions (aparece no resumo da execução, mesmo sem acesso ao log). */
+function anotar(tipo: 'error' | 'warning' | 'notice', titulo: string, msg: string) {
+  const esc = (t: string) => t.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+  console.log(`::${tipo} title=${esc(titulo).replace(/[:,]/g, ' ')}::${esc(msg)}`);
+}
+
+function publicarDiagnostico() {
+  // O GitHub mostra até 10 anotações de cada tipo por etapa: agrupa em poucas mensagens.
+  const formatos = [...diagnostico.formatos].map(([r, f]) => `${r} => ${f}`);
+  for (let i = 0, parte = 1; i < formatos.length; parte++) {
+    let msg = '';
+    while (i < formatos.length && msg.length + formatos[i].length < 3500) msg += formatos[i++] + '\n';
+    anotar('notice', `Formatos das APIs ${parte}`, msg || formatos[i++]);
+  }
+  const falhas = [...diagnostico.falhas].map(([r, f]) => `${r} (${f.vezes}x): ${f.ultima}`);
+  if (falhas.length) anotar('warning', 'Endpoints com falha', falhas.join('\n').slice(0, 3500));
+  console.log(`${diagnostico.chamadas} chamadas às APIs.`);
+}
+
 async function main() {
   const itens: Gravacao[] = [];
   const fontes: string[] = [];
+  const erros: string[] = [];
 
   if (!only || only === 'senado') {
-    const s = await coletarSenado();
-    fontes.push('Senado Federal — Dados Abertos', 'Senado Federal — CEAPS');
-    itens.push({ caminho: 'plenario/senado', dados: s.plenario });
-    for (const sen of s.senadores) {
-      itens.push({ caminho: `senadores/${sen.codigo}`, dados: sen });
-      const porAno = new Map<number, VotoSenador[]>();
-      for (const v of s.votosPorSenador.get(sen.codigo) ?? []) {
-        const ano = Number(v.data.slice(0, 4));
-        porAno.set(ano, [...(porAno.get(ano) ?? []), v]);
+    try {
+      const s = await coletarSenado();
+      fontes.push('Senado Federal — Dados Abertos', 'Senado Federal — CEAPS');
+      itens.push({ caminho: 'plenario/senado', dados: s.plenario });
+      for (const sen of s.senadores) {
+        itens.push({ caminho: `senadores/${sen.codigo}`, dados: sen });
+        const porAno = new Map<number, VotoSenador[]>();
+        for (const v of s.votosPorSenador.get(sen.codigo) ?? []) {
+          const ano = Number(v.data.slice(0, 4));
+          porAno.set(ano, [...(porAno.get(ano) ?? []), v]);
+        }
+        for (const [ano, votos] of porAno) itens.push({ caminho: `senadores/${sen.codigo}/votos/${ano}`, dados: { ano, votos } });
+        for (const g of s.gastosPorSenador.get(sen.codigo) ?? []) itens.push({ caminho: `senadores/${sen.codigo}/gastos/${g.ano}`, dados: g });
+        itens.push({ caminho: `senadores/${sen.codigo}/listas/proposicoes`, dados: { itens: s.proposicoesPorSenador.get(sen.codigo) ?? [] } });
       }
-      for (const [ano, votos] of porAno) itens.push({ caminho: `senadores/${sen.codigo}/votos/${ano}`, dados: { ano, votos } });
-      for (const g of s.gastosPorSenador.get(sen.codigo) ?? []) itens.push({ caminho: `senadores/${sen.codigo}/gastos/${g.ano}`, dados: g });
-      itens.push({ caminho: `senadores/${sen.codigo}/listas/proposicoes`, dados: { itens: s.proposicoesPorSenador.get(sen.codigo) ?? [] } });
+      const votos = [...s.votosPorSenador.values()].reduce((a, v) => a + v.length, 0);
+      anotar('notice', 'Senado', `${s.senadores.length} senadores · ${s.plenario.partidos.length} partidos · ${votos} votos individuais · ${[...s.gastosPorSenador.values()].filter((g) => g.length).length} com gastos · ${[...s.proposicoesPorSenador.values()].reduce((a, p) => a + p.length, 0)} proposições`);
+    } catch (e) {
+      erros.push('Senado');
+      console.error(e);
+      anotar('error', 'Senado falhou', `${(e as Error).message}\n${(e as Error).stack?.split('\n').slice(1, 4).join('\n') ?? ''}`);
     }
   }
 
   if (!only || only === 'presidente') {
-    const p = await coletarPresidentes();
-    fontes.push('Câmara dos Deputados — Dados Abertos', 'Congresso Nacional — Vetos');
-    for (const pres of p.presidentes) itens.push({ caminho: `presidentes/${pres.id}`, dados: pres });
-    for (const a of p.atos) itens.push({ caminho: `presidentes/${a.presidenteId}/mandatos/${a.mandato}`, dados: a });
+    try {
+      const p = await coletarPresidentes();
+      fontes.push('Câmara dos Deputados — Dados Abertos', 'Congresso Nacional — Vetos');
+      for (const pres of p.presidentes) itens.push({ caminho: `presidentes/${pres.id}`, dados: pres });
+      for (const a of p.atos) itens.push({ caminho: `presidentes/${a.presidenteId}/mandatos/${a.mandato}`, dados: a });
+      anotar('notice', 'Presidente', p.atos.map((a) => `${a.presidenteId} ${a.mandato}: ${a.medidas.length} MPs · ${a.vetos.length} vetos · ${a.projetos.length} projetos`).join('\n'));
+    } catch (e) {
+      erros.push('Presidente');
+      console.error(e);
+      anotar('error', 'Presidente falhou', `${(e as Error).message}\n${(e as Error).stack?.split('\n').slice(1, 4).join('\n') ?? ''}`);
+    }
   }
 
-  const meta: Sincronizacao = { atualizadoEm: new Date().toISOString(), fontes };
-  itens.push({ caminho: 'meta/sincronizacao', dados: meta });
-  await gravar(itens);
+  publicarDiagnostico();
+
+  // Só registra a data da coleta se tudo deu certo; o que foi coletado é gravado mesmo assim.
+  if (!erros.length) {
+    const meta: Sincronizacao = { atualizadoEm: new Date().toISOString(), fontes };
+    itens.push({ caminho: 'meta/sincronizacao', dados: meta });
+  }
+  if (itens.length) await gravar(itens);
+  if (erros.length) process.exit(1);
 }
 
 main().catch((e) => {
   console.error(e);
+  anotar('error', 'Sincronização falhou', String((e as Error).message ?? e));
   process.exit(1);
 });

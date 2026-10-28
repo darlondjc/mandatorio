@@ -1,5 +1,7 @@
 // Requisições às APIs públicas, com novas tentativas e um pequeno intervalo entre chamadas
 // para não sobrecarregar os servidores do Senado e da Câmara.
+// Também anota o formato da primeira resposta de cada endpoint e as falhas, para o
+// diagnóstico que a sincronização publica como anotações no GitHub Actions.
 
 const USER_AGENT = 'mandatorio-sync (+https://github.com/darlondjc/mandatorio)';
 const INTERVALO_MS = 150;
@@ -7,18 +9,64 @@ let ultima = 0;
 
 const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Endpoint sem números nem query: "/dadosabertos/senador/5012/comissoes.json" -> "senador/{n}/comissoes.json" */
+export function rotuloEndpoint(url: string): string {
+  const u = new URL(url);
+  return `${u.host.split('.')[0]}${u.pathname.replace(/\/dadosabertos|\/api\/v\d+|\/adm-dadosabertos/g, '').replace(/\d+/g, '{n}')}`;
+}
+
+/** Estrutura resumida de um JSON: chaves e tipos, sem os valores. */
+export function formato(v: unknown, profundidade = 4): string {
+  if (Array.isArray(v)) return v.length ? `[${formato(v[0], profundidade)}]×${v.length}` : '[]';
+  if (v && typeof v === 'object') {
+    if (profundidade <= 0) return '{…}';
+    const chaves = Object.keys(v);
+    const partes = chaves.slice(0, 14).map((k) => `${k}:${formato((v as Record<string, unknown>)[k], profundidade - 1)}`);
+    return `{${partes.join(',')}${chaves.length > 14 ? ',…' : ''}}`;
+  }
+  return v === null ? 'null' : typeof v === 'string' ? 's' : typeof v === 'number' ? 'n' : typeof v;
+}
+
+export const diagnostico = {
+  formatos: new Map<string, string>(),
+  falhas: new Map<string, { vezes: number; ultima: string }>(),
+  chamadas: 0,
+};
+
+function registrarFalha(url: string, msg: string) {
+  const r = rotuloEndpoint(url);
+  const f = diagnostico.falhas.get(r) ?? { vezes: 0, ultima: '' };
+  f.vezes++;
+  f.ultima = msg;
+  diagnostico.falhas.set(r, f);
+}
+
 export async function getJson<T = unknown>(url: string, tentativas = 4): Promise<T> {
   for (let i = 1; ; i++) {
     const agora = Date.now();
     if (agora - ultima < INTERVALO_MS) await espera(INTERVALO_MS - (agora - ultima));
     ultima = Date.now();
+    diagnostico.chamadas++;
     try {
       const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': USER_AGENT } });
       if (res.status === 404) throw new NaoEncontrado(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status} em ${url}`);
-      return (await res.json()) as T;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const texto = await res.text();
+      let json: T;
+      try {
+        json = JSON.parse(texto) as T;
+      } catch {
+        throw new Error(`resposta não é JSON (${res.headers.get('content-type')}): ${texto.slice(0, 120).replace(/\s+/g, ' ')}`);
+      }
+      const r = rotuloEndpoint(url);
+      if (!diagnostico.formatos.has(r)) diagnostico.formatos.set(r, formato(json).slice(0, 700));
+      return json;
     } catch (e) {
-      if (e instanceof NaoEncontrado || i >= tentativas) throw e;
+      if (e instanceof NaoEncontrado || i >= tentativas) {
+        const causa = (e as { cause?: { code?: string; message?: string } }).cause;
+        registrarFalha(url, (e as Error).message + (causa ? ` (${causa.code ?? causa.message})` : ''));
+        throw e;
+      }
       await espera(1000 * 2 ** (i - 1));
     }
   }
