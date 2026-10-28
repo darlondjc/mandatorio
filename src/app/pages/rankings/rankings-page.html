@@ -26,7 +26,15 @@
       @if (classificacao()?.media != null) {
         <div class="media">
           <span class="media__valor">{{ atual().formatarMedia(classificacao()!.media!) }}</span>
-          <span class="media__rotulo">média do Senado</span>
+          <span class="media__rotulo media__legenda">
+            <!-- O mesmo desenho do marcador nas barras: serve de legenda. -->
+            <svg class="icone-media" width="30" height="16" viewBox="0 0 30 16" aria-hidden="true">
+              <rect x="1" y="3" width="28" height="5" rx="2.5" class="icone-media__barra" />
+              <rect x="17" y="0.5" width="2" height="10" class="icone-media__traco" />
+              <path d="M18 10.5l3.5 5h-7z" class="icone-media__seta" />
+            </svg>
+            média do Senado
+          </span>
           <span class="media__rotulo">{{ atual().periodo(r).curto }}</span>
         </div>
       }
@@ -69,11 +77,6 @@
     }
 
     @if (visiveis().length) {
-      @if (classificacao()?.media != null) {
-        <p class="legenda" aria-hidden="true">
-          <span class="legenda__traco"></span> média do Senado ({{ atual().formatarMedia(classificacao()!.media!) }})
-        </p>
-      }
       <ol class="lista" [class]="'tom--' + tom()">
         @for (p of visiveis(); track p.linha.codigo) {
           <li>
