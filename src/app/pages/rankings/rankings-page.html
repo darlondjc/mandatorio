@@ -56,8 +56,10 @@
         @for (p of visiveis(); track p.linha.codigo) {
           <li>
             <a class="linha" [class.linha--podio]="p.posicao <= 3" [routerLink]="['/senado', p.linha.codigo]">
-              <span class="pos" [attr.aria-label]="p.posicao + 'º lugar'">{{ p.posicao }}º</span>
-              <mt-avatar [nome]="p.linha.nome" [partido]="p.linha.partido" [foto]="p.linha.foto" />
+              <span class="foto-pos">
+                <span class="pos" [attr.aria-label]="p.posicao + 'º lugar'">{{ p.posicao }}º</span>
+                <mt-avatar [nome]="p.linha.nome" [partido]="p.linha.partido" [foto]="p.linha.foto" />
+              </span>
               <span class="quem">
                 <span class="quem__nome">{{ p.linha.nome }}</span>
                 <span class="quem__sub">{{ p.linha.partido }} · {{ ufNome(p.linha.uf) }}</span>
