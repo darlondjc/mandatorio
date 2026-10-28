@@ -36,3 +36,8 @@ button { font: inherit; }
 
 /* Selo do reCAPTCHA (App Check): escondido, com o aviso exigido pelo Google no menu lateral. */
 .grecaptcha-badge { visibility: hidden; }
+
+/* Medidas do esqueleto, para o que fica fixo na tela se alinhar ao conteúdo:
+   --largura-menu (menu lateral no desktop) e --altura-topo (barra do topo no celular). */
+:root { --largura-menu: 232px; --altura-topo: 0px; }
+@media (max-width: 960px) { :root { --largura-menu: 0px; --altura-topo: 64px; } }

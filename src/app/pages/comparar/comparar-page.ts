@@ -1,17 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, input, resource, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
 import { data, pctExibido, ROTULO_VOTO, ufNome } from '../../core/format';
 import { linhaRanking } from '../../core/ranking';
 import { perfilTematico, VOLTADO_A } from '../../core/temas';
 import { DescricaoCurtaPipe } from '../../shared/descricao-curta';
-import { Photo } from '../../shared/avatar';
+import { Avatar, Photo } from '../../shared/avatar';
 import { compararCriterios, concordancia } from './comparacao';
+import { criterioGastos, CRITERIOS } from '../rankings/criterios';
 import { Opcao, SeletorSenador } from './seletor-senador';
 
 @Component({
   selector: 'mt-comparar-page',
-  imports: [RouterLink, Photo, SeletorSenador, DescricaoCurtaPipe],
+  imports: [RouterLink, Photo, Avatar, SeletorSenador, DescricaoCurtaPipe],
   templateUrl: './comparar-page.html',
   styleUrl: './comparar-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +40,30 @@ export class CompararPage {
   protected readonly voltadoA = VOLTADO_A;
   protected readonly exibirDiscordancias = signal(10);
 
+  /** As fotos grandes; quando saem da tela por cima, aparece o cabeçalho fixo com as duas. */
+  private readonly duelo = viewChild<ElementRef<HTMLElement>>('duelo');
+  protected readonly cabecalhoFixo = signal(false);
+
+  constructor() {
+    let observador: IntersectionObserver | undefined;
+    inject(DestroyRef).onDestroy(() => observador?.disconnect());
+    effect(() => {
+      const el = this.duelo()?.nativeElement;
+      observador?.disconnect();
+      if (!el) {
+        this.cabecalhoFixo.set(false);
+        return;
+      }
+      // A barra do topo do celular cobre o começo da página: desconta a altura dela.
+      const topo = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--altura-topo')) || 0;
+      observador = new IntersectionObserver(
+        ([e]) => this.cabecalhoFixo.set(!e.isIntersecting && e.boundingClientRect.top < topo),
+        { rootMargin: `-${topo}px 0px 0px 0px` },
+      );
+      observador.observe(el);
+    });
+  }
+
   /** Em exercício primeiro; quem saiu nesta legislatura também pode ser comparado. */
   protected readonly opcoes = computed<Opcao[]>(() => {
     const p = this.plenario.value();
@@ -52,9 +77,22 @@ export class CompararPage {
     return s ? (this.plenario.value()?.cadeiras ?? []).filter((c) => c.uf === s.uf && c.codigo !== s.codigo) : [];
   });
 
+  /** Ano dos gastos na comparação; null = o ano corrente da coleta. */
+  protected readonly anoGastos = signal<number | null>(null);
+
+  /** Anos em que pelo menos um dos dois tem cota registrada, do mais recente ao mais antigo. */
+  protected readonly anosGastos = computed(() => {
+    const [a, b] = [this.senadorA.value(), this.senadorB.value()];
+    const anos = new Set([...Object.keys(a?.cotas ?? {}), ...Object.keys(b?.cotas ?? {})].map(Number));
+    return [...anos].sort((x, y) => y - x);
+  });
+
   protected readonly criterios = computed(() => {
     const [r, a, b] = [this.ranking.value(), this.senadorA.value(), this.senadorB.value()];
-    return r && a && b ? compararCriterios(r, linhaRanking(a), linhaRanking(b)) : [];
+    if (!r || !a || !b) return [];
+    const ano = this.anoGastos();
+    const lista = ano == null || ano === r.cotaAno ? CRITERIOS : CRITERIOS.map((c) => (c.id === 'gastos' ? criterioGastos(ano) : c));
+    return compararCriterios(r, linhaRanking(a), linhaRanking(b), lista);
   });
 
   protected readonly votos = computed(() => {

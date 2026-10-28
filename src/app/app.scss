@@ -53,13 +53,28 @@
   box-shadow: 0 8px 28px rgb(0 0 0 / 0.18); font-size: 15px;
 }
 
+/* Voltar ao topo: aparece depois de rolar um pouco; sobe quando o aviso de versão nova está aberto. */
+.topo-fab {
+  position: fixed; z-index: 35; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom));
+  display: grid; place-items: center; width: 52px; height: 52px; padding: 0;
+  border: 2px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--ink); cursor: pointer;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.16);
+  opacity: 0; transform: translateY(16px) scale(0.85); pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, bottom 0.2s ease;
+}
+.topo-fab--visivel { opacity: 1; transform: none; pointer-events: auto; }
+.topo-fab--acima { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 84px); }
+.topo-fab:hover { border-color: var(--brand-700); color: var(--brand-700); }
+.topo-fab:focus-visible { outline: 3px solid var(--brand-700); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .topo-fab { transition: none; } }
+
 .topbar { display: none; }
 .veu { display: none; }
 
 @media (max-width: 960px) {
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 20;
+    position: sticky; top: 0; z-index: 20; box-sizing: border-box; height: var(--altura-topo);
     padding: 10px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
     background: var(--surface); border-bottom: 2px solid var(--line);
   }

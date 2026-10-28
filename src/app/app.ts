@@ -14,6 +14,7 @@ import { Icon } from './shared/icon';
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(window:scroll)': 'aoRolar()' },
 })
 export class App {
   private readonly ds = inject(DataSource);
@@ -25,6 +26,8 @@ export class App {
   protected readonly menuAberto = signal(false);
   protected readonly atualizado = signal<string | null>(null);
   protected readonly novaVersao = signal(false);
+  /** O botão de voltar ao topo aparece depois de rolar mais de uma tela e meia, mais ou menos. */
+  protected readonly mostrarTopo = signal(false);
 
   constructor() {
     this.ds.sincronizacao().then((s) => this.atualizado.set(s ? data(s.atualizadoEm) : null)).catch(() => {});
@@ -36,6 +39,17 @@ export class App {
       sw.versionUpdates.pipe(filter((e) => e.type === 'VERSION_READY')).subscribe(() => this.novaVersao.set(true));
       sw.unrecoverable.subscribe(() => location.reload());
     }
+  }
+
+  protected aoRolar() {
+    this.mostrarTopo.set(window.scrollY > Math.max(600, window.innerHeight * 0.8));
+  }
+
+  protected irAoTopo() {
+    const reduzir = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduzir ? 'auto' : 'smooth' });
+    // Leva o foco para o começo do conteúdo, para quem navega pelo teclado continuar dali.
+    document.getElementById('conteudo')?.focus({ preventScroll: true });
   }
 
   protected recarregar() {

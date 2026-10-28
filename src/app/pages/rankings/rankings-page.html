@@ -11,6 +11,13 @@
   <mt-tabs [abas]="abas" [ativa]="abaAtiva()" rotulo="Critério do ranking" (trocar)="trocarCriterio($event)" />
 
   <section class="painel" role="tabpanel" [id]="'painel-' + abaAtiva()" [attr.aria-labelledby]="'aba-' + abaAtiva()">
+    @if (atual().id === 'gastos' && anosGastos().length > 1) {
+      <div class="mt-tabs variantes anos" role="group" aria-label="Ano dos gastos">
+        @for (y of anosGastos(); track y) {
+          <button class="mt-tab" type="button" [attr.aria-pressed]="y === anoGastos()" [attr.aria-selected]="y === anoGastos()" (click)="trocarAno(y)">{{ y }}</button>
+        }
+      </div>
+    }
     @if (variantes().length) {
       <div class="mt-tabs variantes" role="group" aria-label="O que contar">
         @for (v of variantes(); track v.id) {

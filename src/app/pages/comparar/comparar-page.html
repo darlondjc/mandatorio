@@ -24,7 +24,21 @@
   @let sa = senadorA.value()!;
   @let sb = senadorB.value()!;
 
-  <section class="duelo" aria-label="Fotos">
+  <div class="fixo" [class.fixo--visivel]="cabecalhoFixo()" [attr.aria-hidden]="!cabecalhoFixo()">
+    <div class="fixo__dentro">
+      <a class="fixo__lado" [routerLink]="['/senado', sa.codigo]" [tabIndex]="cabecalhoFixo() ? 0 : -1">
+        <mt-avatar [nome]="sa.nome" [partido]="sa.partido" [foto]="sa.foto" />
+        <span class="fixo__nome">{{ sa.nome }}<span class="fixo__sub">{{ sa.partido }} · {{ sa.uf }}</span></span>
+      </a>
+      <span class="fixo__vs" aria-hidden="true">vs</span>
+      <a class="fixo__lado" [routerLink]="['/senado', sb.codigo]" [tabIndex]="cabecalhoFixo() ? 0 : -1">
+        <mt-avatar [nome]="sb.nome" [partido]="sb.partido" [foto]="sb.foto" />
+        <span class="fixo__nome">{{ sb.nome }}<span class="fixo__sub">{{ sb.partido }} · {{ sb.uf }}</span></span>
+      </a>
+    </div>
+  </div>
+
+  <section class="duelo" aria-label="Fotos" #duelo>
     <a class="lado" [routerLink]="['/senado', sa.codigo]">
       <mt-photo [nome]="sa.nome" [foto]="sa.foto" [pequena]="true" />
       <span class="lado__nome">{{ sa.nome }}</span>
@@ -46,7 +60,16 @@
     <ul class="criterios">
       @for (l of criterios(); track l.criterio.id) {
         <li class="criterio">
-          <span class="criterio__rotulo">{{ l.criterio.rotulo }} <span class="muted">· {{ l.criterio.periodo(ranking.value()!).curto }}</span></span>
+          <span class="criterio__rotulo">
+            {{ l.criterio.rotulo }} <span class="muted">· {{ l.criterio.periodo(ranking.value()!).curto }}</span>
+            @if (l.criterio.id === 'gastos' && anosGastos().length > 1) {
+              <span class="anos" role="group" aria-label="Ano dos gastos">
+                @for (y of anosGastos(); track y) {
+                  <button class="ano" type="button" [attr.aria-pressed]="y === (anoGastos() ?? ranking.value()!.cotaAno)" (click)="anoGastos.set(y)">{{ y }}</button>
+                }
+              </span>
+            }
+          </span>
           @for (lado of ['a', 'b']; track lado) {
             @let v = lado === 'a' ? l.a : l.b;
             <div class="valor" [class.valor--b]="lado === 'b'" [class.valor--vence]="l.vantagem === lado">
@@ -76,9 +99,11 @@
           <h3 class="subtitulo">Onde discordaram · {{ c.discordancias.length }}</h3>
           <div class="mt-stack">
             @for (d of c.discordancias.slice(0, exibirDiscordancias()); track d.id) {
-              <a class="mt-voterow discordancia" [routerLink]="['/votacao', d.id]">
+              <a class="discordancia" [routerLink]="['/votacao', d.id]">
+                <!-- Cada voto centralizado na metade do seu senador, como as fotos lá em cima. -->
                 <span class="dois-votos">
                   <span class="mt-vote mt-vote--sm mt-vote--{{ d.votoA }}" [title]="sa.nome">{{ rotuloVoto[d.votoA] }}</span>
+                  <span class="dois-votos__x" aria-hidden="true">×</span>
                   <span class="mt-vote mt-vote--sm mt-vote--{{ d.votoB }}" [title]="sb.nome">{{ rotuloVoto[d.votoB] }}</span>
                 </span>
                 <span class="mt-stack titulo">

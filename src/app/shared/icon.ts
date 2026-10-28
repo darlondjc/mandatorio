@@ -10,6 +10,7 @@ const PATHS: Record<string, string> = {
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
   fechar: '<path d="M6 6l12 12M18 6L6 18"/>',
   voltar: '<path d="M15 6l-6 6 6 6"/>',
+  topo: '<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>',
   busca: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
   externo: '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/>',
   tema: '<path d="M12 3a9 9 0 109 9 7 7 0 01-9-9z"/>',
