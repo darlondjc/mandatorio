@@ -1,0 +1,141 @@
+<header class="mt-stack cabecalho">
+  <h1 class="page-title">Comparar senadores</h1>
+  <p class="muted intro">Escolha dois senadores para ver lado a lado como votam, quanto gastam e no que trabalham.</p>
+</header>
+
+<section class="escolha" aria-label="Senadores comparados">
+  <mt-seletor-senador id="sel-a" rotulo="Primeiro senador" [opcoes]="opcoes()" [selecionado]="a() ?? null" [foto]="senadorA.value()?.foto ?? null"
+    (escolher)="escolher('a', $event)" (trocar)="escolher('a', null)" />
+  <button class="mt-btn mt-btn--ghost mt-btn--sm inverter" type="button" (click)="inverter()" [disabled]="!a() || !b()" aria-label="Inverter os lados">⇄</button>
+  <mt-seletor-senador id="sel-b" rotulo="Segundo senador" [opcoes]="opcoes()" [selecionado]="b() ?? null" [foto]="senadorB.value()?.foto ?? null"
+    (escolher)="escolher('b', $event)" (trocar)="escolher('b', null)" />
+</section>
+
+@if (a() && !b() && mesmoEstado().length) {
+  <div class="mt-row sugestoes">
+    <span class="muted">Comparar com quem também representa {{ ufNome(senadorA.value()!.uf) }}:</span>
+    @for (c of mesmoEstado(); track c.codigo) {
+      <button class="mt-chip" type="button" (click)="escolher('b', c.codigo)">{{ c.nome }} · {{ c.partido }}</button>
+    }
+  </div>
+}
+
+@if (senadorA.value() && senadorB.value(); as _) {
+  @let sa = senadorA.value()!;
+  @let sb = senadorB.value()!;
+
+  <section class="duelo" aria-label="Fotos">
+    <a class="lado" [routerLink]="['/senado', sa.codigo]">
+      <mt-photo [nome]="sa.nome" [foto]="sa.foto" [pequena]="true" />
+      <span class="lado__nome">{{ sa.nome }}</span>
+      <span class="muted">{{ sa.partido }} · {{ ufNome(sa.uf) }}</span>
+    </a>
+    <span class="versus" aria-hidden="true">×</span>
+    <a class="lado" [routerLink]="['/senado', sb.codigo]">
+      <mt-photo [nome]="sb.nome" [foto]="sb.foto" [pequena]="true" />
+      <span class="lado__nome">{{ sb.nome }}</span>
+      <span class="muted">{{ sb.partido }} · {{ ufNome(sb.uf) }}</span>
+    </a>
+  </section>
+
+  <section class="bloco" aria-labelledby="t-numeros">
+    <h2 id="t-numeros" class="section-title">Os números</h2>
+    @if (!sa.emExercicio || !sb.emExercicio) {
+      <p class="muted nota">Quem saiu do Senado é comparado pelo período em que esteve em exercício.</p>
+    }
+    <ul class="criterios">
+      @for (l of criterios(); track l.criterio.id) {
+        <li class="criterio">
+          <span class="criterio__rotulo">{{ l.criterio.rotulo }} <span class="muted">· {{ l.criterio.periodo(ranking.value()!).curto }}</span></span>
+          @for (lado of ['a', 'b']; track lado) {
+            @let v = lado === 'a' ? l.a : l.b;
+            <div class="valor" [class.valor--b]="lado === 'b'" [class.valor--vence]="l.vantagem === lado">
+              <span class="valor__num">
+                @if (l.vantagem === lado) {<span class="selo" aria-label="leva vantagem">✓</span>}
+                {{ v.texto }}
+              </span>
+              <span class="valor__barra" aria-hidden="true"><span [style.width.%]="lado === 'a' ? l.largura.a : l.largura.b"></span></span>
+              <span class="valor__nota">{{ v.fora ? 'fora do ranking: ' + v.fora : v.nota }}</span>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+    <p class="muted nota">✓ marca quem leva vantagem onde há um lado melhor: mais presença, menos gasto, mais projetos e leis. Fidelidade ao partido não tem lado melhor.</p>
+  </section>
+
+  <section class="bloco" aria-labelledby="t-votos">
+    <h2 id="t-votos" class="section-title">Como votam juntos</h2>
+    @if (votos(); as c) {
+      @if (c.comuns) {
+        <p class="concordancia">
+          <span class="concordancia__pct">{{ pct(c.pct) }}</span>
+          <span>votaram igual em {{ c.iguais }} das {{ c.comuns }} votações em que os dois votaram Sim ou Não.</span>
+        </p>
+        @if (c.discordancias.length) {
+          <h3 class="subtitulo">Onde discordaram · {{ c.discordancias.length }}</h3>
+          <div class="mt-stack">
+            @for (d of c.discordancias.slice(0, exibirDiscordancias()); track d.id) {
+              <a class="mt-voterow discordancia" [routerLink]="['/votacao', d.id]">
+                <span class="dois-votos">
+                  <span class="mt-vote mt-vote--sm mt-vote--{{ d.votoA }}" [title]="sa.nome">{{ rotuloVoto[d.votoA] }}</span>
+                  <span class="mt-vote mt-vote--sm mt-vote--{{ d.votoB }}" [title]="sb.nome">{{ rotuloVoto[d.votoB] }}</span>
+                </span>
+                <span class="mt-stack titulo">
+                  <span class="mt-voterow__title">{{ d.ementa }}</span>
+                  @if (d.descricao | descricaoCurta; as curta) {
+                    <span class="mt-voterow__desc">{{ curta }}</span>
+                  }
+                  <span class="mt-voterow__meta">{{ d.materia }} · {{ data(d.data) }} · {{ sa.nome }}: {{ rotuloVoto[d.votoA] }} · {{ sb.nome }}: {{ rotuloVoto[d.votoB] }}</span>
+                </span>
+              </a>
+            }
+          </div>
+          @if (c.discordancias.length > exibirDiscordancias()) {
+            <button class="mt-btn mt-btn--outline mais" type="button" (click)="exibirDiscordancias.set(exibirDiscordancias() + 20)">
+              Mostrar mais · faltam {{ c.discordancias.length - exibirDiscordancias() }}
+            </button>
+          }
+        } @else {
+          <p class="muted">Não discordaram em nenhuma votação.</p>
+        }
+      } @else {
+        <p class="muted">Os dois não votaram Sim ou Não numa mesma votação: estiveram no Senado em períodos diferentes.</p>
+      }
+    } @else {
+      <p class="muted">Carregando as votações…</p>
+    }
+  </section>
+
+  @if (perfis().a || perfis().b) {
+    <section class="bloco" aria-labelledby="t-atuacao">
+      <h2 id="t-atuacao" class="section-title">No que trabalham</h2>
+      <div class="perfis">
+        @for (lado of ['a', 'b']; track lado) {
+          @let pt = lado === 'a' ? perfis().a : perfis().b;
+          @let s = lado === 'a' ? sa : sb;
+          <div class="perfil">
+            <p class="perfil__nome">{{ s.nome }}</p>
+            @if (pt) {
+              <p class="perfil__destaque">
+                @if (pt.destaque) { Mais voltado <strong>{{ voltadoA[pt.destaque] }}</strong> que a média } @else { Perfil próximo da média do Senado }
+              </p>
+              <ol class="temas">
+                @for (t of pt.temas.slice(0, 3); track t.id) {
+                  <li><span>{{ t.rotulo }}</span><span class="temas__pct">{{ t.pct }}%</span></li>
+                }
+              </ol>
+              <p class="muted nota">{{ pt.total }} projetos de autoria, sem PECs.</p>
+            } @else {
+              <p class="muted">Poucos projetos para traçar um perfil.</p>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+} @else if (a() && b() && (senadorA.isLoading() || senadorB.isLoading())) {
+  <p class="muted">Carregando…</p>
+} @else if (!a() || !b()) {
+  <p class="muted vazio">Escolha {{ a() || b() ? 'mais um senador' : 'dois senadores' }} para comparar.</p>
+}

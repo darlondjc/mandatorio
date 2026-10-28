@@ -48,6 +48,7 @@
       </p>
     </div>
     <div class="perfil__acoes">
+      <a class="mt-btn mt-btn--outline" routerLink="/comparar" [queryParams]="{ a: s.codigo }">Comparar com…</a>
       <a class="mt-btn mt-btn--outline" [href]="'https://www25.senado.leg.br/web/senadores/senador/-/perfil/' + s.codigo" target="_blank" rel="noopener">
         Página no Senado
       </a>

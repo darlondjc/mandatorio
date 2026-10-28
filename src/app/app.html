@@ -33,7 +33,9 @@
       <a class="mt-nav__item" routerLink="/rankings" routerLinkActive #rr="routerLinkActive" [attr.aria-current]="rr.isActive ? 'page' : null">
         <mt-icon name="rankings" />Rankings
       </a>
-      <span class="mt-nav__item mt-nav__item--off"><mt-icon name="comparar" />Comparar<span class="mt-chip mt-chip--soon">breve</span></span>
+      <a class="mt-nav__item" routerLink="/comparar" routerLinkActive #rc="routerLinkActive" [attr.aria-current]="rc.isActive ? 'page' : null">
+        <mt-icon name="comparar" />Comparar
+      </a>
     </div>
 
     <div class="menu__rodape">
