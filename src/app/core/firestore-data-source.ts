@@ -24,15 +24,27 @@ export class FirestoreDataSource extends DataSource {
   private conn?: Promise<{ db: Firestore; fs: FirestoreModule }>;
   private readonly atos = new Map<string, Promise<AtosMandato | null>>();
 
-  constructor(private readonly config: FirebaseOptions) {
+  constructor(
+    private readonly config: FirebaseOptions,
+    /** Chave do reCAPTCHA Enterprise para o App Check; sem ela, o App Check fica desligado. */
+    private readonly appCheckSiteKey: string | null = null,
+  ) {
     super();
   }
 
   private connect() {
-    this.conn ??= Promise.all([import('firebase/app'), import('firebase/firestore')]).then(([app, fs]) => ({
-      db: fs.getFirestore(app.initializeApp(this.config)),
-      fs,
-    }));
+    this.conn ??= (async () => {
+      const [app, fs] = await Promise.all([import('firebase/app'), import('firebase/firestore')]);
+      const firebase = app.initializeApp(this.config);
+      // O App Check precisa estar ligado antes da primeira leitura: com a aplicação obrigatória
+      // ativada no console, o Firestore recusa pedidos sem o token dele.
+      if (this.appCheckSiteKey) {
+        // reCAPTCHA Enterprise: o v3 clássico não é mais aceito no registro do App Check.
+        const { initializeAppCheck, ReCaptchaEnterpriseProvider } = await import('firebase/app-check');
+        initializeAppCheck(firebase, { provider: new ReCaptchaEnterpriseProvider(this.appCheckSiteKey), isTokenAutoRefreshEnabled: true });
+      }
+      return { db: fs.getFirestore(firebase), fs };
+    })();
     return this.conn;
   }
 
