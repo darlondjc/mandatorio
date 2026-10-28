@@ -1,5 +1,5 @@
 {
-  "_comentario": "Cadastro manual dos presidentes acompanhados. Para incluir mandatos anteriores, acrescente itens em 'mandatos' (ou novos presidentes); a sincronização busca MPs, vetos e projetos de cada mandato pelo período.",
+  "_comentario": "Cadastro manual dos presidentes acompanhados. Cada mandato vai do dia da posse até a posse do sucessor (fim exclusivo), para que MPs, vetos e projetos caiam no mandato certo. A foto vem do Wikidata: pelo identificador em 'wikidata', ou buscando pelo nome.",
   "presidentes": [
     {
       "id": "lula",
@@ -19,6 +19,93 @@
           "partido": "PT",
           "vice": "Geraldo Alckmin",
           "partidoVice": "PSB"
+        },
+        {
+          "id": "2007-2010",
+          "inicio": "2007-01-01",
+          "fim": "2011-01-01",
+          "ordem": 2,
+          "partido": "PT",
+          "vice": "José Alencar",
+          "partidoVice": "PRB"
+        },
+        {
+          "id": "2003-2006",
+          "inicio": "2003-01-01",
+          "fim": "2007-01-01",
+          "ordem": 1,
+          "partido": "PT",
+          "vice": "José Alencar",
+          "partidoVice": "PL"
+        }
+      ]
+    },
+    {
+      "id": "bolsonaro",
+      "nome": "Jair Bolsonaro",
+      "nomeCompleto": "Jair Messias Bolsonaro",
+      "foto": null,
+      "nascimento": "1955-03-21",
+      "naturalidade": "Glicério (SP)",
+      "perfil": "Capitão reformado do Exército e deputado federal por sete mandatos. Eleito pelo PSL, filiou-se ao PL em 2021.",
+      "mandatos": [
+        {
+          "id": "2019-2022",
+          "inicio": "2019-01-01",
+          "fim": "2023-01-01",
+          "ordem": 1,
+          "partido": "PL",
+          "vice": "Hamilton Mourão",
+          "partidoVice": "PRTB"
+        }
+      ]
+    },
+    {
+      "id": "temer",
+      "nome": "Michel Temer",
+      "nomeCompleto": "Michel Miguel Elias Temer Lulia",
+      "foto": null,
+      "nascimento": "1940-09-23",
+      "naturalidade": "Tietê (SP)",
+      "perfil": "Advogado e professor de direito constitucional. Vice de Dilma Rousseff, assumiu interinamente em 12/05/2016 e em definitivo em 31/08/2016, após o impeachment.",
+      "mandatos": [
+        {
+          "id": "2016-2018",
+          "inicio": "2016-05-12",
+          "fim": "2019-01-01",
+          "ordem": 1,
+          "partido": "MDB",
+          "vice": null,
+          "partidoVice": null
+        }
+      ]
+    },
+    {
+      "id": "dilma",
+      "nome": "Dilma Rousseff",
+      "nomeCompleto": "Dilma Vana Rousseff",
+      "foto": null,
+      "nascimento": "1947-12-14",
+      "naturalidade": "Belo Horizonte (MG)",
+      "perfil": "Economista, primeira mulher a presidir o Brasil. Afastada em 12/05/2016 e destituída pelo Senado em 31/08/2016, no processo de impeachment.",
+      "mandatos": [
+        {
+          "id": "2015-2016",
+          "inicio": "2015-01-01",
+          "fim": "2016-05-12",
+          "ordem": 2,
+          "partido": "PT",
+          "vice": "Michel Temer",
+          "partidoVice": "PMDB"
+        },
+        {
+          "id": "2011-2014",
+          "inicio": "2011-01-01",
+          "fim": "2015-01-01",
+          "ordem": 1,
+          "partido": "PT",
+          "vice": "Michel Temer",
+          "partidoVice": "PMDB"
         }
       ]
     }

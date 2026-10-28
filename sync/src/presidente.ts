@@ -32,18 +32,60 @@ type Cadastro = Omit<Presidente, 'mandatos'> & { mandatos: Omit<MandatoPresident
  * Foto oficial pelo Wikidata (propriedade P18, imagem) servida pelo Wikimedia Commons.
  * Usada quando o cadastro não traz uma URL de foto.
  */
-async function fotoWikidata(qid: string): Promise<{ foto: string; fonte: string } | null> {
+const WIKIDATA = 'https://www.wikidata.org';
+
+/** Diagnóstico das fotos: que item do Wikidata foi usado para cada presidente. */
+export const diagFotos: string[] = [];
+
+/**
+ * Encontra o item do Wikidata do presidente: usa o identificador do cadastro, se houver,
+ * ou busca pelo nome e escolhe o resultado descrito como presidente do Brasil. Em qualquer
+ * caso confere se o rótulo do item contém o sobrenome, para nunca usar a foto de outra pessoa.
+ */
+async function itemWikidata(nome: string, qid?: string): Promise<{ qid: string; entidade: Json } | null> {
+  const sobrenome = semAcento(nome.split(' ').at(-1) ?? nome);
+  const confere = (ent: Json) => {
+    const rotulos = [ent?.labels?.pt?.value, ent?.labels?.['pt-br']?.value, ent?.labels?.en?.value].filter(Boolean).map((x: string) => semAcento(x));
+    return rotulos.some((r) => r.includes(sobrenome));
+  };
+  const candidatos: string[] = [];
+  if (qid) candidatos.push(qid);
+  else {
+    const q = new URLSearchParams({ action: 'wbsearchentities', search: nome, language: 'pt', uselang: 'pt', type: 'item', limit: '7', format: 'json' });
+    const busca = await getJson<Json>(`${WIKIDATA}/w/api.php?${q}`);
+    const resultados = lista<Json>(busca?.search);
+    const presidente = resultados.filter((r) => /presidente|president/i.test(String(r.description ?? '')));
+    candidatos.push(...[...presidente, ...resultados].map((r) => String(r.id)));
+  }
+  for (const id of [...new Set(candidatos)].slice(0, 4)) {
+    const j = await getJson<Json>(`${WIKIDATA}/wiki/Special:EntityData/${id}.json`);
+    const ent = j?.entities?.[id];
+    if (ent && confere(ent)) return { qid: id, entidade: ent };
+  }
+  return null;
+}
+
+async function fotoWikidata(nome: string, qid?: string): Promise<{ foto: string; fonte: string } | null> {
   try {
-    const j = await getJson<Json>(`https://www.wikidata.org/wiki/Special:EntityData/${qid}.json`);
-    const arquivo: string | undefined = j?.entities?.[qid]?.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
-    if (!arquivo) return null;
-    const nome = encodeURIComponent(arquivo.replace(/ /g, '_'));
+    const item = await itemWikidata(nome, qid);
+    if (!item) {
+      diagFotos.push(`${nome}: nenhum item do Wikidata conferiu com o nome`);
+      return null;
+    }
+    const arquivo: string | undefined = item.entidade?.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+    const rotulo = item.entidade?.labels?.pt?.value ?? item.entidade?.labels?.en?.value;
+    if (!arquivo) {
+      diagFotos.push(`${nome}: ${item.qid} (${rotulo}) sem imagem`);
+      return null;
+    }
+    const arq = encodeURIComponent(arquivo.replace(/ /g, '_'));
+    diagFotos.push(`${nome}: ${item.qid} (${rotulo}) → ${arquivo}`);
     return {
-      foto: `https://commons.wikimedia.org/wiki/Special:FilePath/${nome}?width=400`,
-      fonte: `https://commons.wikimedia.org/wiki/File:${nome}`,
+      foto: `https://commons.wikimedia.org/wiki/Special:FilePath/${arq}?width=400`,
+      fonte: `https://commons.wikimedia.org/wiki/File:${arq}`,
     };
   } catch (e) {
-    console.warn(`Foto do Wikidata ${qid} indisponível: ${(e as Error).message}`);
+    diagFotos.push(`${nome}: erro ${(e as Error).message}`);
     return null;
   }
 }
@@ -179,7 +221,7 @@ async function vetos(m: Cadastro['mandatos'][number], mandatoId: string): Promis
     }
     for (const v of itens) {
       const dataLeitura = isoData(v.dataApresentacao ?? v.dataAutuacao ?? v.data);
-      if (!dataLeitura || dataLeitura < m.inicio || dataLeitura > m.fim) continue;
+      if (!dataLeitura || dataLeitura < m.inicio || dataLeitura >= m.fim) continue;
       const ementa: string = v.ementa ?? '';
       const deliberacao = String(v.siglaTipoDeliberacao ?? '');
       deliberacoesVistas.set(deliberacao || '(vazio)', (deliberacoesVistas.get(deliberacao || '(vazio)') ?? 0) + 1);
@@ -231,8 +273,8 @@ export async function coletarPresidentes(): Promise<{ presidentes: Presidente[];
   const presidentes: Presidente[] = [];
   const atos: AtosMandato[] = [];
   for (const p of lerCadastro()) {
-    if (!p.foto && p.wikidata) {
-      const f = await fotoWikidata(p.wikidata);
+    if (!p.foto) {
+      const f = await fotoWikidata(p.nome, p.wikidata);
       if (f) Object.assign(p, { foto: f.foto, fotoFonte: f.fonte });
     }
     const mandatos: MandatoPresidente[] = [];

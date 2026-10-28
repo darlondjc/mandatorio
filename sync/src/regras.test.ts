@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { etapaProjeto, resumir, situacaoMP, situacaoVeto } from './presidente.ts';
+import { etapaProjeto, lerCadastro, resumir, situacaoMP, situacaoVeto } from './presidente.ts';
 import { citaSenador, maioriaPorPartido } from './senado.ts';
 import { assuntoDoVeto, descricaoVotacao, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
 
@@ -118,4 +118,17 @@ test('descrição da votação só quando acrescenta algo à ementa', () => {
   assert.equal(descricaoVotacao('Altera a Constituição', 'Altera a  Constituição'), null);
   assert.equal(descricaoVotacao('  ', 'x'), null);
   assert.equal(descricaoVotacao(undefined, 'x'), null);
+});
+
+test('cadastro de presidentes: mandatos sem sobreposição e sem buracos', () => {
+  const mandatos = lerCadastro()
+    .flatMap((p) => p.mandatos.map((m) => ({ ...m, quem: p.id })))
+    .sort((a, b) => a.inicio.localeCompare(b.inicio));
+  assert.ok(mandatos.length >= 7);
+  for (let i = 1; i < mandatos.length; i++) {
+    assert.equal(mandatos[i].inicio, mandatos[i - 1].fim, `${mandatos[i - 1].quem} ${mandatos[i - 1].id} → ${mandatos[i].quem} ${mandatos[i].id}`);
+  }
+  for (const m of mandatos) assert.ok(m.inicio < m.fim, `${m.quem} ${m.id}`);
+  const ids = lerCadastro().flatMap((p) => p.mandatos.map((m) => `${p.id}/${m.id}`));
+  assert.equal(new Set(ids).size, ids.length);
 });
