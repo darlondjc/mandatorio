@@ -68,11 +68,26 @@ export function etapaProjeto(descricao: string, orgao: string): EtapaProjeto {
   return 'camara';
 }
 
+/** Anos cobertos por um mandato, até hoje. */
+function anosDoMandato(m: Cadastro['mandatos'][number]): number[] {
+  const ini = Number(m.inicio.slice(0, 4));
+  const fim = Math.min(Number(m.fim.slice(0, 4)), Number(hojeISO().slice(0, 4)));
+  return Array.from({ length: fim - ini + 1 }, (_, i) => ini + i);
+}
+
+/** Proposições de uma sigla nos anos do mandato, filtradas pela data de apresentação dentro do mandato. */
+async function doMandato(m: Cadastro['mandatos'][number], siglaTipo: string, extra: Record<string, string> = {}) {
+  const itens: Json[] = [];
+  for (const ano of anosDoMandato(m)) itens.push(...(await proposicoesCamara({ siglaTipo, ano: String(ano), ...extra })));
+  const comDetalhe = await emParalelo(itens, 4, async (p) => ({ p, d: await detalheCamara(p.id) }));
+  return comDetalhe.filter(({ d }) => {
+    const data = isoData(d.dataApresentacao);
+    return !data || (data >= m.inicio && data < m.fim);
+  });
+}
+
 async function medidasProvisorias(m: Cadastro['mandatos'][number], mandatoId: string): Promise<MedidaProvisoria[]> {
-  const fim = m.fim < hojeISO() ? m.fim : hojeISO();
-  const itens = await proposicoesCamara({ siglaTipo: 'MPV', dataApresentacaoInicio: m.inicio, dataApresentacaoFim: fim });
-  return emParalelo(itens, 4, async (p): Promise<MedidaProvisoria> => {
-    const d = await detalheCamara(p.id);
+  return (await doMandato(m, 'MPV')).map(({ p, d }): MedidaProvisoria => {
     const dataEdicao = isoData(d.dataApresentacao) ?? `${p.ano}-01-01`;
     const prazoFinal = somarDiasSemRecesso(dataEdicao, PRAZO_MP);
     const status = d.statusProposicao ?? {};
@@ -94,28 +109,24 @@ async function medidasProvisorias(m: Cadastro['mandatos'][number], mandatoId: st
 }
 
 async function projetosExecutivo(m: Cadastro['mandatos'][number], mandatoId: string): Promise<ProjetoExecutivo[]> {
-  const fim = m.fim < hojeISO() ? m.fim : hojeISO();
-  const itens = await proposicoesCamara({
-    siglaTipo: 'PL,PLP,PEC',
-    autor: 'Poder Executivo',
-    dataApresentacaoInicio: m.inicio,
-    dataApresentacaoFim: fim,
-  });
-  return emParalelo(itens, 4, async (p): Promise<ProjetoExecutivo> => {
-    const d = await detalheCamara(p.id);
-    const status = d.statusProposicao ?? {};
-    const descricao = `${status.descricaoSituacao ?? ''} ${status.despacho ?? ''}`;
-    return {
-      id: `${String(p.siglaTipo).toLowerCase()}-${p.numero}-${p.ano}`,
-      mandato: mandatoId,
-      numero: identificacao(p.siglaTipo, p.numero, p.ano),
-      ementa: p.ementa ?? d.ementa ?? '',
-      dataApresentacao: isoData(d.dataApresentacao) ?? `${p.ano}-01-01`,
-      etapa: etapaProjeto(descricao, status.siglaOrgao ?? ''),
-      situacao: status.descricaoSituacao ?? 'Em tramitação',
-      url: `https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=${p.id}`,
-    };
-  });
+  const out: ProjetoExecutivo[] = [];
+  for (const sigla of ['PL', 'PLP', 'PEC']) {
+    for (const { p, d } of await doMandato(m, sigla, { autor: 'Poder Executivo' })) {
+      const status = d.statusProposicao ?? {};
+      const descricao = `${status.descricaoSituacao ?? ''} ${status.despacho ?? ''}`;
+      out.push({
+        id: `${sigla.toLowerCase()}-${p.numero}-${p.ano}`,
+        mandato: mandatoId,
+        numero: identificacao(sigla, p.numero, p.ano),
+        ementa: p.ementa ?? d.ementa ?? '',
+        dataApresentacao: isoData(d.dataApresentacao) ?? `${p.ano}-01-01`,
+        etapa: etapaProjeto(descricao, status.siglaOrgao ?? ''),
+        situacao: status.descricaoSituacao ?? 'Em tramitação',
+        url: `https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=${p.id}`,
+      });
+    }
+  }
+  return out.sort((a, b) => b.dataApresentacao.localeCompare(a.dataApresentacao));
 }
 
 export function situacaoVeto(texto: string): SituacaoVeto {

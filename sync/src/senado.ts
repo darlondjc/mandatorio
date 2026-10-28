@@ -102,11 +102,7 @@ async function detalhes(codigo: string) {
   } catch (e) {
     if (!(e instanceof NaoEncontrado)) throw e;
   }
-  try {
-    const p = await getJson<Json>(`${LEGIS}/senador/${codigo}/profissao.json`);
-    const profs = lista(p?.ProfissaoParlamentar?.Parlamentar?.Profissoes?.Profissao);
-    out.profissao = profs.map((x: Json) => x.NomeProfissao).filter(Boolean).join(', ') || null;
-  } catch {}
+  // Profissão: o endpoint /profissao devolve o histórico acadêmico, sem a profissão. Fica null por ora.
   try {
     const m = await getJson<Json>(`${LEGIS}/senador/${codigo}/mandatos.json`);
     out.mandatos = Math.max(1, lista(m?.MandatoParlamentar?.Parlamentar?.Mandatos?.Mandato).length);
@@ -124,9 +120,14 @@ async function detalhes(codigo: string) {
   return out;
 }
 
+/** Preenchido quando a API avisa que o endpoint de autorias será desativado. */
+export let avisoDescontinuacao: string | null = null;
+
 async function autorias(codigo: string): Promise<Proposicao[]> {
   try {
     const j = await getJson<Json>(`${LEGIS}/senador/${codigo}/autorias.json`);
+    const desc = j?.MateriasAutoriaParlamentar?.Metadados?.Descontinuacao;
+    if (desc) avisoDescontinuacao = `autorias.json descontinuado (desativação: ${desc.DataDesativacaoCompleta}; substituto: ${desc.UrlServicoSubstituto})`;
     const itens = lista(j?.MateriasAutoriaParlamentar?.Parlamentar?.Autorias?.Autoria);
     return itens
       .filter((a: Json) => a.IndicadorAutorPrincipal !== 'Não')

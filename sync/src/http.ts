@@ -50,7 +50,7 @@ export async function getJson<T = unknown>(url: string, tentativas = 4): Promise
     try {
       const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': USER_AGENT } });
       if (res.status === 404) throw new NaoEncontrado(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200).replace(/\s+/g, ' ')}`);
       const texto = await res.text();
       let json: T;
       try {
