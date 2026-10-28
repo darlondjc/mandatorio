@@ -1,18 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, input, resource, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
 import { data, pctExibido, ROTULO_VOTO, ufNome } from '../../core/format';
 import { linhaRanking } from '../../core/ranking';
 import { perfilTematico, VOLTADO_A } from '../../core/temas';
 import { DescricaoCurtaPipe } from '../../shared/descricao-curta';
-import { Photo } from '../../shared/avatar';
+import { Avatar, Photo } from '../../shared/avatar';
 import { compararCriterios, concordancia } from './comparacao';
 import { criterioGastos, CRITERIOS } from '../rankings/criterios';
 import { Opcao, SeletorSenador } from './seletor-senador';
 
 @Component({
   selector: 'mt-comparar-page',
-  imports: [RouterLink, Photo, SeletorSenador, DescricaoCurtaPipe],
+  imports: [RouterLink, Photo, Avatar, SeletorSenador, DescricaoCurtaPipe],
   templateUrl: './comparar-page.html',
   styleUrl: './comparar-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +39,30 @@ export class CompararPage {
   protected readonly rotuloVoto = ROTULO_VOTO;
   protected readonly voltadoA = VOLTADO_A;
   protected readonly exibirDiscordancias = signal(10);
+
+  /** As fotos grandes; quando saem da tela por cima, aparece o cabeçalho fixo com as duas. */
+  private readonly duelo = viewChild<ElementRef<HTMLElement>>('duelo');
+  protected readonly cabecalhoFixo = signal(false);
+
+  constructor() {
+    let observador: IntersectionObserver | undefined;
+    inject(DestroyRef).onDestroy(() => observador?.disconnect());
+    effect(() => {
+      const el = this.duelo()?.nativeElement;
+      observador?.disconnect();
+      if (!el) {
+        this.cabecalhoFixo.set(false);
+        return;
+      }
+      // A barra do topo do celular cobre o começo da página: desconta a altura dela.
+      const topo = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--altura-topo')) || 0;
+      observador = new IntersectionObserver(
+        ([e]) => this.cabecalhoFixo.set(!e.isIntersecting && e.boundingClientRect.top < topo),
+        { rootMargin: `-${topo}px 0px 0px 0px` },
+      );
+      observador.observe(el);
+    });
+  }
 
   /** Em exercício primeiro; quem saiu nesta legislatura também pode ser comparado. */
   protected readonly opcoes = computed<Opcao[]>(() => {

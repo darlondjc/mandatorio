@@ -14,6 +14,29 @@
 .lado__nome { font: 500 22px/1.2 var(--font-display); }
 .versus { font: 500 34px var(--font-display); color: var(--ink-muted); text-align: center; }
 
+/* Cabeçalho fixo: as duas fotos e "vs" no centro, quando as fotos grandes saem da tela.
+   Ocupa a área do conteúdo (à direita do menu no desktop, abaixo da barra do topo no celular). */
+.fixo {
+  position: fixed; z-index: 15; top: var(--altura-topo); left: var(--largura-menu); right: 0;
+  background: var(--surface); border-bottom: 2px solid var(--line); box-shadow: 0 6px 18px rgb(0 0 0 / 0.08);
+  opacity: 0; transform: translateY(-100%); pointer-events: none;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+.fixo--visivel { opacity: 1; transform: none; pointer-events: auto; }
+.fixo__dentro {
+  max-width: 1100px; margin: 0 auto; padding: 8px var(--space-10);
+  display: grid; grid-template-columns: 1fr 48px 1fr; align-items: center; justify-items: center; gap: var(--space-4);
+}
+.fixo__lado { display: flex; align-items: center; gap: 10px; min-width: 0; color: inherit; text-decoration: none; }
+.fixo__nome { display: flex; flex-direction: column; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fixo__sub { font-size: 12px; font-weight: 500; color: var(--ink-muted); }
+.fixo__vs {
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--ink); color: var(--on-ink); font: 600 14px/1 var(--font-display);
+}
+:host ::ng-deep .fixo .mt-avatar { width: 40px; height: 40px; font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { .fixo { transition: none; } }
+
 .bloco { display: flex; flex-direction: column; gap: var(--space-3); }
 .nota { font-size: 13px; }
 .subtitulo { font-size: 16px; font-weight: 600; margin-top: var(--space-2); }
@@ -66,7 +89,15 @@
 .temas li { display: flex; justify-content: space-between; gap: 8px; }
 .temas__pct { font-weight: 600; font-variant-numeric: tabular-nums; }
 
+@media (max-width: 960px) {
+  .fixo__dentro { padding: 8px var(--space-4); }
+}
+
 @media (max-width: 720px) {
+  .fixo__lado { flex-direction: column; gap: 4px; text-align: center; }
+  .fixo__nome { align-items: center; font-size: 13px; max-width: 40vw; }
+  .fixo__sub { font-size: 11px; }
+  :host ::ng-deep .fixo .mt-avatar { width: 34px; height: 34px; font-size: 12px; }
   .escolha { grid-template-columns: 1fr; }
   .inverter { justify-self: center; transform: rotate(90deg); }
   .lado__nome { font-size: 17px; }

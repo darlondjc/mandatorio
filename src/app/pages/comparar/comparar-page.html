@@ -24,7 +24,21 @@
   @let sa = senadorA.value()!;
   @let sb = senadorB.value()!;
 
-  <section class="duelo" aria-label="Fotos">
+  <div class="fixo" [class.fixo--visivel]="cabecalhoFixo()" [attr.aria-hidden]="!cabecalhoFixo()">
+    <div class="fixo__dentro">
+      <a class="fixo__lado" [routerLink]="['/senado', sa.codigo]" [tabIndex]="cabecalhoFixo() ? 0 : -1">
+        <mt-avatar [nome]="sa.nome" [partido]="sa.partido" [foto]="sa.foto" />
+        <span class="fixo__nome">{{ sa.nome }}<span class="fixo__sub">{{ sa.partido }} · {{ sa.uf }}</span></span>
+      </a>
+      <span class="fixo__vs" aria-hidden="true">vs</span>
+      <a class="fixo__lado" [routerLink]="['/senado', sb.codigo]" [tabIndex]="cabecalhoFixo() ? 0 : -1">
+        <mt-avatar [nome]="sb.nome" [partido]="sb.partido" [foto]="sb.foto" />
+        <span class="fixo__nome">{{ sb.nome }}<span class="fixo__sub">{{ sb.partido }} · {{ sb.uf }}</span></span>
+      </a>
+    </div>
+  </div>
+
+  <section class="duelo" aria-label="Fotos" #duelo>
     <a class="lado" [routerLink]="['/senado', sa.codigo]">
       <mt-photo [nome]="sa.nome" [foto]="sa.foto" [pequena]="true" />
       <span class="lado__nome">{{ sa.nome }}</span>

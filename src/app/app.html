@@ -69,6 +69,19 @@
     }
     <router-outlet />
   </main>
+  <button
+    type="button"
+    class="topo-fab"
+    [class.topo-fab--visivel]="mostrarTopo()"
+    [class.topo-fab--acima]="novaVersao()"
+    [attr.aria-hidden]="!mostrarTopo()"
+    [tabIndex]="mostrarTopo() ? 0 : -1"
+    aria-label="Voltar ao topo da página"
+    title="Voltar ao topo"
+    (click)="irAoTopo()"
+  >
+    <mt-icon name="topo" [size]="22" />
+  </button>
   @if (novaVersao()) {
     <div class="nova-versao" role="status">
       <span>Há uma versão nova do Mandatório.</span>
