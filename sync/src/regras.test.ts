@@ -156,6 +156,15 @@ test('mandato da legislatura e saída de quem deixou o exercício', () => {
   assert.deepEqual(m.mandato, { inicio: '2023-02-01', fim: '2031-01-31', legislaturas: [57, 58] });
   assert.deepEqual(m.saida, { data: '2024-07-02', motivo: 'Retorno do titular' });
   assert.equal(m.exercicioDesde, '2024-03-01');
+  assert.deepEqual(m.exercicios.map((e) => [e.inicio, e.fim, e.motivo]), [
+    ['2023-02-01', '2023-05-10', 'Retorno do titular'],
+    ['2024-03-01', '2024-07-02', 'Retorno do titular'],
+  ]);
+  assert.equal(m.titular, null);
+  assert.deepEqual(mandatoDaLegislatura([{ ...mandatos[0], Titular: { CodigoParlamentar: '5953', NomeParlamentar: 'Mecias de Jesus' } }], 57)!.titular, {
+    codigo: '5953',
+    nome: 'Mecias de Jesus',
+  });
   // Um exercício só, como objeto e não lista.
   const um = mandatoDaLegislatura([{ ...mandatos[0], Exercicios: { Exercicio: { DataInicio: '2023-02-01' } } }], 58)!;
   assert.deepEqual(um.saida, { data: null, motivo: null });

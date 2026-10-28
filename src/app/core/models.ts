@@ -108,6 +108,10 @@ export interface Senador {
   participacao?: string | null;
   /** Início do período em exercício atual (ou do último, para quem saiu). Pode ser bem depois do início do mandato. */
   exercicioDesde?: DataISO | null;
+  /** Para suplentes: de quem é a vaga. */
+  titular?: { codigo: string; nome: string } | null;
+  /** Períodos em exercício neste mandato, do mais antigo ao atual (fim null = em curso). */
+  exercicios?: { inicio: DataISO; fim: DataISO | null; motivo: string | null }[];
   mandato: { inicio: DataISO; fim: DataISO; legislaturas: number[]; ordem: number };
   nascimento: DataISO | null;
   naturalidade: string | null;

@@ -158,6 +158,16 @@ export function mandatoDaLegislatura(mandatos: Json[], legislatura: number) {
     },
     /** Início do período em exercício mais recente (o atual, para quem está no cargo). */
     exercicioDesde: isoData(ultimo?.DataInicio),
+    /** Para suplentes: o titular da vaga. */
+    titular: m.Titular?.CodigoParlamentar
+      ? { codigo: String(m.Titular.CodigoParlamentar), nome: String(m.Titular.NomeParlamentar ?? '') }
+      : null,
+    /** Todos os períodos em exercício neste mandato, do mais antigo ao atual. */
+    exercicios: exercicios.map((e) => ({
+      inicio: isoData(e.DataInicio) ?? '',
+      fim: isoData(e.DataFim),
+      motivo: (e.DescricaoCausaAfastamento as string | undefined)?.trim() || null,
+    })),
     saida: {
       data: isoData(ultimo?.DataFim),
       motivo: (ultimo?.DescricaoCausaAfastamento as string | undefined)?.trim() || null,
@@ -166,7 +176,7 @@ export function mandatoDaLegislatura(mandatos: Json[], legislatura: number) {
 }
 
 /** Diagnóstico de quem saiu: quantos, e um exemplo do que veio da API. */
-export const diagSaidas = { total: 0, exemplos: [] as string[] };
+export const diagSaidas = { total: 0, exemplos: [] as string[], suplentes: [] as string[] };
 
 const SIGLAS_PROPOSICAO = ['PL', 'PLS', 'PEC', 'PLP', 'PDL', 'PRS'];
 const PARTICULAS = new Set(['da', 'de', 'do', 'das', 'dos', 'e']);
@@ -367,6 +377,10 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
 
   // Em exercício: titular ou suplente, e desde quando (um suplente herda as datas do mandato da vaga).
   const atuaisMandato = base.map((_, i) => mandatoDaLegislatura(det[i].listaMandatos, legislatura));
+  diagSaidas.suplentes = base
+    .map((s, i) => ({ s, m: atuaisMandato[i], bruto: det[i].listaMandatos.find((x) => /suplente/i.test(String(x.DescricaoParticipacao ?? ''))) }))
+    .filter((x) => /suplente/i.test(x.m?.participacao ?? ''))
+    .map(({ s, m, bruto }) => `${s.nome} (${m!.participacao}) titular: ${m!.titular?.nome ?? '?'} · exercícios: ${m!.exercicios.map((e) => `${e.inicio}→${e.fim ?? 'atual'}`).join(', ')} · chaves: ${Object.keys(bruto ?? {}).join(',')}`);
   const todos = [...base, ...ex];
   const todosDet = [...det, ...detEx];
   const props = await emParalelo(todos, 4, (s) => proposicoesDoSenador(s.codigo, s.nome, s.nomeCompleto));
@@ -424,7 +438,10 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
     return {
       ...s,
       participacao: saiu ? (s as (typeof ex)[number]).participacao : (atuaisMandato[i]?.participacao ?? null),
-      exercicioDesde: saiu ? (mandatoDaLegislatura(d.listaMandatos, legislatura)?.exercicioDesde ?? null) : (atuaisMandato[i]?.exercicioDesde ?? null),
+      ...(() => {
+        const m = saiu ? mandatoDaLegislatura(d.listaMandatos, legislatura) : atuaisMandato[i];
+        return { exercicioDesde: m?.exercicioDesde ?? null, titular: m?.titular ?? null, exercicios: m?.exercicios ?? [] };
+      })(),
       foto: fotos.get(s.codigo)?.foto ?? s.foto,
       fotoFonte: fotos.get(s.codigo)?.fonte ?? null,
       emExercicio: !saiu,
@@ -450,6 +467,16 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
       atualizadoEm: agora,
     };
   });
+
+  // Titular da vaga de cada suplente, quando a API não informa: quem tem o mesmo mandato
+  // (mesma UF e mesmas datas) como titular, esteja no cargo ou não.
+  for (const s of senadores) {
+    if (s.titular || !/suplente/i.test(s.participacao ?? '')) continue;
+    const t = senadores.find(
+      (x) => x !== s && /titular/i.test(x.participacao ?? '') && x.uf === s.uf && x.mandato.inicio === s.mandato.inicio && x.mandato.fim === s.mandato.fim,
+    );
+    if (t) s.titular = { codigo: t.codigo, nome: t.nome };
+  }
 
   // Média de alinhamento por partido, entre os senadores em exercício.
   const porPartido = new Map<string, Senador[]>();

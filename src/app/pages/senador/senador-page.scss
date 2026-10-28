@@ -4,6 +4,8 @@
 
 .perfil { display: flex; gap: 28px; align-items: center; }
 .perfil__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.dados > .periodos { border-radius: var(--radius-lg); }
+.periodos dd { display: inline-flex; flex-direction: column; gap: 2px; }
 .foto { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .foto figcaption { font-size: 11px; }
 .foto figcaption a { color: var(--ink-muted); }

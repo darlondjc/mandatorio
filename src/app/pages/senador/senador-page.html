@@ -31,7 +31,7 @@
       <p class="resumo">
         @if (s.emExercicio) {
           @if (suplente()) {
-            {{ s.participacao }} em exercício desde {{ data(s.exercicioDesde!) }}, na vaga do mandato {{ s.mandato.inicio.slice(0, 4) }}–{{ s.mandato.fim.slice(0, 4) }}.
+            {{ s.participacao }}@if (s.titular) { de <a [routerLink]="['/senado', s.titular.codigo]">{{ s.titular.nome }}</a>}, em exercício desde {{ data(s.exercicioDesde!) }}. A vaga é do mandato {{ s.mandato.inicio.slice(0, 4) }}–{{ s.mandato.fim.slice(0, 4) }}.
           } @else {
             {{ tratamento() }} em {{ s.mandato.ordem }}º mandato ({{ s.mandato.inicio.slice(0, 4) }}–{{ s.mandato.fim.slice(0, 4) }}).
           }
@@ -58,7 +58,16 @@
       <div><dt>Nasceu</dt><dd>{{ data(s.nascimento) }}@if (s.naturalidade) {, {{ s.naturalidade }}}</dd></div>
     }
     <div><dt>Mandato</dt><dd>{{ data(s.mandato.inicio) }} a {{ data(s.mandato.fim) }}@if (s.participacao && s.participacao !== 'Titular') { · {{ s.participacao }}}</dd></div>
-    @if (s.emExercicio && exercicioRecente()) {
+    @if (periodos().length) {
+      <div class="periodos">
+        <dt>Em exercício</dt>
+        <dd>
+          @for (p of periodos(); track p.inicio) {
+            <span class="periodo">{{ data(p.inicio) }} {{ p.fim ? 'a ' + data(p.fim) : 'até hoje' }}@if (p.motivo) { <span class="muted">· saiu por {{ p.motivo.toLowerCase() }}</span>}</span>
+          }
+        </dd>
+      </div>
+    } @else if (s.emExercicio && exercicioRecente()) {
       <div><dt>Em exercício desde</dt><dd>{{ data(s.exercicioDesde!) }}</dd></div>
     }
     @if (!s.emExercicio && s.saida?.motivo) {

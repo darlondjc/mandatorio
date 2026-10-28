@@ -73,6 +73,18 @@ export class SenadorPage {
     return !!s?.exercicioDesde && Date.parse(s.exercicioDesde) - Date.parse(s.mandato.inicio) > 30 * 864e5;
   });
 
+  /**
+   * Períodos em exercício, quando dizem algo além do mandato: suplentes, quem voltou de
+   * licença ou quem saiu. Um titular que nunca se afastou não precisa da lista.
+   */
+  protected readonly periodos = computed(() => {
+    const s = this.senador.value();
+    const ps = s?.exercicios ?? [];
+    if (!s || !ps.length) return [];
+    const continuo = ps.length === 1 && !ps[0].fim && !this.exercicioRecente();
+    return continuo ? [] : ps;
+  });
+
   protected readonly cards = computed(() => {
     const s = this.senador.value();
     if (!s) return null;

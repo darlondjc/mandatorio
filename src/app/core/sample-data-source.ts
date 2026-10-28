@@ -207,6 +207,12 @@ function gerar(): Base {
       saida: saiu ? { data: datas[SAIDAS[idx - cadeiras.length].ate - 1], motivo: SAIDAS[idx - cadeiras.length].motivo } : null,
       participacao: (saiu && idx - cadeiras.length !== 1) || vaga ? '1º Suplente' : 'Titular',
       exercicioDesde: vaga ? datas[vaga.ate] : saiu ? datas[0] : mandatoInicio,
+      titular: vaga ? { codigo: exCadeiras[SAIDAS.indexOf(vaga)].codigo, nome: exCadeiras[SAIDAS.indexOf(vaga)].nome } : null,
+      exercicios: vaga
+        ? [{ inicio: datas[vaga.ate], fim: null, motivo: null }]
+        : saiu
+          ? [{ inicio: datas[0], fim: datas[SAIDAS[idx - cadeiras.length].ate - 1], motivo: SAIDAS[idx - cadeiras.length].motivo }]
+          : [{ inicio: mandatoInicio, fim: null, motivo: null }],
       mandato: {
         inicio: mandatoInicio,
         fim: mandatoInicio === '2019-02-01' ? '2027-01-31' : '2031-01-31',
