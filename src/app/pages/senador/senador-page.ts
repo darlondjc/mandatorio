@@ -41,9 +41,12 @@ export class SenadorPage {
 
   protected readonly senador = resource({ params: () => this.codigo(), loader: ({ params }) => this.ds.senador(params) });
 
-  protected readonly limiteVotos = signal(30);
+  /** Quantas votações aparecem na tela; os filtros valem sempre para todas. */
+  protected readonly exibir = signal(30);
   protected readonly votos = resource({
-    params: () => ({ codigo: this.codigo(), limite: this.limiteVotos() }),
+    // Todas as votações de uma vez (são poucos documentos, um por ano): assim os filtros
+    // encontram votos antigos, e não só os já mostrados.
+    params: () => ({ codigo: this.codigo(), limite: 100_000 }),
     loader: ({ params }) => this.ds.votos(params.codigo, params.limite),
   });
   // Carregado já na abertura: alimenta o perfil de atuação (é um documento só).
@@ -166,9 +169,22 @@ export class SenadorPage {
     return `${n} ${n === 1 ? 'voto' : 'votos'} diferente${n === 1 ? '' : 's'} da maioria do ${this.senador.value()!.partido}`;
   });
 
-  protected readonly votosFiltrados = computed(() => {
+  /** Todas as votações do filtro escolhido; a tela mostra as primeiras `exibir()`. */
+  protected readonly todosFiltrados = computed(() => this.filtrar(this.filtro()));
+  protected readonly votosFiltrados = computed(() => this.todosFiltrados().slice(0, this.exibir()));
+  protected readonly contagemFiltros = computed(() => ({
+    divergiu: this.filtrar('divergiu').length,
+    ausente: this.filtrar('ausente').length,
+  }));
+
+  protected trocarFiltro(f: FiltroVoto) {
+    this.filtro.set(f);
+    this.exibir.set(30);
+  }
+
+  private filtrar(filtro: FiltroVoto) {
     const lista = this.votos.value() ?? [];
-    switch (this.filtro()) {
+    switch (filtro) {
       case 'divergiu':
         return lista.filter((v) => v.divergiu);
       case 'ausente':
@@ -179,7 +195,7 @@ export class SenadorPage {
         // Votações secretas (indicações de autoridades) ficam num filtro próprio: o voto não é público.
         return lista.filter((v) => v.voto !== 'secreto');
     }
-  });
+  }
 
   protected readonly gastoSelecionado = computed(() => {
     const anos = this.gastos.value() ?? [];
