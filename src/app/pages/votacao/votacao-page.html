@@ -83,7 +83,7 @@
     </h2>
     <div class="grade">
       @for (s of lista(); track s.codigo) {
-        @if (emExercicio().has(s.codigo)) {
+        @if (comPagina().has(s.codigo)) {
           <a class="mt-sencard" [routerLink]="['/senado', s.codigo]" (mouseenter)="realce.set(s.codigo)" (mouseleave)="realce.set(null)" (focus)="realce.set(s.codigo)" (blur)="realce.set(null)">
             <span class="mt-vote mt-vote--sm mt-vote--{{ s.voto }}" [title]="s.votoOriginal">{{ s.voto === 'secreto' ? 'Votou' : rotuloVoto[s.voto] }}</span>
             <span class="mt-stack nome"><span class="mt-sencard__name">{{ s.nome }}</span><span class="mt-sencard__sub">{{ s.partido }} · {{ ufNome(s.uf) }}</span></span>
@@ -91,7 +91,7 @@
         } @else {
           <div class="mt-sencard" (mouseenter)="realce.set(s.codigo)" (mouseleave)="realce.set(null)">
             <span class="mt-vote mt-vote--sm mt-vote--{{ s.voto }}" [title]="s.votoOriginal">{{ s.voto === 'secreto' ? 'Votou' : rotuloVoto[s.voto] }}</span>
-            <span class="mt-stack nome"><span class="mt-sencard__name">{{ s.nome }}</span><span class="mt-sencard__sub">{{ s.partido }} · {{ ufNome(s.uf) }} · não está mais em exercício</span></span>
+            <span class="mt-stack nome"><span class="mt-sencard__name">{{ s.nome }}</span><span class="mt-sencard__sub">{{ s.partido }} · {{ ufNome(s.uf) }} · de outra legislatura</span></span>
           </div>
         }
       }

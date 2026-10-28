@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, resource, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
-import { corPartido, ufNome } from '../../core/format';
+import { corPartido, data, ufNome } from '../../core/format';
+import type { Cadeira } from '../../core/models';
 import { Avatar } from '../../shared/avatar';
 import { ModoCor, SeatMap } from '../../shared/seat-map';
 
@@ -25,19 +26,24 @@ export class SenadoPage {
 
   protected readonly corPartido = corPartido;
   protected readonly ufNome = ufNome;
+  protected readonly data = data;
 
   protected readonly ufs = computed(() => [...new Set(this.plenario.value()?.cadeiras.map((c) => c.uf) ?? [])].sort());
 
-  protected readonly lista = computed(() => {
-    const p = this.plenario.value();
-    if (!p) return [];
+  protected readonly lista = computed(() =>
+    this.filtrar(this.plenario.value()?.cadeiras ?? []).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+  );
+
+  /** Quem saiu nesta legislatura, com os mesmos filtros; a ordem (saída mais recente primeiro) vem da coleta. */
+  protected readonly saidas = computed(() => this.filtrar(this.plenario.value()?.exSenadores ?? []));
+
+  private filtrar<T extends Cadeira>(lista: T[]): T[] {
     const termo = normalizar(this.busca().trim());
-    return p.cadeiras
+    return lista
       .filter((c) => !this.partido() || c.partido === this.partido())
       .filter((c) => !this.uf() || c.uf === this.uf())
-      .filter((c) => !termo || normalizar(`${c.nome} ${c.partido} ${c.uf} ${ufNome(c.uf)}`).includes(termo))
-      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-  });
+      .filter((c) => !termo || normalizar(`${c.nome} ${c.partido} ${c.uf} ${ufNome(c.uf)}`).includes(termo));
+  }
 
   protected alternarPartido(sigla: string) {
     this.partido.update((atual) => (atual === sigla ? null : sigla));

@@ -16,11 +16,19 @@
       <div class="mt-row">
         <span class="mt-chip mt-chip--brand">{{ s.partido }}</span>
         <span class="mt-chip">{{ ufNome(s.uf) }}</span>
-        <span class="mt-chip">{{ s.emExercicio ? 'Em exercício' : 'Fora de exercício' }}</span>
+        @if (s.emExercicio) {
+          <span class="mt-chip">Em exercício</span>
+        } @else {
+          <span class="mt-chip">{{ s.saida?.data ? 'Saiu em ' + data(s.saida!.data!) : 'Fora de exercício' }}</span>
+        }
       </div>
       <h1 class="nome">{{ s.nome }}</h1>
       <p class="resumo">
-        {{ tratamento() }} em {{ s.mandato.ordem }}º mandato ({{ s.mandato.inicio.slice(0, 4) }}–{{ s.mandato.fim.slice(0, 4) }}).
+        @if (s.emExercicio) {
+          {{ tratamento() }} em {{ s.mandato.ordem }}º mandato ({{ s.mandato.inicio.slice(0, 4) }}–{{ s.mandato.fim.slice(0, 4) }}).
+        } @else {
+          Foi {{ tratamento().toLowerCase() }} na legislatura atual@if (s.saida?.data) {, até {{ data(s.saida!.data!) }}}. Os números abaixo cobrem o período em exercício.
+        }
         @if (s.profissao) {
           {{ s.profissao }}.
         }
@@ -40,7 +48,10 @@
     @if (s.nascimento) {
       <div><dt>Nasceu</dt><dd>{{ data(s.nascimento) }}@if (s.naturalidade) {, {{ s.naturalidade }}}</dd></div>
     }
-    <div><dt>Mandato</dt><dd>{{ data(s.mandato.inicio) }} a {{ data(s.mandato.fim) }}</dd></div>
+    <div><dt>Mandato</dt><dd>{{ data(s.mandato.inicio) }} a {{ data(s.mandato.fim) }}@if (s.participacao && s.participacao !== 'Titular') { · {{ s.participacao }}}</dd></div>
+    @if (!s.emExercicio && s.saida?.motivo) {
+      <div><dt>Saída</dt><dd>{{ s.saida!.motivo }}</dd></div>
+    }
     @if (s.email) {
       <div><dt>E-mail</dt><dd>{{ s.email }}</dd></div>
     }

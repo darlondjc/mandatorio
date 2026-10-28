@@ -47,3 +47,27 @@ describe('SampleDataSource — votações', () => {
     expect(await ds.votacao('nao-existe')).toBeNull();
   });
 });
+
+describe('SampleDataSource — quem saiu', () => {
+  const ds = new SampleDataSource();
+
+  it('lista quem saiu fora das 81 cadeiras, com perfil e votos até a saída', async () => {
+    const p = (await ds.plenario())!;
+    const ex = p.exSenadores ?? [];
+    expect(ex.length).toBe(3);
+    expect(ex.some((e) => p.cadeiras.some((c) => c.codigo === e.codigo))).toBe(false);
+    const s = (await ds.senador(ex[0].codigo))!;
+    expect(s.emExercicio).toBe(false);
+    expect(s.saida?.data).toBe(ex[0].saida.data);
+    const votos = await ds.votos(s.codigo, 1000);
+    expect(votos.length).toBe(ex[0].votacoes);
+    expect(votos.every((v) => v.data <= ex[0].saida.data!)).toBe(true);
+  });
+
+  it('cada votação tem no máximo 81 votos, contando quem saiu', async () => {
+    for (const id of ['v0', 'v20', 'v59']) {
+      const v = (await ds.votacao(id))!;
+      expect(v.votos.length).toBe(81);
+    }
+  });
+});

@@ -8,10 +8,12 @@
 import type {
   Cadeira,
   Comissao,
+  ExSenador,
   GastoAno,
   PartidoBancada,
   Plenario,
   Proposicao,
+  Saida,
   Senador,
   Votacao as VotacaoCompleta,
   Voto,
@@ -95,9 +97,18 @@ async function senadoresEmExercicio(): Promise<{ base: SenadorBase[]; legislatur
 }
 
 async function detalhes(codigo: string) {
-  const out = { nascimento: null as string | null, naturalidade: null as string | null, profissao: null as string | null, mandatos: 1, comissoes: [] as Comissao[] };
+  const out = {
+    nascimento: null as string | null,
+    naturalidade: null as string | null,
+    profissao: null as string | null,
+    mandatos: 1,
+    comissoes: [] as Comissao[],
+    identificacao: {} as Json,
+    listaMandatos: [] as Json[],
+  };
   try {
     const d = await getJson<Json>(`${LEGIS}/senador/${codigo}.json`);
+    out.identificacao = d?.DetalheParlamentar?.Parlamentar?.IdentificacaoParlamentar ?? {};
     const basicos = d?.DetalheParlamentar?.Parlamentar?.DadosBasicosParlamentar ?? {};
     out.nascimento = isoData(basicos.DataNascimento);
     out.naturalidade = basicos.Naturalidade ? `${basicos.Naturalidade}${basicos.UfNaturalidade ? ` (${basicos.UfNaturalidade})` : ''}` : null;
@@ -107,7 +118,8 @@ async function detalhes(codigo: string) {
   // Profissão: o endpoint /profissao devolve o histórico acadêmico, sem a profissão. Fica null por ora.
   try {
     const m = await getJson<Json>(`${LEGIS}/senador/${codigo}/mandatos.json`);
-    out.mandatos = Math.max(1, lista(m?.MandatoParlamentar?.Parlamentar?.Mandatos?.Mandato).length);
+    out.listaMandatos = lista<Json>(m?.MandatoParlamentar?.Parlamentar?.Mandatos?.Mandato);
+    out.mandatos = Math.max(1, out.listaMandatos.length);
   } catch {}
   try {
     const c = await getJson<Json>(`${LEGIS}/senador/${codigo}/comissoes.json`);
@@ -121,6 +133,37 @@ async function detalhes(codigo: string) {
   } catch {}
   return out;
 }
+
+/**
+ * O mandato que cobre a legislatura, com a participação (titular ou suplente) e o fim do
+ * último exercício. Serve para quem saiu: o Senado registra cada período em exercício, com a
+ * causa do afastamento.
+ */
+export function mandatoDaLegislatura(mandatos: Json[], legislatura: number) {
+  const numero = (l: Json | undefined) => Number(l?.NumeroLegislatura) || 0;
+  const m = mandatos.find((x) => [numero(x.PrimeiraLegislaturaDoMandato), numero(x.SegundaLegislaturaDoMandato)].includes(legislatura));
+  if (!m) return null;
+  const leg1 = m.PrimeiraLegislaturaDoMandato ?? {};
+  const leg2 = m.SegundaLegislaturaDoMandato ?? {};
+  const exercicios = lista<Json>(m.Exercicios?.Exercicio).sort((a, b) => (isoData(a.DataInicio) ?? '').localeCompare(isoData(b.DataInicio) ?? ''));
+  const ultimo = exercicios.at(-1);
+  return {
+    uf: (m.UfParlamentar as string | undefined) ?? null,
+    participacao: (m.DescricaoParticipacao as string | undefined) ?? null,
+    mandato: {
+      inicio: isoData(leg1.DataInicio) ?? '',
+      fim: isoData(leg2.DataFim ?? leg1.DataFim) ?? '',
+      legislaturas: [numero(leg1), numero(leg2)].filter(Boolean),
+    },
+    saida: {
+      data: isoData(ultimo?.DataFim),
+      motivo: (ultimo?.DescricaoCausaAfastamento as string | undefined)?.trim() || null,
+    },
+  };
+}
+
+/** Diagnóstico de quem saiu: quantos, e um exemplo do que veio da API. */
+export const diagSaidas = { total: 0, exemplos: [] as string[] };
 
 const SIGLAS_PROPOSICAO = ['PL', 'PLS', 'PEC', 'PLP', 'PDL', 'PRS'];
 const PARTICULAS = new Set(['da', 'de', 'do', 'das', 'dos', 'e']);
@@ -285,24 +328,58 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
   const { base, legislatura, inicio, fim } = await senadoresEmExercicio();
   console.log(`  ${base.length} senadores, ${legislatura}ª legislatura`);
 
-  console.log('Senado: detalhes, comissões e autorias…');
-  const det = await emParalelo(base, 4, (s) => detalhes(s.codigo));
-  const props = await emParalelo(base, 4, (s) => proposicoesDoSenador(s.codigo, s.nome, s.nomeCompleto));
-
   console.log(`Senado: votações nominais desde ${inicio}…`);
   const vots = await votacoes(inicio, hoje);
   console.log(`  ${vots.length} votações nominais`);
 
+  // Quem votou nesta legislatura e não está mais em exercício. As votações vêm da mais recente
+  // para a mais antiga, então a primeira aparição traz o partido e a UF da época da saída.
+  const atuais = new Set(base.map((s) => s.codigo));
+  const vistos = new Map<string, Votacao['votos'][number]>();
+  for (const v of vots) for (const x of v.votos) if (!atuais.has(x.codigo) && !vistos.has(x.codigo)) vistos.set(x.codigo, x);
+
+  console.log(`Senado: detalhes, comissões e autorias (${base.length} em exercício, ${vistos.size} que saíram)…`);
+  const det = await emParalelo(base, 4, (s) => detalhes(s.codigo));
+  const detEx = await emParalelo([...vistos.keys()], 4, (c) => detalhes(c));
+  const ex: (SenadorBase & { saida: Saida; participacao: string | null })[] = [...vistos.values()].map((x, i) => {
+    const id = detEx[i].identificacao;
+    const m = mandatoDaLegislatura(detEx[i].listaMandatos, legislatura);
+    return {
+      codigo: x.codigo,
+      nome: id.NomeParlamentar ?? x.nome,
+      nomeCompleto: id.NomeCompletoParlamentar ?? id.NomeParlamentar ?? x.nome,
+      sexo: id.SexoParlamentar === 'Feminino' ? 'F' : 'M',
+      partido: x.partido || id.SiglaPartidoParlamentar || 'S/Partido',
+      uf: x.uf || m?.uf || id.UfParlamentar || '',
+      foto: id.UrlFotoParlamentar ? String(id.UrlFotoParlamentar).replace(/^http:\/\//, 'https://') : null,
+      email: null,
+      bloco: null,
+      mandato: m ? { ...m.mandato, ordem: 1 } : { inicio, fim, legislaturas: [legislatura], ordem: 1 },
+      participacao: m?.participacao ?? null,
+      saida: m?.saida ?? { data: null, motivo: null },
+    };
+  });
+  diagSaidas.total = ex.length;
+  diagSaidas.exemplos = ex.slice(0, 6).map((s, i) => `${s.nome} (${s.partido}-${s.uf}, ${s.participacao ?? '?'}): saída ${s.saida.data ?? '?'} ${s.saida.motivo ?? ''} · ${detEx[i].listaMandatos.length} mandatos na API`);
+
+  const todos = [...base, ...ex];
+  const todosDet = [...det, ...detEx];
+  const props = await emParalelo(todos, 4, (s) => proposicoesDoSenador(s.codigo, s.nome, s.nomeCompleto));
+
+  // Em exercício: ano atual e anterior. Quem saiu: todos os anos da legislatura, porque os
+  // gastos dele podem ter parado antes.
   console.log('Senado: cota parlamentar (CEAPS)…');
+  const anoInicio = Number(inicio.slice(0, 4)) || anoAtual - 1;
+  const anosCeaps = Array.from({ length: anoAtual - Math.min(anoInicio, anoAtual - 1) + 1 }, (_, i) => anoAtual - i);
   const ceaps = new Map<number, Map<string, GastoAno>>();
-  for (const ano of [anoAtual, anoAtual - 1]) ceaps.set(ano, await despesas(ano));
+  for (const ano of anosCeaps) ceaps.set(ano, await despesas(ano));
 
   const votosPorSenador = new Map<string, VotoSenador[]>();
-  for (const s of base) votosPorSenador.set(s.codigo, []);
+  for (const s of todos) votosPorSenador.set(s.codigo, []);
   for (const v of vots) {
     const maioria = maioriaPorPartido(v);
     const porCodigo = new Map(v.votos.map((x) => [x.codigo, x]));
-    for (const s of base) {
+    for (const s of todos) {
       const x = porCodigo.get(s.codigo);
       // Quem não aparece na lista não estava no exercício do mandato nessa data: fica de fora.
       if (!x) continue;
@@ -327,27 +404,31 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
   const valoresCota = base.map((s) => cotaAtual.get(s.codigo)?.total ?? 0).filter((v) => v > 0);
   const mediaCota = valoresCota.length ? Math.round(valoresCota.reduce((a, b) => a + b, 0) / valoresCota.length) : 0;
 
-  const senadores: Senador[] = base.map((s, i) => {
+  const senadores: Senador[] = todos.map((s, i) => {
     const vs = votosPorSenador.get(s.codigo)!;
     const distribuicao: Record<Voto, number> = { sim: 0, nao: 0, abstencao: 0, secreto: 0, ausente: 0 };
     vs.forEach((v) => distribuicao[v.voto]++);
     const comparaveis = vs.filter((v) => v.maioriaPartido && (v.voto === 'sim' || v.voto === 'nao'));
+    const saiu = i >= base.length;
+    // Para quem saiu, a cota de referência é a do último ano com gastos.
+    const anoCota = saiu ? (anosCeaps.find((a) => ceaps.get(a)!.get(s.codigo)) ?? anoAtual) : anoAtual;
+    const d = todosDet[i];
     return {
       ...s,
-      emExercicio: true,
-      mandato: { ...s.mandato, ordem: det[i].mandatos },
-      nascimento: det[i].nascimento,
-      naturalidade: det[i].naturalidade,
-      profissao: det[i].profissao,
-      comissoes: det[i].comissoes,
+      emExercicio: !saiu,
+      mandato: { ...s.mandato, ordem: d.mandatos },
+      nascimento: d.nascimento,
+      naturalidade: d.naturalidade,
+      profissao: d.profissao,
+      comissoes: saiu ? [] : d.comissoes,
       resumo: {
         votacoes: vs.length,
         distribuicao,
         votosComparaveis: comparaveis.length,
         votosComPartido: comparaveis.filter((v) => !v.divergiu).length,
         mediaPartido: null,
-        cotaAno: cotaAtual.get(s.codigo)?.total ?? 0,
-        cotaAnoReferencia: anoAtual,
+        cotaAno: ceaps.get(anoCota)!.get(s.codigo)?.total ?? 0,
+        cotaAnoReferencia: anoCota,
         cotaMediaSenado: mediaCota,
         proposicoes: props[i].length,
         proposicoesLei: props[i].filter((p) => p.virouLei).length,
@@ -356,16 +437,20 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
     };
   });
 
-  // Média de alinhamento por partido.
+  // Média de alinhamento por partido, entre os senadores em exercício.
   const porPartido = new Map<string, Senador[]>();
-  senadores.forEach((s) => porPartido.set(s.partido, [...(porPartido.get(s.partido) ?? []), s]));
-  for (const membros of porPartido.values()) {
+  senadores.filter((s) => s.emExercicio).forEach((s) => porPartido.set(s.partido, [...(porPartido.get(s.partido) ?? []), s]));
+  const mediaDoPartido = new Map<string, number | null>();
+  for (const [partido, membros] of porPartido) {
     const validos = membros.filter((m) => m.resumo.votosComparaveis > 0);
-    const media = validos.length
-      ? Math.round((validos.reduce((a, m) => a + m.resumo.votosComPartido / m.resumo.votosComparaveis, 0) / validos.length) * 100)
-      : null;
-    membros.forEach((m) => (m.resumo.mediaPartido = media));
+    mediaDoPartido.set(
+      partido,
+      validos.length
+        ? Math.round((validos.reduce((a, m) => a + m.resumo.votosComPartido / m.resumo.votosComparaveis, 0) / validos.length) * 100)
+        : null,
+    );
   }
+  senadores.forEach((s) => (s.resumo.mediaPartido = mediaDoPartido.get(s.partido) ?? null));
 
   const contagem = new Map<string, number>();
   base.forEach((s) => contagem.set(s.partido, (contagem.get(s.partido) ?? 0) + 1));
@@ -377,21 +462,33 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
     .map(([sigla, total]) => ({ sigla, total }))
     .sort((a, b) => posicao(a.sigla) - posicao(b.sigla) || b.total - a.total);
   const cadeiras: Cadeira[] = base.map((s) => ({ codigo: s.codigo, nome: s.nome, partido: s.partido, uf: s.uf, sexo: s.sexo }));
+  const exSenadores: ExSenador[] = ex
+    .map((s) => ({
+      codigo: s.codigo,
+      nome: s.nome,
+      partido: s.partido,
+      uf: s.uf,
+      sexo: s.sexo,
+      saida: s.saida,
+      votacoes: votosPorSenador.get(s.codigo)!.length,
+    }))
+    .sort((a, b) => (b.saida.data ?? '').localeCompare(a.saida.data ?? '') || a.nome.localeCompare(b.nome, 'pt-BR'));
 
   const gastosPorSenador = new Map<string, GastoAno[]>();
-  for (const s of base) {
+  for (const [i, s] of todos.entries()) {
+    const anos = i < base.length ? [anoAtual, anoAtual - 1] : anosCeaps;
     gastosPorSenador.set(
       s.codigo,
-      [...ceaps.values()].map((m) => m.get(s.codigo)).filter((g): g is GastoAno => !!g),
+      anos.map((a) => ceaps.get(a)!.get(s.codigo)).filter((g): g is GastoAno => !!g),
     );
   }
 
   return {
-    plenario: { legislatura, inicio, fim, atualizadoEm: agora, partidos, cadeiras },
+    plenario: { legislatura, inicio, fim, atualizadoEm: agora, partidos, cadeiras, exSenadores },
     senadores,
     votosPorSenador,
     gastosPorSenador,
-    proposicoesPorSenador: new Map(base.map((s, i) => [s.codigo, props[i]])),
+    proposicoesPorSenador: new Map(todos.map((s, i) => [s.codigo, props[i]])),
     votacoes: vots.map((v) => votacaoCompleta(v, agora)),
   };
 }

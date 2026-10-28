@@ -8,7 +8,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Presidente, Sincronizacao, VotoSenador } from '../../src/app/core/models.ts';
 import { diagnostico } from './http.ts';
 import { coletarPresidentes, deliberacoesVistas, diagFotos } from './presidente.ts';
-import { coletarSenado, diagAutorias } from './senado.ts';
+import { coletarSenado, diagAutorias, diagSaidas } from './senado.ts';
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
@@ -109,6 +109,7 @@ async function main() {
       anotar('notice', 'Senado — votos', `${JSON.stringify(dist)}\nsiglas originais: ${[...originais].map(([k, n]) => `${k}=${n}`).join(' ')}\nexemplo: ${JSON.stringify({ nome: ex.nome, partido: ex.partido, mandato: ex.mandato, nascimento: ex.nascimento, naturalidade: ex.naturalidade, comissoes: ex.comissoes.length, resumo: ex.resumo, voto: s.votosPorSenador.get(ex.codigo)?.[0] }).slice(0, 1500)}`);
       if (diagAutorias.semItens.length) anotar('warning', 'Senado — senadores sem proposições', diagAutorias.semItens.join('\n'));
       anotar('notice', 'Senado — autorias', `${diagAutorias.comItens} senadores com proposições · leis: ${s.senadores.reduce((a, x) => a + x.resumo.proposicoesLei, 0)} · exemplo: ${JSON.stringify(s.proposicoesPorSenador.get(ex.codigo)?.slice(0, 2)).slice(0, 700)}`);
+      anotar('notice', 'Senado — saíram', `${diagSaidas.total} senadores votaram nesta legislatura e não estão em exercício\n${diagSaidas.exemplos.join('\n')}`);
       anotar('notice', 'Senado', `${s.senadores.length} senadores · ${s.plenario.partidos.length} partidos · ${votos} votos individuais · ${[...s.gastosPorSenador.values()].filter((g) => g.length).length} com gastos · ${[...s.proposicoesPorSenador.values()].reduce((a, p) => a + p.length, 0)} proposições`);
     } catch (e) {
       erros.push('Senado');

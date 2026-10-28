@@ -23,6 +23,8 @@
 }
 .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-3); }
 .nome { gap: 0; min-width: 0; flex: 1; }
+.saiu mt-avatar { filter: grayscale(0.6); opacity: 0.85; }
+.saida { font-size: 13px; }
 .vazio, .carregando { padding-block: var(--space-6); }
 .aviso-erro { padding: var(--space-4); border-radius: var(--radius-lg); background: var(--coral-100); color: var(--coral-900); }
 

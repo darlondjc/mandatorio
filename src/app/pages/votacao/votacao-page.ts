@@ -42,7 +42,11 @@ export class VotacaoPage {
   protected readonly rotuloVoto = ROTULO_VOTO;
   protected readonly corVoto = COR_VOTO;
 
-  protected readonly emExercicio = computed(() => new Set(this.plenario.value()?.cadeiras.map((c) => c.codigo) ?? []));
+  /** Quem tem página no site: em exercício e quem saiu nesta legislatura. */
+  protected readonly comPagina = computed(() => {
+    const p = this.plenario.value();
+    return new Set([...(p?.cadeiras ?? []), ...(p?.exSenadores ?? [])].map((c) => c.codigo));
+  });
 
   protected readonly cadeiras = computed<Cadeira[]>(() => {
     const sexo = new Map(this.plenario.value()?.cadeiras.map((c) => [c.codigo, c.sexo]) ?? []);

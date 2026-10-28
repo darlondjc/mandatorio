@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { etapaProjeto, lerCadastro, resumir, situacaoMP, situacaoVeto } from './presidente.ts';
-import { citaSenador, maioriaPorPartido } from './senado.ts';
+import { citaSenador, maioriaPorPartido, mandatoDaLegislatura } from './senado.ts';
 import { assuntoDoVeto, descricaoVotacao, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
 
 test('normaliza votos do Senado', () => {
@@ -131,4 +131,31 @@ test('cadastro de presidentes: mandatos sem sobreposição e sem buracos', () =>
   for (const m of mandatos) assert.ok(m.inicio < m.fim, `${m.quem} ${m.id}`);
   const ids = lerCadastro().flatMap((p) => p.mandatos.map((m) => `${p.id}/${m.id}`));
   assert.equal(new Set(ids).size, ids.length);
+});
+
+test('mandato da legislatura e saída de quem deixou o exercício', () => {
+  const mandatos = [
+    {
+      UfParlamentar: 'MA',
+      DescricaoParticipacao: '1º Suplente',
+      PrimeiraLegislaturaDoMandato: { NumeroLegislatura: '57', DataInicio: '2023-02-01', DataFim: '2027-01-31' },
+      SegundaLegislaturaDoMandato: { NumeroLegislatura: '58', DataInicio: '2027-02-01', DataFim: '2031-01-31' },
+      Exercicios: {
+        Exercicio: [
+          { DataInicio: '2024-03-01', DataFim: '2024-07-02', DescricaoCausaAfastamento: 'Retorno do titular' },
+          { DataInicio: '2023-02-01', DataFim: '2023-05-10', DescricaoCausaAfastamento: 'Retorno do titular ' },
+        ],
+      },
+    },
+    { PrimeiraLegislaturaDoMandato: { NumeroLegislatura: '55' }, SegundaLegislaturaDoMandato: { NumeroLegislatura: '56' } },
+  ];
+  const m = mandatoDaLegislatura(mandatos, 57)!;
+  assert.equal(m.uf, 'MA');
+  assert.equal(m.participacao, '1º Suplente');
+  assert.deepEqual(m.mandato, { inicio: '2023-02-01', fim: '2031-01-31', legislaturas: [57, 58] });
+  assert.deepEqual(m.saida, { data: '2024-07-02', motivo: 'Retorno do titular' });
+  // Um exercício só, como objeto e não lista.
+  const um = mandatoDaLegislatura([{ ...mandatos[0], Exercicios: { Exercicio: { DataInicio: '2023-02-01' } } }], 58)!;
+  assert.deepEqual(um.saida, { data: null, motivo: null });
+  assert.equal(mandatoDaLegislatura(mandatos, 54), null);
 });

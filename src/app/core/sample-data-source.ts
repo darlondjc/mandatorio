@@ -104,6 +104,26 @@ function gerar(): Base {
   if (goiano && psd.uf !== 'GO') goiano.uf = psd.uf;
   Object.assign(psd, { nome: 'Marina Leite Albuquerque', uf: 'GO', sexo: 'F' });
 
+  // Três vagas trocaram de mãos durante a legislatura: quem ocupava votou até a votação `ate`.
+  const SAIDAS = [
+    { vaga: 40, ate: 18, motivo: 'Retorno do titular' },
+    { vaga: 57, ate: 31, motivo: 'Renúncia' },
+    { vaga: 70, ate: 44, motivo: 'Licença para exercer cargo de Ministro de Estado' },
+  ];
+  const exCadeiras: Cadeira[] = SAIDAS.map(({ vaga }, k) => {
+    const sexo: 'M' | 'F' = k === 1 ? 'F' : 'M';
+    const c = cadeiras[vaga];
+    return { codigo: String(5900 + k), nome: `${pick(r, sexo === 'F' ? NOMES_F : NOMES_M)} ${pick(r, SOBRENOMES)}`, partido: c.partido, uf: c.uf, sexo };
+  });
+  const todas = [...cadeiras, ...exCadeiras];
+  /** Se o senador estava em exercício na votação i. */
+  const ativo = (codigo: string, i: number) => {
+    const k = exCadeiras.findIndex((c) => c.codigo === codigo);
+    if (k >= 0) return i < SAIDAS[k].ate;
+    const vaga = SAIDAS.find((x) => cadeiras[x.vaga].codigo === codigo);
+    return !vaga || i >= vaga.ate;
+  };
+
   // Cada partido tem uma tendência por votação; cada senador segue com alguma probabilidade.
   const tendencia = new Map<string, Voto[]>();
   for (const [sigla] of PARTIDOS) {
@@ -112,7 +132,7 @@ function gerar(): Base {
   const datas = Array.from({ length: VOTACOES }, (_, i) => addDays(PRIMEIRA_VOTACAO, i * 9 + Math.floor(r() * 4)));
 
   const brutos = new Map<string, Voto[]>();
-  for (const c of cadeiras) {
+  for (const c of todas) {
     const assiduidade = 0.82 + r() * 0.17;
     const fidelidade = 0.7 + r() * 0.28;
     brutos.set(
@@ -131,8 +151,8 @@ function gerar(): Base {
 
   const maioria = (partido: string, i: number): Voto | null => {
     const cont = { sim: 0, nao: 0 };
-    for (const c of cadeiras) {
-      if (c.partido !== partido) continue;
+    for (const c of todas) {
+      if (c.partido !== partido || !ativo(c.codigo, i)) continue;
       const v = brutos.get(c.codigo)![i];
       if (v === 'sim' || v === 'nao') cont[v]++;
     }
@@ -141,13 +161,15 @@ function gerar(): Base {
   };
 
   const votos = new Map<string, VotoSenador[]>();
-  const senadores: Senador[] = cadeiras.map((c, idx) => {
-    const lista = brutos.get(c.codigo)!.map((v, i): VotoSenador => {
+  const senadores: Senador[] = todas.map((c, idx) => {
+    const saiu = idx >= cadeiras.length;
+    const lista = brutos.get(c.codigo)!.flatMap((v, i): VotoSenador[] => {
+      if (!ativo(c.codigo, i)) return [];
       const [materia, ementa] = secreta(i)
         ? [`MSF ${10 + i}/2026`, 'Submete à apreciação do Senado a indicação de embaixador do Brasil']
         : MATERIAS[i % MATERIAS.length];
       const m = maioria(c.partido, i);
-      return {
+      return [{
         id: `v${i}`,
         data: datas[i],
         materia,
@@ -158,7 +180,7 @@ function gerar(): Base {
         maioriaPartido: m,
         divergiu: m !== null && (v === 'sim' || v === 'nao') && v !== m,
         resultado: i % 7 === 3 ? 'Rejeitado' : 'Aprovado',
-      };
+      }];
     }).reverse();
     votos.set(c.codigo, lista);
 
@@ -177,7 +199,9 @@ function gerar(): Base {
       uf: c.uf,
       foto: null,
       email: null,
-      emExercicio: true,
+      emExercicio: !saiu,
+      saida: saiu ? { data: datas[SAIDAS[idx - cadeiras.length].ate - 1], motivo: SAIDAS[idx - cadeiras.length].motivo } : null,
+      participacao: saiu && idx - cadeiras.length !== 1 ? '1º Suplente' : 'Titular',
       mandato: {
         inicio: mandatoInicio,
         fim: mandatoInicio === '2019-02-01' ? '2027-01-31' : '2031-01-31',
@@ -188,7 +212,7 @@ function gerar(): Base {
       naturalidade: `${pick(r, ['Capital', 'Interior'])} (${c.uf})`,
       profissao: pick(r, PROFISSOES),
       bloco: null,
-      comissoes: [0, 1, 2].map((k) => {
+      comissoes: saiu ? [] : [0, 1, 2].map((k) => {
         const [sigla, nome] = COMISSOES[(idx + k * 3) % COMISSOES.length];
         return { sigla, nome, cargo: k === 2 ? 'Suplente' : 'Titular' };
       }),
@@ -208,13 +232,14 @@ function gerar(): Base {
     };
   });
 
-  const mediaCota = Math.round(senadores.reduce((s, x) => s + x.resumo.cotaAno, 0) / senadores.length);
+  const emExercicio = senadores.filter((s) => s.emExercicio);
+  const mediaCota = Math.round(emExercicio.reduce((s, x) => s + x.resumo.cotaAno, 0) / emExercicio.length);
   for (const [sigla] of PARTIDOS) {
-    const doPartido = senadores.filter((s) => s.partido === sigla);
+    const doPartido = senadores.filter((s) => s.partido === sigla && s.emExercicio);
     const media = Math.round(
       (doPartido.reduce((s, x) => s + x.resumo.votosComPartido / Math.max(1, x.resumo.votosComparaveis), 0) / doPartido.length) * 100,
     );
-    doPartido.forEach((s) => {
+    senadores.filter((s) => s.partido === sigla).forEach((s) => {
       s.resumo.mediaPartido = media;
       s.resumo.cotaMediaSenado = mediaCota;
     });
@@ -230,6 +255,9 @@ function gerar(): Base {
       atualizadoEm: '2026-10-27T06:00:00Z',
       partidos: PARTIDOS.map(([sigla, total]) => ({ sigla, total })),
       cadeiras,
+      exSenadores: exCadeiras
+        .map((c, k) => ({ ...c, saida: { data: datas[SAIDAS[k].ate - 1], motivo: SAIDAS[k].motivo }, votacoes: votos.get(c.codigo)!.length }))
+        .reverse(),
     },
   };
 }
@@ -313,7 +341,8 @@ export class SampleDataSource extends DataSource {
   async votacao(id: string): Promise<Votacao | null> {
     const placar: Record<Voto, number> = { sim: 0, nao: 0, abstencao: 0, secreto: 0, ausente: 0 };
     let base: VotoSenador | undefined;
-    const votos = this.dados.plenario.cadeiras.flatMap((c) => {
+    const p = this.dados.plenario;
+    const votos = [...p.cadeiras, ...(p.exSenadores ?? [])].flatMap((c) => {
       const v = this.dados.votos.get(c.codigo)?.find((x) => x.id === id);
       if (!v) return [];
       base ??= v;

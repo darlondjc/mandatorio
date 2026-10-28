@@ -47,6 +47,21 @@ export interface Plenario {
   /** Na ordem em que aparecem no semicírculo, da esquerda para a direita. */
   partidos: PartidoBancada[];
   cadeiras: Cadeira[];
+  /** Quem votou nesta legislatura e não está mais em exercício (suplentes que devolveram a vaga, renúncias, licenças…). */
+  exSenadores?: ExSenador[];
+}
+
+export interface Saida {
+  /** Último dia em exercício, quando a API informa. */
+  data: DataISO | null;
+  /** Causa do afastamento como o Senado descreve ("Renúncia", "Retorno do titular"…). */
+  motivo: string | null;
+}
+
+export interface ExSenador extends Cadeira {
+  saida: Saida;
+  /** Votações nominais de que participou nesta legislatura. */
+  votacoes: number;
 }
 
 export interface Comissao {
@@ -81,6 +96,10 @@ export interface Senador {
   foto: string | null;
   email: string | null;
   emExercicio: boolean;
+  /** Só para quem saiu: quando e por quê. */
+  saida?: Saida | null;
+  /** "Titular", "1º Suplente"… */
+  participacao?: string | null;
   mandato: { inicio: DataISO; fim: DataISO; legislaturas: number[]; ordem: number };
   nascimento: DataISO | null;
   naturalidade: string | null;

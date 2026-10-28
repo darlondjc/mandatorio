@@ -85,6 +85,36 @@
       <p class="muted vazio">Nenhum senador encontrado com esses filtros.</p>
     }
   </section>
+
+  @if (p.exSenadores?.length) {
+    <section class="lista" aria-labelledby="t-saidas">
+      <div class="mt-stack" style="gap: 4px">
+        <h2 id="t-saidas" class="section-title">
+          Saíram nesta legislatura
+          <span class="muted contagem">· {{ saidas().length }} de {{ p.exSenadores!.length }}</span>
+        </h2>
+        <p class="muted">Votaram desde {{ data(p.inicio) }} e não estão mais em exercício: suplentes que devolveram a vaga, renúncias, licenças.</p>
+      </div>
+      @if (saidas().length) {
+        <div class="grade">
+          @for (c of saidas(); track c.codigo) {
+            <a class="mt-sencard saiu" [routerLink]="['/senado', c.codigo]">
+              <mt-avatar [nome]="c.nome" [partido]="c.partido" />
+              <span class="mt-stack nome">
+                <span class="mt-sencard__name">{{ c.nome }}</span>
+                <span class="mt-sencard__sub">{{ c.partido }} · {{ ufNome(c.uf) }}</span>
+                <span class="mt-sencard__sub saida">
+                  @if (c.saida.data) {Saiu em {{ data(c.saida.data) }}} @else {Fora de exercício}@if (c.saida.motivo) { · {{ c.saida.motivo }}}
+                </span>
+              </span>
+            </a>
+          }
+        </div>
+      } @else {
+        <p class="muted vazio">Ninguém que saiu corresponde a esses filtros.</p>
+      }
+    </section>
+  }
 } @else {
   <p class="muted vazio">Os dados do Senado ainda estão sendo coletados. Volte em algumas horas.</p>
 }
