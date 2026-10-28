@@ -7,11 +7,12 @@ import type { LinhaRanking } from '../../core/models';
 import { situacaoExercicio } from '../../core/ranking';
 import { Avatar } from '../../shared/avatar';
 import { Tabs } from '../../shared/tabs';
-import { classificar, CRITERIOS, Ordem } from './criterios';
+import { Icon } from '../../shared/icon';
+import { classificar, CRITERIOS, Ordem, tomDaOrdem } from './criterios';
 
 @Component({
   selector: 'mt-rankings-page',
-  imports: [RouterLink, Avatar, Tabs],
+  imports: [RouterLink, Avatar, Tabs, Icon],
   templateUrl: './rankings-page.html',
   styleUrl: './rankings-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,6 +50,12 @@ export class RankingsPage {
     const r = this.ranking.value();
     return r ? classificar(r, this.atual(), this.sentido()) : null;
   });
+
+  /** As duas ordens com rótulo e tom, para os chips. */
+  protected readonly opcoesOrdem = computed(() =>
+    (['desc', 'asc'] as Ordem[]).map((o, i) => ({ ordem: o, rotulo: this.atual().ordens[i], tom: tomDaOrdem(this.atual(), o) })),
+  );
+  protected readonly tom = computed(() => tomDaOrdem(this.atual(), this.sentido()));
 
   protected readonly partidos = computed(() => [...new Set(this.ranking.value()?.linhas.map((l) => l.partido) ?? [])].sort());
   protected readonly ufs = computed(() => [...new Set(this.ranking.value()?.linhas.map((l) => l.uf) ?? [])].sort());

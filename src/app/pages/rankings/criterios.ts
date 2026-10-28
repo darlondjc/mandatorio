@@ -4,6 +4,8 @@ import type { LinhaRanking, RankingSenado } from '../../core/models';
 
 export type CriterioId = 'presenca' | 'fidelidade' | 'gastos' | 'projetos';
 export type Ordem = 'desc' | 'asc';
+/** Se estar no topo desta ordem é bom, ruim ou só uma característica. */
+export type Tom = 'bom' | 'ruim' | 'neutro';
 
 /** Abaixo disso a pessoa chegou há pouco tempo e a porcentagem diz pouco. */
 export const MIN_VOTACOES = 30;
@@ -20,6 +22,11 @@ export interface Criterio {
   rotulo: string;
   /** Rótulos dos dois sentidos de ordenação: [maior primeiro, menor primeiro]. */
   ordens: [string, string];
+  /**
+   * Qual ordem põe no topo quem faz o melhor trabalho. Sem valor quando não há lado certo
+   * (fidelidade ao partido: ser fiel ou independente depende do ponto de vista).
+   */
+  boa?: Ordem;
   explicacao: (r: RankingSenado) => string;
   valor: (l: LinhaRanking) => number;
   formatar: (v: number) => string;
@@ -45,6 +52,7 @@ export const CRITERIOS: Criterio[] = [
     id: 'presenca',
     rotulo: 'Presença',
     ordens: ['Mais presentes', 'Menos presentes'],
+    boa: 'desc',
     explicacao: (r) =>
       `Parcela das votações nominais do plenário, desde ${data(r.inicio)}, em que o senador registrou voto (Sim, Não, abstenção, obstrução ou voto secreto). Licenças, missões e faltas contam como ausência. Quem tem menos de ${MIN_VOTACOES} votações fica de fora.`,
     valor: (l) => pctDe(l.presentes, l.votacoes),
@@ -81,6 +89,7 @@ export const CRITERIOS: Criterio[] = [
     id: 'gastos',
     rotulo: 'Gastos',
     ordens: ['Quem mais gastou', 'Quem menos gastou'],
+    boa: 'asc',
     explicacao: (r) =>
       `Total reembolsado pela cota parlamentar (CEAPS) em ${r.cotaAno}: passagens, combustível, aluguel de escritório, divulgação e outros. Não inclui salário nem verba de gabinete. Quem chegou há pouco (menos de ${MIN_VOTACOES} votações) ou não tem gasto registrado no ano fica de fora.`,
     valor: (l) => l.cota,
@@ -94,6 +103,7 @@ export const CRITERIOS: Criterio[] = [
     id: 'projetos',
     rotulo: 'Projetos',
     ordens: ['Mais projetos', 'Menos projetos'],
+    boa: 'desc',
     explicacao: () =>
       'Projetos de lei, PECs, projetos de lei complementar, de decreto legislativo e de resolução de autoria do senador, incluindo os de mandatos anteriores no Senado. Autoria conjunta conta para todos os autores.',
     valor: (l) => l.proposicoes,
@@ -104,6 +114,10 @@ export const CRITERIOS: Criterio[] = [
     fora: () => null,
   },
 ];
+
+export function tomDaOrdem(c: Criterio, o: Ordem): Tom {
+  return !c.boa ? 'neutro' : c.boa === o ? 'bom' : 'ruim';
+}
 
 export interface Posicao {
   linha: LinhaRanking;

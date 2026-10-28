@@ -23,8 +23,14 @@
 
     <div class="controles">
       <div class="mt-row" role="group" aria-label="Ordem">
-        <button class="mt-chip" type="button" [attr.aria-pressed]="sentido() === 'desc'" (click)="trocarOrdem('desc')">{{ atual().ordens[0] }}</button>
-        <button class="mt-chip" type="button" [attr.aria-pressed]="sentido() === 'asc'" (click)="trocarOrdem('asc')">{{ atual().ordens[1] }}</button>
+        @for (o of opcoesOrdem(); track o.ordem) {
+          <button class="mt-chip ordem" [class]="'ordem--' + o.tom" type="button" [attr.aria-pressed]="sentido() === o.ordem" (click)="trocarOrdem(o.ordem)">
+            @if (o.tom !== 'neutro') {
+              <mt-icon [name]="o.tom === 'bom' ? 'positivo' : 'negativo'" [size]="15" />
+            }
+            {{ o.rotulo }}
+          </button>
+        }
       </div>
       <div class="mt-row">
         <label class="mt-sr" for="rk-partido">Partido</label>
@@ -52,7 +58,7 @@
     }
 
     @if (visiveis().length) {
-      <ol class="lista" [class.lista--gastos]="atual().id === 'gastos'">
+      <ol class="lista" [class]="'tom--' + tom()">
         @for (p of visiveis(); track p.linha.codigo) {
           <li>
             <a class="linha" [class.linha--podio]="p.posicao <= 3" [routerLink]="['/senado', p.linha.codigo]">
