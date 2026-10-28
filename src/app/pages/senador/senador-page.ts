@@ -53,6 +53,11 @@ export class SenadorPage {
   });
   protected readonly ranking = resource({ loader: () => this.ds.ranking() });
 
+  /** Na aba Projetos: os próprios (o que conta no card e no ranking) ou as PECs assinadas. */
+  protected readonly tipoProjeto = signal<'proprios' | 'pecs'>('proprios');
+  protected readonly proprios = computed(() => (this.projetos.value() ?? []).filter((p) => !p.materia.startsWith('PEC ')));
+  protected readonly pecs = computed(() => (this.projetos.value() ?? []).filter((p) => p.materia.startsWith('PEC ')));
+
   protected readonly perfilTematico = computed(() => perfilTematico(this.projetos.value() ?? []));
   protected readonly voltadoA = VOLTADO_A;
 
@@ -137,7 +142,7 @@ export class SenadorPage {
             ? 'igual à média do Senado'
             : `${Math.abs(difCota)}% ${difCota < 0 ? 'abaixo' : 'acima'} da média do Senado`,
       projetos: r.proposicoes,
-      projetosNota: `${r.proposicoesLei} viraram lei`,
+      projetosNota: `${r.proposicoesLei} ${r.proposicoesLei === 1 ? 'virou' : 'viraram'} lei${r.pecs != null ? ` · ${r.pecs} ${r.pecs === 1 ? 'PEC assinada' : 'PECs assinadas'}` : ''}`,
     };
   });
 

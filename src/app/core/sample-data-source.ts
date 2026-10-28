@@ -240,6 +240,7 @@ function gerar(): Base {
         cotaMediaSenado: 0,
         proposicoes: props,
         proposicoesLei: Math.floor(props * (0.05 + r() * 0.15)),
+        pecs: 20 + Math.floor(r() * 120),
       },
       atualizadoEm: '2026-10-27T06:00:00Z',
     };

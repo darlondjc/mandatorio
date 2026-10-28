@@ -18,6 +18,7 @@ export function linhaRanking(s: Senador): LinhaRanking {
     cota: r.cotaAno,
     proposicoes: r.proposicoes,
     leis: r.proposicoesLei,
+    pecs: r.pecs,
     primeiraVotacao: r.primeiraVotacao ?? null,
     participacao: s.participacao ?? null,
     exercicioDesde: s.exercicioDesde ?? null,

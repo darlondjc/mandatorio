@@ -249,8 +249,17 @@
           @if (projetos.isLoading()) {
             <p class="muted">Carregando projetos…</p>
           }
+          @if (pecs().length) {
+            <div class="mt-row" role="group" aria-label="Tipo de projeto">
+              <button class="filtro" type="button" [attr.aria-pressed]="tipoProjeto() === 'proprios'" (click)="tipoProjeto.set('proprios')">Projetos · {{ proprios().length }}</button>
+              <button class="filtro" type="button" [attr.aria-pressed]="tipoProjeto() === 'pecs'" (click)="tipoProjeto.set('pecs')">PECs assinadas · {{ pecs().length }}</button>
+            </div>
+            @if (tipoProjeto() === 'pecs') {
+              <p class="muted nota-pecs">Uma PEC precisa da assinatura de pelo menos 27 senadores. Assinar não quer dizer ter proposto: por isso as PECs ficam fora da contagem de projetos e do ranking.</p>
+            }
+          }
           <div class="mt-stack">
-            @for (p of projetos.value() ?? []; track p.id) {
+            @for (p of tipoProjeto() === 'pecs' ? pecs() : proprios(); track p.id) {
               <article class="mt-voterow projeto">
                 <span class="mt-chip" [class.mt-chip--brand]="p.virouLei">{{ p.virouLei ? 'Virou lei' : p.situacao }}</span>
                 <div class="mt-stack titulo">

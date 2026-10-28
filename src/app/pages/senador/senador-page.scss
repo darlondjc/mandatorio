@@ -24,6 +24,7 @@
 .painel { display: flex; flex-direction: column; gap: var(--space-4); }
 .titulo { gap: 0; min-width: 0; }
 .mais { align-self: center; }
+.nota-pecs { font-size: 13px; max-width: 720px; }
 
 .filtro {
   padding: 6px 14px; border: 2px solid var(--line); border-radius: var(--radius-pill);

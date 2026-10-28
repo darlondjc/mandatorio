@@ -111,7 +111,7 @@ export const CRITERIOS: Criterio[] = [
     frases: ['com mais projetos', 'com menos projetos'],
     boa: 'desc',
     explicacao: () =>
-      'Projetos de lei, PECs, projetos de lei complementar, de decreto legislativo e de resolução de autoria do senador, incluindo os de mandatos anteriores no Senado. Autoria conjunta conta para todos os autores.',
+      'Projetos de lei, de lei complementar, de decreto legislativo e de resolução de autoria do senador, incluindo os de mandatos anteriores no Senado. PECs não entram: exigem a assinatura de 27 senadores e apareceriam para quase todos. Autoria conjunta conta para todos os autores.',
     valor: (l) => l.proposicoes,
     formatar: (v) => String(v),
     chave: (v) => v,

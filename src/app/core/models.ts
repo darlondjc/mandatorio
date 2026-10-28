@@ -82,8 +82,11 @@ export interface ResumoSenador {
   cotaAno: number;
   cotaAnoReferencia: number;
   cotaMediaSenado: number;
+  /** Projetos de autoria sem as PECs (PL, PLP, PDL, PRS…). */
   proposicoes: number;
   proposicoesLei: number;
+  /** PECs assinadas: exigem 27 assinaturas, então ficam fora de `proposicoes`. */
+  pecs?: number;
   /** Data da primeira votação em exercício nesta legislatura. */
   primeiraVotacao?: DataISO | null;
   /** Votações nominais do plenário na legislatura inteira, para comparar com `votacoes`. */
@@ -316,6 +319,7 @@ export interface LinhaRanking {
   cota: number;
   proposicoes: number;
   leis: number;
+  pecs?: number;
   primeiraVotacao?: DataISO | null;
   participacao?: string | null;
   exercicioDesde?: DataISO | null;

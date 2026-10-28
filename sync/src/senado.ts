@@ -469,8 +469,10 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
         cotaAno: ceaps.get(anoCota)!.get(s.codigo)?.total ?? 0,
         cotaAnoReferencia: anoCota,
         cotaMediaSenado: mediaCota,
-        proposicoes: props[i].length,
-        proposicoesLei: props[i].filter((p) => p.virouLei).length,
+        // PECs exigem 27 assinaturas e entram na autoria de quase todos: contam à parte.
+        proposicoes: props[i].filter((p) => !p.materia.startsWith('PEC ')).length,
+        proposicoesLei: props[i].filter((p) => !p.materia.startsWith('PEC ') && p.virouLei).length,
+        pecs: props[i].filter((p) => p.materia.startsWith('PEC ')).length,
       },
       atualizadoEm: agora,
     };
