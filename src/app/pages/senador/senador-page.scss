@@ -4,6 +4,9 @@
 
 .perfil { display: flex; gap: 28px; align-items: center; }
 .perfil__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.foto { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.foto figcaption { font-size: 11px; }
+.foto figcaption a { color: var(--ink-muted); }
 .nome { font-size: 52px; font-weight: 500; line-height: 1; letter-spacing: -0.02em; }
 .resumo { max-width: 640px; font-size: 16px; color: var(--ink-muted); }
 .perfil__acoes { display: flex; flex-direction: column; gap: var(--space-2); }

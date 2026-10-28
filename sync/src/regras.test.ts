@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { dimensoesImagem } from './fotos.ts';
 import { etapaProjeto, lerCadastro, resumir, situacaoMP, situacaoVeto } from './presidente.ts';
 import { citaSenador, maioriaPorPartido, mandatoDaLegislatura } from './senado.ts';
 import { assuntoDoVeto, descricaoVotacao, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
@@ -158,4 +159,16 @@ test('mandato da legislatura e saída de quem deixou o exercício', () => {
   const um = mandatoDaLegislatura([{ ...mandatos[0], Exercicios: { Exercicio: { DataInicio: '2023-02-01' } } }], 58)!;
   assert.deepEqual(um.saida, { data: null, motivo: null });
   assert.equal(mandatoDaLegislatura(mandatos, 54), null);
+});
+
+test('lê largura e altura do cabeçalho de JPEG e PNG', () => {
+  // SOI, APP0 curto, SOF0 com altura 340 e largura 260.
+  const jpeg = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x04, 0x00, 0x00, 0xff, 0xc0, 0x00, 0x11, 0x08, 0x01, 0x54, 0x01, 0x04, 0x03, 0, 0, 0, 0]);
+  assert.deepEqual(dimensoesImagem(jpeg), { largura: 260, altura: 340 });
+  const png = new Uint8Array(32);
+  png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  new DataView(png.buffer).setUint32(16, 640);
+  new DataView(png.buffer).setUint32(20, 800);
+  assert.deepEqual(dimensoesImagem(png), { largura: 640, altura: 800 });
+  assert.equal(dimensoesImagem(Uint8Array.from([1, 2, 3])), null);
 });

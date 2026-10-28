@@ -11,7 +11,12 @@
   </section>
 } @else if (senador.value(); as s) {
   <section class="perfil">
-    <mt-photo [nome]="s.nome" [foto]="s.foto" />
+    <figure class="foto">
+      <mt-photo [nome]="s.nome" [foto]="s.foto" />
+      @if (s.fotoFonte) {
+        <figcaption><a [href]="s.fotoFonte" target="_blank" rel="noopener">Foto: Wikimedia Commons</a></figcaption>
+      }
+    </figure>
     <div class="perfil__texto">
       <div class="mt-row">
         <span class="mt-chip mt-chip--brand">{{ s.partido }}</span>

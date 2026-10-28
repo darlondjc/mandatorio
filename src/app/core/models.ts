@@ -94,6 +94,8 @@ export interface Senador {
   partido: string;
   uf: string;
   foto: string | null;
+  /** Página do arquivo no Wikimedia Commons, quando a foto vem de lá (a do Senado é pequena). */
+  fotoFonte?: string | null;
   email: string | null;
   emExercicio: boolean;
   /** Só para quem saiu: quando e por quê. */

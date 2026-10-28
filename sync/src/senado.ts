@@ -19,6 +19,7 @@ import type {
   Voto,
   VotoSenador,
 } from '../../src/app/core/models.ts';
+import { escolherFotos } from './fotos.ts';
 import { emParalelo, getJson, lista, NaoEncontrado } from './http.ts';
 import { descricaoVotacao, identificacao, isoData, normalizarVoto, resultadoVotacao, semAcento } from './util.ts';
 
@@ -404,6 +405,9 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
   const valoresCota = base.map((s) => cotaAtual.get(s.codigo)?.total ?? 0).filter((v) => v > 0);
   const mediaCota = valoresCota.length ? Math.round(valoresCota.reduce((a, b) => a + b, 0) / valoresCota.length) : 0;
 
+  console.log('Senado: fotos…');
+  const fotos = await escolherFotos(todos);
+
   const senadores: Senador[] = todos.map((s, i) => {
     const vs = votosPorSenador.get(s.codigo)!;
     const distribuicao: Record<Voto, number> = { sim: 0, nao: 0, abstencao: 0, secreto: 0, ausente: 0 };
@@ -415,6 +419,8 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
     const d = todosDet[i];
     return {
       ...s,
+      foto: fotos.get(s.codigo)?.foto ?? s.foto,
+      fotoFonte: fotos.get(s.codigo)?.fonte ?? null,
       emExercicio: !saiu,
       mandato: { ...s.mandato, ordem: d.mandatos },
       nascimento: d.nascimento,

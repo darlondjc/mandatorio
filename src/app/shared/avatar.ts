@@ -39,7 +39,7 @@ export class Photo {
       <span class="mt-avatar" aria-hidden="true" [style.background]="cor()" [style.color]="texto()">{{ ini() }}</span>
     }
   `,
-  styles: `img.mt-avatar { object-fit: cover; background: var(--brand-100); }`,
+  styles: `img.mt-avatar { object-fit: cover; object-position: 50% 22%; background: var(--brand-100); }`,
 })
 export class Avatar {
   readonly nome = input.required<string>();
