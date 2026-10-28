@@ -1,0 +1,95 @@
+/* Mandatório — gerado de design/tokens.json por design/build-tokens.mjs. Não edite à mão. */
+:root {
+  --brand-700: #0e6b5c;
+  --brand-800: #0a5246;
+  --brand-100: #ecf4f1;
+  --on-brand: #ffffff;
+  --coral-500: #f2684a;
+  --on-coral: #1a0f0c;
+  --coral-100: #fdece7;
+  --coral-900: #8a2a14;
+  --ink: #0f1e1b;
+  --on-ink: #ffffff;
+  --ink-muted: #4d605b;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --line: #dde9e5;
+  --abstain: #a9bdb7;
+  --focus: var(--brand-700);
+  --party-pt: #e5383b;
+  --party-psb: #ff8c42;
+  --party-pdt: #c2185b;
+  --party-mdb: #2a9d8f;
+  --party-psd: #2747f5;
+  --party-podemos: #4cc9f0;
+  --party-psdb: #7b61ff;
+  --party-uniao: #f2c14e;
+  --party-republicanos: #3d348b;
+  --party-pp: #8ac926;
+  --party-pl: #0b1a5c;
+  --party-novo: #ff5c8a;
+  --party-outros: #8d9a97;
+  --shadow-tab: 0 1px 3px rgba(15, 30, 27, 0.12);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+  --font-display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+  --font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --brand-700: #4cc2ac;
+    --brand-800: #6fd3bf;
+    --brand-100: #17302b;
+    --on-brand: #06231e;
+    --coral-500: #ff8466;
+    --on-coral: #1a0f0c;
+    --coral-100: #3a1f18;
+    --coral-900: #ffc2b2;
+    --ink: #e8f0ee;
+    --on-ink: #0f1e1b;
+    --ink-muted: #a3b5b0;
+    --surface: #0f1a18;
+    --surface-raised: #1b2b28;
+    --line: #24403a;
+    --abstain: #5e726d;
+    --focus: var(--brand-700);
+    --party-republicanos: #7a6fd1;
+    --party-pl: #5a73d6;
+    --shadow-tab: 0 1px 3px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --brand-700: #4cc2ac;
+  --brand-800: #6fd3bf;
+  --brand-100: #17302b;
+  --on-brand: #06231e;
+  --coral-500: #ff8466;
+  --on-coral: #1a0f0c;
+  --coral-100: #3a1f18;
+  --coral-900: #ffc2b2;
+  --ink: #e8f0ee;
+  --on-ink: #0f1e1b;
+  --ink-muted: #a3b5b0;
+  --surface: #0f1a18;
+  --surface-raised: #1b2b28;
+  --line: #24403a;
+  --abstain: #5e726d;
+  --focus: var(--brand-700);
+  --party-republicanos: #7a6fd1;
+  --party-pl: #5a73d6;
+  --shadow-tab: 0 1px 3px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}

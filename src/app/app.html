@@ -1,0 +1,62 @@
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topbar">
+  <button class="mt-btn mt-btn--icon" type="button" aria-label="Abrir menu" [attr.aria-expanded]="menuAberto()" aria-controls="menu" (click)="menuAberto.set(true)">
+    <mt-icon name="menu" />
+  </button>
+  <a class="mt-logo topbar__logo" routerLink="/senado"><span class="mt-logo__mark" aria-hidden="true"></span>mandatório</a>
+  <button class="mt-btn mt-btn--icon" type="button" aria-label="Alternar tema claro ou escuro" (click)="alternarTema()">
+    <mt-icon name="tema" />
+  </button>
+</header>
+
+@if (menuAberto()) {
+  <div class="veu" (click)="menuAberto.set(false)" aria-hidden="true"></div>
+}
+
+<div class="shell">
+  <nav id="menu" class="menu" [class.menu--aberto]="menuAberto()" aria-label="Principal">
+    <div class="menu__topo">
+      <a class="mt-logo" routerLink="/senado"><span class="mt-logo__mark" aria-hidden="true"></span>mandatório</a>
+      <button class="mt-btn mt-btn--icon menu__fechar" type="button" aria-label="Fechar menu" (click)="menuAberto.set(false)">
+        <mt-icon name="fechar" />
+      </button>
+    </div>
+
+    <div class="mt-stack menu__itens">
+      <a class="mt-nav__item" routerLink="/presidente" routerLinkActive #rp="routerLinkActive" [attr.aria-current]="rp.isActive ? 'page' : null">
+        <mt-icon name="presidente" />Presidente
+      </a>
+      <a class="mt-nav__item" routerLink="/senado" routerLinkActive #rs="routerLinkActive" [attr.aria-current]="rs.isActive ? 'page' : null">
+        <mt-icon name="senado" />Senado
+      </a>
+      <span class="mt-nav__item mt-nav__item--off"><mt-icon name="comparar" />Comparar<span class="mt-chip mt-chip--soon">breve</span></span>
+      <span class="mt-nav__item mt-nav__item--off"><mt-icon name="rankings" />Rankings<span class="mt-chip mt-chip--soon">breve</span></span>
+    </div>
+
+    <div class="menu__rodape">
+      <button class="mt-btn mt-btn--outline mt-btn--sm tema" type="button" (click)="alternarTema()">
+        <mt-icon name="tema" [size]="16" />Tema claro/escuro
+      </button>
+      <p class="fonte">
+        @if (exemplo) {
+          Dados de exemplo. Conecte o Firebase para ver os dados oficiais.
+        } @else {
+          Dados oficiais do Senado Federal, da Câmara dos Deputados e do Congresso Nacional.
+          @if (atualizado()) {
+            Última coleta: {{ atualizado() }}.
+          }
+        }
+      </p>
+    </div>
+  </nav>
+
+  <main id="conteudo" class="conteudo" tabindex="-1">
+    @if (exemplo) {
+      <p class="aviso" role="note">
+        <strong>Dados de exemplo.</strong> Nomes e números desta versão são fictícios, para demonstração.
+      </p>
+    }
+    <router-outlet />
+  </main>
+</div>

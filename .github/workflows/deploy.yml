@@ -1,0 +1,67 @@
+name: Deploy (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Testes
+        run: npm test -- --watch=false
+
+      # A configuração web do Firebase é pública; fica numa variável do repositório
+      # (Settings → Secrets and variables → Actions → Variables → FIREBASE_WEB_CONFIG).
+      # Sem ela, o site é publicado com os dados de exemplo.
+      - name: Configuração do Firebase
+        env:
+          FIREBASE_WEB_CONFIG: ${{ vars.FIREBASE_WEB_CONFIG }}
+        run: |
+          if [ -n "$FIREBASE_WEB_CONFIG" ]; then
+            echo "$FIREBASE_WEB_CONFIG" | node -e "JSON.parse(require('fs').readFileSync(0,'utf8'))"
+            printf "import type { FirebaseOptions } from 'firebase/app';\n\nexport const firebaseConfig: FirebaseOptions | null = %s;\n" "$FIREBASE_WEB_CONFIG" > src/app/core/firebase-config.ts
+            echo "Usando o Firestore."
+          else
+            echo "FIREBASE_WEB_CONFIG não definida: publicando com dados de exemplo."
+          fi
+
+      - name: Build
+        run: npx ng build --base-href "/${{ github.event.repository.name }}/"
+
+      # GitHub Pages não conhece as rotas do Angular: o 404.html devolve o app para qualquer endereço.
+      - run: cp dist/mandatorio/browser/index.html dist/mandatorio/browser/404.html
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist/mandatorio/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

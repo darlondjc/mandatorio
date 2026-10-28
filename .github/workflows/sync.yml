@@ -1,0 +1,67 @@
+name: Sincronizar dados
+
+on:
+  schedule:
+    # Todo dia às 04:17 (horário de Brasília).
+    - cron: '17 7 * * *'
+  workflow_dispatch:
+    inputs:
+      parte:
+        description: 'O que sincronizar'
+        type: choice
+        options: [tudo, senado, presidente]
+        default: tudo
+      dry_run:
+        description: 'Só coletar (não grava no Firestore; os JSON ficam como artefato)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: sync
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: sync/package-lock.json
+
+      - run: npm ci
+
+      - run: npm test
+
+      - name: Sincronizar
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PARTE: ${{ inputs.parte || 'tudo' }}
+          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: |
+          ONLY=""
+          if [ "$PARTE" != "tudo" ]; then ONLY="--only=$PARTE"; fi
+          if [ -z "$DRY_RUN" ] && [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::warning::Secret FIREBASE_SERVICE_ACCOUNT não configurado; rodando em modo de conferência (dry-run)."
+            DRY_RUN="--dry-run"
+          fi
+          npx tsx src/index.ts $ONLY $DRY_RUN
+
+      - name: Guardar coleta (dry-run)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coleta
+          path: sync/out
+          if-no-files-found: ignore
+          retention-days: 7

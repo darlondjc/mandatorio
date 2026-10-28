@@ -1,0 +1,25 @@
+{
+  "_comentario": "Cadastro manual dos presidentes acompanhados. Para incluir mandatos anteriores, acrescente itens em 'mandatos' (ou novos presidentes); a sincronização busca MPs, vetos e projetos de cada mandato pelo período.",
+  "presidentes": [
+    {
+      "id": "lula",
+      "nome": "Luiz Inácio Lula da Silva",
+      "nomeCompleto": "Luiz Inácio Lula da Silva",
+      "foto": null,
+      "nascimento": "1945-10-27",
+      "naturalidade": "Caetés (PE)",
+      "perfil": "Ex-metalúrgico e ex-líder sindical. Presidiu o país de 2003 a 2010 e voltou ao cargo em 2023.",
+      "mandatos": [
+        {
+          "id": "2023-2026",
+          "inicio": "2023-01-01",
+          "fim": "2027-01-05",
+          "ordem": 3,
+          "partido": "PT",
+          "vice": "Geraldo Alckmin",
+          "partidoVice": "PSB"
+        }
+      ]
+    }
+  ]
+}
