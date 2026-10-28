@@ -106,6 +106,34 @@ button.mt-chip[aria-pressed="true"] { border-color: var(--ink); }
 .mt-seatmap__total b { font: 500 72px/1 var(--font-display); letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
 .mt-seatmap__total span { font: 600 14px/1.4 var(--font-sans); color: var(--ink-muted); }
 
+/* StatusBadge — situação de MP e de veto */
+.mt-status { display: inline-block; min-width: 136px; padding: 6px 10px; text-align: center; border-radius: var(--radius-pill); border: 2px solid transparent; font: 600 13px/1.2 var(--font-sans); }
+.mt-status--lei, .mt-status--mantido { background: var(--brand-700); color: var(--on-brand); }
+.mt-status--tramitando, .mt-status--aguardando { background: var(--surface); color: var(--brand-700); border-color: var(--brand-700); }
+.mt-status--caducou, .mt-status--prejudicado { background: var(--line); color: var(--ink); }
+.mt-status--rejeitada, .mt-status--derrubado, .mt-status--derrubado-parcial { background: var(--coral-500); color: var(--on-coral); }
+.mt-status--sm { min-width: 0; padding: 3px 12px; font-size: 12px; }
+
+/* Etapas do projeto: cor de cada etapa (Câmara verde, Senado azul, Sanção âmbar, Lei marca, Arquivado cinza) */
+.mt-etapa--camara { --c: var(--etapa-camara); --on: var(--on-etapa-camara); }
+.mt-etapa--senado { --c: var(--etapa-senado); --on: var(--on-etapa-senado); }
+.mt-etapa--sancao { --c: var(--etapa-sancao); --on: var(--on-etapa-sancao); }
+.mt-etapa--lei { --c: var(--etapa-lei); --on: var(--on-etapa-lei); }
+.mt-etapa--arquivado { --c: var(--etapa-arquivado); --on: var(--on-etapa-arquivado); }
+
+/* StageChip — filtro por etapa: tom claro da cor; selecionado, a cor cheia */
+.mt-stage { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 10px; border: 2px solid transparent; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--c) 20%, var(--surface)); color: var(--ink); font: 600 13px var(--font-sans); cursor: pointer; }
+.mt-stage:hover { border-color: var(--c); }
+.mt-stage[aria-pressed="true"] { background: var(--c); color: var(--on); }
+.mt-stage__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.mt-stage[aria-pressed="true"] .mt-stage__dot { background: var(--on); }
+
+/* StageSteps — caminho do projeto; o passo atual usa a cor da etapa */
+.mt-steps { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.mt-step { padding: 4px 10px; border-radius: var(--radius-pill); font: 500 12px/1.3 var(--font-sans); background: var(--brand-100); color: var(--ink-muted); }
+.mt-step--done { background: var(--line); color: var(--ink); }
+.mt-step--current { background: var(--c, var(--brand-700)); color: var(--on, var(--on-brand)); font-weight: 600; }
+
 /* Search */
 .mt-search { height: 48px; width: 100%; padding: 0 var(--space-5); border: 2px solid var(--line); border-radius: var(--radius-pill); background: var(--surface-raised); color: var(--ink); font: 400 15px var(--font-sans); }
 .mt-search::placeholder { color: var(--ink-muted); }

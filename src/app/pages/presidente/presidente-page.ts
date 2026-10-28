@@ -146,11 +146,6 @@ export class PresidentePage {
       .map((p) => ({ ...p, passo: ETAPAS.findIndex((e) => e.id === p.etapa) })),
   );
 
-  /** Variáveis CSS da cor de uma etapa (tokens etapa-*). */
-  protected corEtapa(id: EtapaProjeto) {
-    return { '--c': `var(--etapa-${id})`, '--on': `var(--on-etapa-${id})` };
-  }
-
   protected alternarEtapa(id: EtapaProjeto) {
     this.filtroEtapa.update((atual) => (atual === id ? null : id));
   }
@@ -167,9 +162,9 @@ export class PresidentePage {
   }
 
   protected classeMP(s: SituacaoMP) {
-    return `selo selo--${s}`;
+    return `mt-status mt-status--${s}`;
   }
   protected classeVeto(s: SituacaoVeto) {
-    return `selo selo--veto-${s}`;
+    return `mt-status mt-status--${s}`;
   }
 }

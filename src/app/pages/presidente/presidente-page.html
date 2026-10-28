@@ -94,8 +94,8 @@
                 Todos · {{ projetos.value()?.length ?? 0 }}
               </button>
               @for (e of chipsEtapa(); track e.id) {
-                <button class="chip-etapa" type="button" [style]="corEtapa(e.id)" [attr.aria-pressed]="filtroEtapa() === e.id" (click)="alternarEtapa(e.id)">
-                  <span class="chip-etapa__ponto" aria-hidden="true"></span>{{ e.rotulo }} · {{ e.total }}
+                <button class="mt-stage mt-etapa--{{ e.id }}" type="button" [attr.aria-pressed]="filtroEtapa() === e.id" (click)="alternarEtapa(e.id)">
+                  <span class="mt-stage__dot" aria-hidden="true"></span>{{ e.rotulo }} · {{ e.total }}
                 </button>
               }
             </div>
@@ -111,11 +111,11 @@
                   <span class="mt-voterow__meta">{{ p.numero }} · enviado em {{ data(p.dataApresentacao) }} · {{ p.situacao }}</span>
                 </div>
                 @if (p.etapa === 'arquivado') {
-                  <span class="etapa etapa--atual" [style]="corEtapa('arquivado')">Arquivado</span>
+                  <span class="mt-step mt-step--current mt-etapa--arquivado">Arquivado</span>
                 } @else {
-                  <ol class="etapas" [attr.aria-label]="'Etapa atual: ' + etapas[p.passo].rotulo">
+                  <ol class="mt-steps" [attr.aria-label]="'Etapa atual: ' + etapas[p.passo].rotulo">
                     @for (e of etapas; track e.id; let i = $index) {
-                      <li class="etapa" [class.etapa--feita]="i < p.passo" [class.etapa--atual]="i === p.passo" [style]="i === p.passo ? corEtapa(e.id) : null" [attr.aria-current]="i === p.passo ? 'step' : null">{{ e.rotulo }}</li>
+                      <li class="mt-step mt-etapa--{{ e.id }}" [class.mt-step--done]="i < p.passo" [class.mt-step--current]="i === p.passo" [attr.aria-current]="i === p.passo ? 'step' : null">{{ e.rotulo }}</li>
                     }
                   </ol>
                 }

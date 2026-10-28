@@ -40,15 +40,7 @@
   border: 2px solid var(--line); border-radius: var(--radius-lg); background: var(--surface);
 }
 .linha--projeto { grid-template-columns: minmax(0, 1fr) auto; padding-left: 18px; }
-
-.selo {
-  justify-self: start; min-width: 136px; padding: 6px 10px; text-align: center;
-  border-radius: var(--radius-pill); border: 2px solid transparent; font: 600 13px/1.2 var(--font-sans);
-}
-.selo--lei, .selo--veto-mantido { background: var(--brand-700); color: var(--on-brand); }
-.selo--tramitando, .selo--veto-aguardando { background: var(--surface); color: var(--brand-700); border-color: var(--brand-700); }
-.selo--caducou, .selo--veto-prejudicado { background: var(--line); color: var(--ink); }
-.selo--rejeitada, .selo--veto-derrubado, .selo--veto-derrubado-parcial { background: var(--coral-500); color: var(--on-coral); }
+.linha > .mt-status { justify-self: start; }
 
 .prazo { display: flex; flex-direction: column; gap: 4px; }
 .prazo__texto { font-size: 13px; color: var(--ink-muted); text-align: right; }
@@ -56,26 +48,6 @@
 .prazo__barra { height: 8px; border-radius: var(--radius-pill); background: var(--line); overflow: hidden; }
 .prazo__barra span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--brand-700); }
 .prazo__barra span.urgente { background: var(--coral-500); }
-
-.etapas { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.etapa {
-  padding: 4px 10px; border-radius: var(--radius-pill); font: 600 12px/1.3 var(--font-sans);
-  background: var(--brand-100); color: var(--ink-muted);
-}
-.etapa--feita { background: var(--line); color: var(--ink); }
-.etapa--atual { background: var(--c, var(--brand-700)); color: var(--on, var(--on-brand)); font-weight: 600; }
-
-// Chip de filtro de etapa: tom claro da cor da etapa; selecionado, a cor cheia.
-.chip-etapa {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 14px 6px 10px; border: 2px solid transparent; border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--c) 20%, var(--surface)); color: var(--ink);
-  font: 600 13px var(--font-sans); cursor: pointer;
-  &:hover { border-color: var(--c); }
-  &[aria-pressed='true'] { background: var(--c); color: var(--on); }
-}
-.chip-etapa__ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
-.chip-etapa[aria-pressed='true'] .chip-etapa__ponto { background: var(--on); }
 
 .aviso-erro { padding: var(--space-4); border-radius: var(--radius-lg); background: var(--coral-100); color: var(--coral-900); }
 
@@ -97,7 +69,6 @@
   .cards .mt-stat__value { font-size: 28px; }
   .linha { grid-template-columns: 1fr; gap: var(--space-2); padding: var(--space-3) 14px; }
   .linha--projeto { padding-left: 14px; }
-  .selo { min-width: 0; padding: 3px 12px; font-size: 12px; }
+  .linha > .mt-status { min-width: 0; padding: 3px 12px; font-size: 12px; }
   .prazo__texto { text-align: left; }
-  .etapas { flex-wrap: wrap; }
 }
