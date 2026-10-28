@@ -111,3 +111,13 @@ describe('período de cada ranking', () => {
     expect(g.fora[0].motivo).toBe('em exercício só desde abr/2026');
   });
 });
+
+describe('projetos que viraram lei', () => {
+  it('ordena por leis e mostra quantos foram apresentados', () => {
+    const r = ranking([linha('a', 'X', { leis: 2, proposicoes: 50 }), linha('b', 'X', { leis: 9, proposicoes: 30 })]);
+    const c = classificar(r, crit('leis'), 'desc');
+    expect(c.ranqueados.map((p) => p.linha.codigo)).toEqual(['b', 'a']);
+    expect(crit('leis').nota(c.ranqueados[0].linha, r)).toBe('de 30 apresentados');
+    expect(crit('leis').aba).toBe('projetos');
+  });
+});

@@ -28,7 +28,14 @@ export class RankingsPage {
   readonly partido = input('', { transform: (v: string | undefined) => v ?? '' });
   readonly uf = input('', { transform: (v: string | undefined) => v ?? '' });
 
-  protected readonly abas = CRITERIOS.map((c) => ({ id: c.id, rotulo: c.rotulo }));
+  protected readonly abas = CRITERIOS.filter((c) => !c.aba).map((c) => ({ id: c.id, rotulo: c.rotulo }));
+  /** Aba ativa: a de uma variante é a do critério principal (Viraram lei fica em Projetos). */
+  protected readonly abaAtiva = computed(() => this.atual().aba ?? this.atual().id);
+  /** Variantes da aba ativa, para o chaveador (vazio quando a aba não tem). */
+  protected readonly variantes = computed(() => {
+    const doGrupo = CRITERIOS.filter((c) => (c.aba ?? c.id) === this.abaAtiva());
+    return doGrupo.length > 1 ? doGrupo : [];
+  });
   protected readonly atual = computed(() => CRITERIOS.find((c) => c.id === this.criterio()) ?? CRITERIOS[0]);
   protected readonly sentido = computed<Ordem>(() => (this.ordem() === 'asc' ? 'asc' : 'desc'));
 

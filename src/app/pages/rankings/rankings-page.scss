@@ -4,6 +4,8 @@
 .intro { font-size: 16px; }
 
 .painel { display: flex; flex-direction: column; gap: var(--space-4); }
+.variantes { align-self: flex-start; }
+.variantes .mt-tab { padding: 6px 16px; font-size: 14px; }
 
 .resumo {
   display: flex; gap: var(--space-5); align-items: center; justify-content: space-between;

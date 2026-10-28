@@ -3,7 +3,7 @@ import { data, dinheiro, dinheiroCurto, pctExibido } from '../../core/format';
 import type { LinhaRanking, RankingSenado } from '../../core/models';
 import { mesAno } from '../../core/ranking';
 
-export type CriterioId = 'presenca' | 'fidelidade' | 'gastos' | 'projetos';
+export type CriterioId = 'presenca' | 'fidelidade' | 'gastos' | 'projetos' | 'leis';
 export type Ordem = 'desc' | 'asc';
 /** Se estar no topo desta ordem é bom, ruim ou só uma característica. */
 export type Tom = 'bom' | 'ruim' | 'neutro';
@@ -21,6 +21,10 @@ interface Contexto {
 export interface Criterio {
   id: CriterioId;
   rotulo: string;
+  /** Variante de outro critério: fica dentro da aba dele, num chaveador, em vez de ter aba própria. */
+  aba?: CriterioId;
+  /** Rótulo no chaveador da aba, quando ela tem variantes. */
+  variante?: string;
   /** Rótulos dos dois sentidos de ordenação: [maior primeiro, menor primeiro]. */
   ordens: [string, string];
   /** Como dizer a posição de alguém em cada ordem: "3º mais presente", "2º que menos gastou". */
@@ -137,6 +141,7 @@ export const CRITERIOS: Criterio[] = [
   {
     id: 'projetos',
     rotulo: 'Projetos',
+    variante: 'Apresentados',
     ordens: ['Mais projetos', 'Menos projetos'],
     frases: ['com mais projetos', 'com menos projetos'],
     boa: 'desc',
@@ -148,6 +153,24 @@ export const CRITERIOS: Criterio[] = [
     chave: (v) => v,
     formatarMedia: (v) => String(Math.round(v)),
     nota: (l) => `${l.leis} ${l.leis === 1 ? 'virou lei' : 'viraram lei'}`,
+    fora: () => null,
+  },
+  {
+    id: 'leis',
+    aba: 'projetos',
+    rotulo: 'Projetos que viraram lei',
+    variante: 'Viraram lei',
+    ordens: ['Mais leis', 'Menos leis'],
+    frases: ['com mais projetos que viraram lei', 'com menos projetos que viraram lei'],
+    boa: 'desc',
+    periodo: () => ({ curto: 'toda a carreira', completo: 'Toda a carreira no Senado' }),
+    explicacao: () =>
+      'Projetos de autoria do senador que viraram lei (ou outra norma, como decreto legislativo ou resolução), incluindo os de mandatos anteriores no Senado. PECs não entram, como no ranking de projetos apresentados. Autoria conjunta conta para todos os autores.',
+    valor: (l) => l.leis,
+    formatar: (v) => String(v),
+    chave: (v) => v,
+    formatarMedia: (v) => (v < 10 ? v.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : String(Math.round(v))),
+    nota: (l) => `de ${l.proposicoes} ${l.proposicoes === 1 ? 'apresentado' : 'apresentados'}`,
     fora: () => null,
   },
 ];
