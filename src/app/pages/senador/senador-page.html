@@ -200,11 +200,11 @@
         @case ('votos') {
           <mt-split-bar [segmentos]="segmentos()" [nota]="notaDivergencia()" />
           <div class="mt-row" role="group" aria-label="Filtrar votações">
-            <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'abertas'" (click)="filtro.set('abertas')">Votações abertas</button>
-            <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'divergiu'" (click)="filtro.set('divergiu')">Diferente do partido</button>
-            <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'ausente'" (click)="filtro.set('ausente')">Ausências</button>
+            <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'abertas'" (click)="trocarFiltro('abertas')">Votações abertas</button>
+            <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'divergiu'" (click)="trocarFiltro('divergiu')">Diferente do partido@if (votos.value()) { · {{ contagemFiltros().divergiu }}}</button>
+            <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'ausente'" (click)="trocarFiltro('ausente')">Ausências@if (votos.value()) { · {{ contagemFiltros().ausente }}}</button>
             @if (s.resumo.distribuicao.secreto) {
-              <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'secretas'" (click)="filtro.set('secretas')">Secretas · {{ s.resumo.distribuicao.secreto }}</button>
+              <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'secretas'" (click)="trocarFiltro('secretas')">Secretas · {{ s.resumo.distribuicao.secreto }}</button>
             }
           </div>
           @if (votos.isLoading() && !votos.value()) {
@@ -236,12 +236,14 @@
               </a>
             } @empty {
               @if (!votos.isLoading()) {
-                <p class="muted">Nenhuma votação com esse filtro entre as carregadas.</p>
+                <p class="muted">Nenhuma votação com esse filtro.</p>
               }
             }
           </div>
-          @if ((votos.value()?.length ?? 0) >= limiteVotos() && limiteVotos() < s.resumo.votacoes) {
-            <button class="mt-btn mt-btn--outline mais" type="button" (click)="limiteVotos.set(limiteVotos() + 30)">Mostrar mais votações</button>
+          @if (todosFiltrados().length > exibir()) {
+            <button class="mt-btn mt-btn--outline mais" type="button" (click)="exibir.set(exibir() + 30)">
+              Mostrar mais votações · faltam {{ todosFiltrados().length - exibir() }}
+            </button>
           }
         }
 
