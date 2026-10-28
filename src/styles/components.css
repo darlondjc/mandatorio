@@ -44,6 +44,7 @@ button.mt-chip[aria-pressed="true"] { border-color: var(--ink); }
 .mt-split__sim { background: var(--brand-700); }
 .mt-split__nao { background: var(--coral-500); }
 .mt-split__abs { background: var(--abstain); }
+.mt-split__sec { background: var(--brand-800); }
 .mt-split__aus { background: var(--line); }
 .mt-split-legend { display: flex; flex-wrap: wrap; gap: var(--space-4); font-size: 13px; color: var(--ink-muted); }
 .mt-split-legend strong { color: var(--ink); font-weight: 600; }
