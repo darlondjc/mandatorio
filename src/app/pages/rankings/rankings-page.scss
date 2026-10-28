@@ -9,6 +9,8 @@
   display: flex; gap: var(--space-5); align-items: center; justify-content: space-between;
   padding: var(--space-5) var(--space-6); border-radius: var(--radius-xl); background: var(--brand-100);
 }
+.texto { gap: 8px; }
+.periodo { align-self: flex-start; padding: 3px 10px; border-radius: var(--radius-pill); background: var(--surface); font-size: 13px; font-weight: 600; }
 .explicacao { max-width: 680px; font-size: 15px; line-height: 1.5; }
 .media { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
 .media__valor { font: 500 34px/1.1 var(--font-display); letter-spacing: -0.01em; }

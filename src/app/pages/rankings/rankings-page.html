@@ -12,11 +12,15 @@
 
   <section class="painel" role="tabpanel" [id]="'painel-' + atual().id" [attr.aria-labelledby]="'aba-' + atual().id">
     <div class="resumo">
-      <p class="explicacao">{{ atual().explicacao(r) }}</p>
+      <div class="mt-stack texto">
+        <span class="periodo">{{ atual().periodo(r).completo }}</span>
+        <p class="explicacao">{{ atual().explicacao(r) }}</p>
+      </div>
       @if (classificacao()?.media != null) {
         <div class="media">
           <span class="media__valor">{{ atual().formatarMedia(classificacao()!.media!) }}</span>
           <span class="media__rotulo">média do Senado</span>
+          <span class="media__rotulo">{{ atual().periodo(r).curto }}</span>
         </div>
       }
     </div>

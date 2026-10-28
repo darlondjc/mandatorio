@@ -1,6 +1,7 @@
 // Critérios dos rankings: como cada um calcula o valor, quem entra e como explicar.
 import { data, dinheiro, dinheiroCurto, pctExibido } from '../../core/format';
 import type { LinhaRanking, RankingSenado } from '../../core/models';
+import { mesAno } from '../../core/ranking';
 
 export type CriterioId = 'presenca' | 'fidelidade' | 'gastos' | 'projetos';
 export type Ordem = 'desc' | 'asc';
@@ -30,6 +31,11 @@ export interface Criterio {
    */
   boa?: Ordem;
   explicacao: (r: RankingSenado) => string;
+  /**
+   * Período que os dados cobrem, sempre visível junto do ranking: curto ("fev/2023 a
+   * out/2026") e completo ("Votações de fev/2023 a out/2026").
+   */
+  periodo: (r: RankingSenado) => { curto: string; completo: string };
   valor: (l: LinhaRanking) => number;
   formatar: (v: number) => string;
   /** Valor como aparece na tela: empata quem mostra o mesmo número. */
@@ -49,6 +55,22 @@ const pct1 = (v: number) => pctExibido(v, 1);
 const pctTexto = (v: number) => `${pct1(v).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
 const poucas = (l: LinhaRanking) => (l.votacoes < MIN_VOTACOES ? `chegou há pouco: ${l.votacoes} ${l.votacoes === 1 ? 'votação' : 'votações'}` : null);
 
+/** Presença e fidelidade: as votações nominais da legislatura até a última coleta. */
+function periodoVotacoes(r: RankingSenado) {
+  const curto = `${mesAno(r.inicio)} a ${mesAno(r.atualizadoEm)}`;
+  return { curto, completo: `Votações de ${curto}` };
+}
+
+const MESES_LONGOS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+/** Gastos: a cota de um ano; se for o ano corrente, só até o mês da última coleta. */
+function periodoCota(r: RankingSenado) {
+  const emCurso = r.atualizadoEm.startsWith(String(r.cotaAno));
+  const curto = emCurso ? `jan a ${mesAno(r.atualizadoEm)}` : String(r.cotaAno);
+  const mes = MESES_LONGOS[Number(r.atualizadoEm.slice(5, 7)) - 1];
+  return { curto, completo: emCurso ? `Cota de ${r.cotaAno}, de janeiro a ${mes} (ano em curso)` : `Cota de ${r.cotaAno}` };
+}
+
 export const CRITERIOS: Criterio[] = [
   {
     id: 'presenca',
@@ -56,6 +78,7 @@ export const CRITERIOS: Criterio[] = [
     ordens: ['Mais presentes', 'Menos presentes'],
     frases: ['mais presente', 'menos presente'],
     boa: 'desc',
+    periodo: periodoVotacoes,
     explicacao: (r) =>
       `Parcela das votações nominais do plenário, desde ${data(r.inicio)}, em que o senador registrou voto (Sim, Não, abstenção, obstrução ou voto secreto). Licenças, missões e faltas contam como ausência. Quem tem menos de ${MIN_VOTACOES} votações fica de fora.`,
     valor: (l) => pctDe(l.presentes, l.votacoes),
@@ -71,8 +94,9 @@ export const CRITERIOS: Criterio[] = [
     rotulo: 'Fidelidade ao partido',
     ordens: ['Mais fiéis', 'Mais independentes'],
     frases: ['mais fiel ao partido', 'mais independente do partido'],
-    explicacao: () =>
-      `Parcela dos votos Sim ou Não em que o senador acompanhou a maioria do próprio partido. Votações em que o partido empatou, secretas e ausências não entram. Ficam de fora quem tem menos de ${MIN_COMPARAVEIS} votos comparáveis e quem é o único senador do partido.`,
+    periodo: periodoVotacoes,
+    explicacao: (r) =>
+      `Parcela dos votos Sim ou Não, nas votações desde ${data(r.inicio)}, em que o senador acompanhou a maioria do próprio partido. Votações em que o partido empatou, secretas e ausências não entram. Ficam de fora quem tem menos de ${MIN_COMPARAVEIS} votos comparáveis e quem é o único senador do partido.`,
     valor: (l) => pctDe(l.comPartido, l.comparaveis),
     formatar: pctTexto,
     chave: pct1,
@@ -95,14 +119,20 @@ export const CRITERIOS: Criterio[] = [
     ordens: ['Quem mais gastou', 'Quem menos gastou'],
     frases: ['que mais gastou', 'que menos gastou'],
     boa: 'asc',
-    explicacao: (r) =>
-      `Total reembolsado pela cota parlamentar (CEAPS) em ${r.cotaAno}: passagens, combustível, aluguel de escritório, divulgação e outros. Não inclui salário nem verba de gabinete. Quem chegou há pouco (menos de ${MIN_VOTACOES} votações) ou não tem gasto registrado no ano fica de fora.`,
+    periodo: periodoCota,
+    explicacao: () =>
+      `Total reembolsado pela cota parlamentar (CEAPS) no período: passagens, combustível, aluguel de escritório, divulgação e outros. Não inclui salário nem verba de gabinete. Para comparar períodos iguais, fica de fora quem não esteve em exercício o ano todo (chegou ou voltou depois de janeiro) e quem não tem gasto registrado no ano.`,
     valor: (l) => l.cota,
     formatar: dinheiroCurto,
     chave: (v) => v,
     formatarMedia: dinheiroCurto,
     nota: (l) => dinheiro(l.cota),
-    fora: (l, c) => poucas(l) ?? (l.cota <= 0 ? `sem gastos registrados em ${c.ranking.cotaAno}` : null),
+    fora: (l, c) => {
+      // Quem entrou ou voltou no meio do ano gastou só parte dele: compararia períodos diferentes.
+      const desde = l.exercicioDesde ?? l.primeiraVotacao;
+      if (desde && desde > `${c.ranking.cotaAno}-02-01`) return `em exercício só desde ${mesAno(desde)}`;
+      return poucas(l) ?? (l.cota <= 0 ? `sem gastos registrados em ${c.ranking.cotaAno}` : null);
+    },
   },
   {
     id: 'projetos',
@@ -110,6 +140,7 @@ export const CRITERIOS: Criterio[] = [
     ordens: ['Mais projetos', 'Menos projetos'],
     frases: ['com mais projetos', 'com menos projetos'],
     boa: 'desc',
+    periodo: () => ({ curto: 'toda a carreira', completo: 'Toda a carreira no Senado' }),
     explicacao: () =>
       'Projetos de lei, de lei complementar, de decreto legislativo e de resolução de autoria do senador, incluindo os de mandatos anteriores no Senado. PECs não entram: exigem a assinatura de 27 senadores e apareceriam para quase todos. Autoria conjunta conta para todos os autores.',
     valor: (l) => l.proposicoes,

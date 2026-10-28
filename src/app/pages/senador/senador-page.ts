@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
-import { inicioDaLegislatura, situacaoExercicio } from '../../core/ranking';
+import { inicioDaLegislatura, mesAno, situacaoExercicio } from '../../core/ranking';
 import { data, dinheiro, dinheiroCurto, pct, ROTULO_VOTO, ufNome } from '../../core/format';
 import { Voto, VotoSenador } from '../../core/models';
 import { Photo } from '../../shared/avatar';
@@ -134,7 +134,8 @@ export class SenadorPage {
       alinhamento,
       alinhamentoNota: r.mediaPartido != null ? `média do partido: ${r.mediaPartido}%` : `${r.votosComparaveis} votos comparados`,
       cota: dinheiroCurto(r.cotaAno),
-      cotaRotulo: `Cota parlamentar em ${r.cotaAnoReferencia}`,
+      // Ano em curso: deixa claro que ainda não é o ano inteiro.
+      cotaRotulo: `Cota parlamentar em ${r.cotaAnoReferencia}${s.atualizadoEm.startsWith(String(r.cotaAnoReferencia)) ? ` (jan a ${mesAno(s.atualizadoEm).split('/')[0]})` : ''}`,
       cotaNota:
         difCota == null
           ? 'Gastos reembolsados (CEAPS)'

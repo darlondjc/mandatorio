@@ -167,7 +167,7 @@
               <li>
                 @if (p.fora) {
                   <span class="posicao posicao--fora">
-                    <span class="posicao__criterio">{{ p.criterio.rotulo }}</span>
+                    <span class="posicao__criterio">{{ p.criterio.rotulo }} · {{ p.criterio.periodo(ranking.value()!).curto }}</span>
                     <span class="posicao__texto">fora do ranking: {{ p.motivo }}</span>
                   </span>
                 } @else {
@@ -180,7 +180,7 @@
                     @if (p.destaque && p.tom !== 'neutro') {
                       <mt-icon [name]="p.tom === 'bom' ? 'positivo' : 'negativo'" [size]="16" />
                     }
-                    <span class="posicao__criterio">{{ p.criterio.rotulo }}</span>
+                    <span class="posicao__criterio">{{ p.criterio.rotulo }} · {{ p.criterio.periodo(ranking.value()!).curto }}</span>
                     <span class="posicao__texto"><strong>{{ p.frase }}</strong> de {{ p.total }}</span>
                   </a>
                 }

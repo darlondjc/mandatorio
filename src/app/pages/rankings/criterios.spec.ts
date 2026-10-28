@@ -93,3 +93,21 @@ describe('posicoesDoSenador', () => {
     expect(g.fora && g.motivo).toContain('sem gastos');
   });
 });
+
+describe('período de cada ranking', () => {
+  const r = { ...ranking([]), atualizadoEm: '2026-10-28T06:00:00Z' };
+  it('diz sempre o período, e que a cota do ano corrente ainda não fechou', () => {
+    expect(crit('presenca').periodo(r).completo).toBe('Votações de fev/2023 a out/2026');
+    expect(crit('fidelidade').periodo(r).curto).toBe('fev/2023 a out/2026');
+    expect(crit('gastos').periodo(r)).toEqual({ curto: 'jan a out/2026', completo: 'Cota de 2026, de janeiro a outubro (ano em curso)' });
+    expect(crit('gastos').periodo({ ...r, cotaAno: 2025 }).curto).toBe('2025');
+    expect(crit('projetos').periodo(r).curto).toBe('toda a carreira');
+  });
+
+  it('gastos: quem entrou ou voltou no meio do ano fica de fora', () => {
+    const rr = ranking([linha('a', 'X', {}), linha('b', 'X', { exercicioDesde: '2026-04-02', cota: 40_000 })]);
+    const g = classificar(rr, crit('gastos'), 'asc');
+    expect(g.ranqueados.map((p) => p.linha.codigo)).toEqual(['a']);
+    expect(g.fora[0].motivo).toBe('em exercício só desde abr/2026');
+  });
+});
