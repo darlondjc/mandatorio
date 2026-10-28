@@ -5,7 +5,8 @@
   --brand-100: #ecf4f1;
   --on-brand: #ffffff;
   --coral-500: #f2684a;
-  --on-coral: #1a0f0c;
+  --coral-700: #b93a24;
+  --on-coral: #ffffff;
   --coral-100: #fdece7;
   --coral-900: #8a2a14;
   --ink: #0f1e1b;
@@ -64,6 +65,7 @@
     --brand-100: #17302b;
     --on-brand: #06231e;
     --coral-500: #ff8466;
+    --coral-700: #ff8466;
     --on-coral: #1a0f0c;
     --coral-100: #3a1f18;
     --coral-900: #ffc2b2;
@@ -97,6 +99,7 @@
   --brand-100: #17302b;
   --on-brand: #06231e;
   --coral-500: #ff8466;
+  --coral-700: #ff8466;
   --on-coral: #1a0f0c;
   --coral-100: #3a1f18;
   --coral-900: #ffc2b2;

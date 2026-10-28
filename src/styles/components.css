@@ -32,7 +32,7 @@ button.mt-chip[aria-pressed="true"] { border-color: var(--ink); }
 /* VoteBadge */
 .mt-vote { display: inline-block; min-width: 84px; padding: 6px 0; border-radius: var(--radius-pill); text-align: center; font: 600 14px/1.2 var(--font-sans); border: 2px solid transparent; }
 .mt-vote--sim { background: var(--brand-700); color: var(--on-brand); }
-.mt-vote--nao { background: var(--coral-500); color: var(--on-coral); }
+.mt-vote--nao { background: var(--coral-700); color: var(--on-coral); }
 .mt-vote--abstencao { background: var(--line); color: var(--ink); }
 .mt-vote--secreto { background: var(--surface); color: var(--brand-700); border-color: var(--brand-700); }
 .mt-vote--ausente { background: var(--surface); color: var(--ink-muted); border: 2px dashed var(--abstain); }
@@ -115,7 +115,7 @@ a.mt-voterow:hover { border-color: var(--brand-700); }
 .mt-status--lei, .mt-status--mantido { background: var(--brand-700); color: var(--on-brand); }
 .mt-status--tramitando, .mt-status--aguardando { background: var(--surface); color: var(--brand-700); border-color: var(--brand-700); }
 .mt-status--caducou, .mt-status--prejudicado { background: var(--line); color: var(--ink); }
-.mt-status--rejeitada, .mt-status--derrubado, .mt-status--derrubado-parcial { background: var(--coral-500); color: var(--on-coral); }
+.mt-status--rejeitada, .mt-status--derrubado, .mt-status--derrubado-parcial { background: var(--coral-700); color: var(--on-coral); }
 .mt-status--sm { min-width: 0; padding: 3px 12px; font-size: 12px; }
 
 /* Etapas do projeto: cor de cada etapa (Câmara verde, Senado azul, Sanção âmbar, Lei marca, Arquivado cinza) */
