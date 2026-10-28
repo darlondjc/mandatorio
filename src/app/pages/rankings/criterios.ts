@@ -22,6 +22,8 @@ export interface Criterio {
   rotulo: string;
   /** Rótulos dos dois sentidos de ordenação: [maior primeiro, menor primeiro]. */
   ordens: [string, string];
+  /** Como dizer a posição de alguém em cada ordem: "3º mais presente", "2º que menos gastou". */
+  frases: [string, string];
   /**
    * Qual ordem põe no topo quem faz o melhor trabalho. Sem valor quando não há lado certo
    * (fidelidade ao partido: ser fiel ou independente depende do ponto de vista).
@@ -52,6 +54,7 @@ export const CRITERIOS: Criterio[] = [
     id: 'presenca',
     rotulo: 'Presença',
     ordens: ['Mais presentes', 'Menos presentes'],
+    frases: ['mais presente', 'menos presente'],
     boa: 'desc',
     explicacao: (r) =>
       `Parcela das votações nominais do plenário, desde ${data(r.inicio)}, em que o senador registrou voto (Sim, Não, abstenção, obstrução ou voto secreto). Licenças, missões e faltas contam como ausência. Quem tem menos de ${MIN_VOTACOES} votações fica de fora.`,
@@ -67,6 +70,7 @@ export const CRITERIOS: Criterio[] = [
     id: 'fidelidade',
     rotulo: 'Fidelidade ao partido',
     ordens: ['Mais fiéis', 'Mais independentes'],
+    frases: ['mais fiel ao partido', 'mais independente do partido'],
     explicacao: () =>
       `Parcela dos votos Sim ou Não em que o senador acompanhou a maioria do próprio partido. Votações em que o partido empatou, secretas e ausências não entram. Ficam de fora quem tem menos de ${MIN_COMPARAVEIS} votos comparáveis e quem é o único senador do partido.`,
     valor: (l) => pctDe(l.comPartido, l.comparaveis),
@@ -89,6 +93,7 @@ export const CRITERIOS: Criterio[] = [
     id: 'gastos',
     rotulo: 'Gastos',
     ordens: ['Quem mais gastou', 'Quem menos gastou'],
+    frases: ['que mais gastou', 'que menos gastou'],
     boa: 'asc',
     explicacao: (r) =>
       `Total reembolsado pela cota parlamentar (CEAPS) em ${r.cotaAno}: passagens, combustível, aluguel de escritório, divulgação e outros. Não inclui salário nem verba de gabinete. Quem chegou há pouco (menos de ${MIN_VOTACOES} votações) ou não tem gasto registrado no ano fica de fora.`,
@@ -103,6 +108,7 @@ export const CRITERIOS: Criterio[] = [
     id: 'projetos',
     rotulo: 'Projetos',
     ordens: ['Mais projetos', 'Menos projetos'],
+    frases: ['com mais projetos', 'com menos projetos'],
     boa: 'desc',
     explicacao: () =>
       'Projetos de lei, PECs, projetos de lei complementar, de decreto legislativo e de resolução de autoria do senador, incluindo os de mandatos anteriores no Senado. Autoria conjunta conta para todos os autores.',
@@ -170,4 +176,43 @@ export function classificar(ranking: RankingSenado, criterio: Criterio, ordem: O
     media: dentro.length ? dentro.reduce((s, d) => s + d.valor, 0) / dentro.length : null,
     maximo: Math.max(0, ...dentro.map((d) => d.valor)),
   };
+}
+
+/** Até que posição um lado do ranking vira destaque no perfil. */
+export const TOP_DESTAQUE = 5;
+
+export type PosicaoNoRanking =
+  | { criterio: Criterio; fora: false; ordem: Ordem; tom: Tom; posicao: number; total: number; frase: string; destaque: boolean }
+  | { criterio: Criterio; fora: true; motivo: string };
+
+/**
+ * Onde o senador está em cada ranking, pelo lado em que está mais perto do topo: o 70º de
+ * 77 em "quem mais gastou" é o 8º "que menos gastou". Destaque quando está entre os
+ * TOP_DESTAQUE primeiros. Ordem: destaques bons, ruins, neutros, depois o resto.
+ */
+export function posicoesDoSenador(ranking: RankingSenado, codigo: string): PosicaoNoRanking[] {
+  if (!ranking.linhas.some((l) => l.codigo === codigo)) return [];
+  const out = CRITERIOS.map((criterio): PosicaoNoRanking => {
+    const lados = (['desc', 'asc'] as Ordem[]).map((ordem) => {
+      const c = classificar(ranking, criterio, ordem);
+      return { ordem, c, p: c.ranqueados.find((x) => x.linha.codigo === codigo) };
+    });
+    if (!lados[0].p) return { criterio, fora: true, motivo: lados[0].c.fora.find((f) => f.linha.codigo === codigo)?.motivo ?? 'sem dados' };
+    // Mais perto do topo; no empate, o lado bom.
+    const [melhor] = [...lados].sort((a, b) => a.p!.posicao - b.p!.posicao || (tomDaOrdem(criterio, a.ordem) === 'bom' ? -1 : 1));
+    const posicao = melhor.p!.posicao;
+    const i = melhor.ordem === 'desc' ? 0 : 1;
+    return {
+      criterio,
+      fora: false,
+      ordem: melhor.ordem,
+      tom: tomDaOrdem(criterio, melhor.ordem),
+      posicao,
+      total: melhor.c.ranqueados.length,
+      frase: `${posicao}º ${criterio.frases[i]}`,
+      destaque: posicao <= TOP_DESTAQUE,
+    };
+  });
+  const peso = (x: PosicaoNoRanking) => (x.fora ? 4 : !x.destaque ? 3 : x.tom === 'bom' ? 0 : x.tom === 'ruim' ? 1 : 2);
+  return out.sort((a, b) => peso(a) - peso(b));
 }

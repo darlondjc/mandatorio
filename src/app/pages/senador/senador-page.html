@@ -10,6 +10,7 @@
     <p class="muted">Pode ser que não esteja mais em exercício. <a routerLink="/senado">Veja quem está no Senado.</a></p>
   </section>
 } @else if (senador.value(); as s) {
+  <div class="topo">
   <section class="perfil">
     <figure class="foto">
       <mt-photo [nome]="s.nome" [foto]="s.foto" />
@@ -114,6 +115,81 @@
         </div>
       </div>
     </section>
+  }
+  </div>
+
+  @if (perfilTematico() || posicoes().length) {
+    <aside class="lateral" aria-label="Perfil de atuação e rankings">
+      @if (perfilTematico(); as pt) {
+        <section class="bloco" aria-labelledby="t-atuacao">
+          <h2 id="t-atuacao" class="bloco__titulo">Perfil de atuação</h2>
+          <p class="bloco__destaque">
+            @if (pt.destaque) {
+              Mais voltado <strong>{{ voltadoA[pt.destaque] }}</strong> que a média do Senado
+            } @else {
+              Perfil próximo da média do Senado
+            }
+          </p>
+          <ul class="eixos">
+            @for (e of pt.eixos; track e.id) {
+              <li class="eixo" [class.eixo--destaque]="e.id === pt.destaque">
+                <span class="eixo__rotulo">{{ e.rotulo }}</span>
+                <span class="eixo__pct">{{ e.pct }}%</span>
+                <span class="eixo__barra" aria-hidden="true">
+                  <span class="eixo__valor" [style.width.%]="e.pct"></span>
+                  <span class="eixo__media" [style.left.%]="e.media" title="Média do Senado"></span>
+                </span>
+                <span class="eixo__nota">média do Senado: {{ e.media }}%</span>
+              </li>
+            }
+          </ul>
+          <p class="bloco__sub">Temas principais</p>
+          <ol class="temas">
+            @for (t of pt.temas.slice(0, 3); track t.id) {
+              <li>
+                <span>{{ t.rotulo }}</span>
+                <span class="temas__pct">{{ t.pct }}%@if (t.pct - t.media >= 5) { <span class="temas__acima">+{{ t.pct - t.media }} vs média</span>}</span>
+              </li>
+            }
+          </ol>
+          <p class="bloco__nota">
+            Classificação automática pela ementa de {{ pt.total }} projetos de autoria. PECs ficam de fora, porque exigem 27 assinaturas@if (pt.homenagens) {; {{ pt.homenagens }} homenagens e datas comemorativas também}.
+            <a [routerLink]="[]" [queryParams]="{ aba: 'projetos' }" queryParamsHandling="merge">Ver projetos</a>
+          </p>
+        </section>
+      }
+
+      @if (posicoes().length) {
+        <section class="bloco" aria-labelledby="t-rankings">
+          <h2 id="t-rankings" class="bloco__titulo">Nos rankings</h2>
+          <ul class="posicoes">
+            @for (p of posicoes(); track p.criterio.id) {
+              <li>
+                @if (p.fora) {
+                  <span class="posicao posicao--fora">
+                    <span class="posicao__criterio">{{ p.criterio.rotulo }}</span>
+                    <span class="posicao__texto">fora do ranking: {{ p.motivo }}</span>
+                  </span>
+                } @else {
+                  <a
+                    class="posicao"
+                    [class]="p.destaque ? 'posicao--' + p.tom : 'posicao--comum'"
+                    routerLink="/rankings"
+                    [queryParams]="{ criterio: p.criterio.id, ordem: p.ordem === 'asc' ? 'asc' : null }"
+                  >
+                    @if (p.destaque && p.tom !== 'neutro') {
+                      <mt-icon [name]="p.tom === 'bom' ? 'positivo' : 'negativo'" [size]="16" />
+                    }
+                    <span class="posicao__criterio">{{ p.criterio.rotulo }}</span>
+                    <span class="posicao__texto"><strong>{{ p.frase }}</strong> de {{ p.total }}</span>
+                  </a>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </aside>
   }
 
   <section class="secoes">

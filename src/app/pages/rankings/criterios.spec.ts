@@ -1,5 +1,5 @@
 import type { LinhaRanking, RankingSenado } from '../../core/models';
-import { classificar, CRITERIOS } from './criterios';
+import { classificar, CRITERIOS, posicoesDoSenador } from './criterios';
 
 const linha = (codigo: string, partido: string, extra: Partial<LinhaRanking>): LinhaRanking => ({
   codigo, nome: `Senador ${codigo}`, partido, uf: 'DF', sexo: 'M', foto: null,
@@ -62,5 +62,34 @@ describe('ordem entre iguais e período em exercício', () => {
   it('a nota de presença traz só os números', () => {
     const r = { ...ranking([]), votacoes: 426 };
     expect(crit('presenca').nota(linha('a', 'X', { votacoes: 59, presentes: 59 }), r)).toBe('59 de 59 votações');
+  });
+});
+
+describe('posicoesDoSenador', () => {
+  const r = ranking([
+    linha('a', 'X', { presentes: 100, cota: 50_000, proposicoes: 3 }),
+    linha('b', 'X', { presentes: 90, cota: 300_000, proposicoes: 40 }),
+    linha('c', 'Y', { presentes: 80, cota: 200_000, proposicoes: 20 }),
+    linha('d', 'Y', { presentes: 50, votacoes: 100, cota: 0, proposicoes: 10 }),
+  ]);
+
+  it('mostra o lado mais perto do topo, com o tom certo', () => {
+    const ps = posicoesDoSenador(r, 'a');
+    const gastos = ps.find((p) => p.criterio.id === 'gastos')!;
+    expect(gastos.fora).toBe(false);
+    if (!gastos.fora) {
+      expect(gastos.frase).toBe('1º que menos gastou');
+      expect(gastos.tom).toBe('bom');
+      expect(gastos.destaque).toBe(true);
+    }
+    const projetos = ps.find((p) => p.criterio.id === 'projetos')!;
+    if (!projetos.fora) expect([projetos.frase, projetos.tom]).toEqual(['1º com menos projetos', 'ruim']);
+    // Destaques bons antes dos ruins.
+    expect(ps[0].fora || ps[0].tom).toBe('bom');
+  });
+
+  it('explica quando está fora de um ranking', () => {
+    const g = posicoesDoSenador(r, 'd').find((p) => p.criterio.id === 'gastos')!;
+    expect(g.fora && g.motivo).toContain('sem gastos');
   });
 });

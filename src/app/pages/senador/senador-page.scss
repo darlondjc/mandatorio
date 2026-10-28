@@ -1,4 +1,5 @@
-:host { display: flex; flex-direction: column; gap: 22px; max-width: 1200px; }
+:host { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; max-width: 1200px; align-items: start; }
+.topo { display: flex; flex-direction: column; gap: 22px; min-width: 0; container-type: inline-size; }
 
 
 .perfil { display: flex; gap: 28px; align-items: center; }
@@ -66,4 +67,61 @@
   .mt-voterow, .projeto, .comissao { grid-template-columns: auto minmax(0, 1fr); padding: var(--space-3); gap: var(--space-3); }
   .mt-voterow .mt-vote { min-width: 72px; padding: 4px 0; font-size: 13px; }
   .mt-voterow__side { grid-column: 2; text-align: left; }
+}
+
+/* Coluna lateral: perfil de atuação e posição nos rankings. */
+.lateral { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; align-items: start; }
+.bloco { display: flex; flex-direction: column; gap: 12px; padding: var(--space-5); border: 2px solid var(--line); border-radius: var(--radius-xl); background: var(--surface); }
+.bloco__titulo { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-muted); }
+.bloco__destaque { font: 500 19px/1.3 var(--font-display); }
+.bloco__destaque strong { font-weight: 600; color: var(--brand-700); }
+.bloco__sub { font-size: 13px; font-weight: 600; color: var(--ink-muted); margin-top: 4px; }
+.bloco__nota { font-size: 12px; color: var(--ink-muted); line-height: 1.45; }
+.bloco__nota a { color: var(--brand-700); font-weight: 600; }
+
+.eixos, .temas, .posicoes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.eixos { gap: 10px; }
+.eixo { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; font-size: 14px; }
+.eixo__pct { font-weight: 600; font-variant-numeric: tabular-nums; }
+.eixo__barra { grid-column: 1 / -1; position: relative; height: 8px; border-radius: var(--radius-pill); background: var(--line); }
+.eixo__valor { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--abstain); }
+.eixo--destaque .eixo__valor { background: var(--brand-700); }
+.eixo--destaque .eixo__rotulo { font-weight: 600; }
+.eixo__media { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--ink); opacity: 0.55; }
+.eixo__nota { grid-column: 1 / -1; font-size: 11px; color: var(--ink-muted); }
+
+.temas { gap: 6px; font-size: 14px; }
+.temas li { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.temas li:last-child { border-bottom: 0; padding-bottom: 0; }
+.temas__pct { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.temas__acima { margin-left: 6px; font-size: 11px; font-weight: 600; color: var(--brand-700); }
+
+.posicoes { gap: 8px; }
+.posicao {
+  display: grid; grid-template-columns: auto 1fr; grid-template-areas: 'ic crit' 'ic texto'; column-gap: 10px; align-items: center;
+  padding: 10px 12px; border-radius: var(--radius-lg); background: var(--brand-100); color: inherit; text-decoration: none; font-size: 14px;
+}
+.posicao mt-icon { grid-area: ic; }
+.posicao__criterio { grid-area: crit; font-size: 12px; color: var(--ink-muted); }
+.posicao__texto { grid-area: texto; }
+.posicao__texto strong { font-weight: 600; }
+a.posicao:hover { outline: 2px solid var(--line); }
+.posicao--bom { background: var(--brand-700); color: var(--on-brand); }
+.posicao--ruim { background: var(--coral-500); color: var(--on-coral); }
+.posicao--bom .posicao__criterio, .posicao--ruim .posicao__criterio { color: inherit; opacity: 0.85; }
+.posicao--neutro { background: var(--surface); border: 2px solid var(--ink); }
+.posicao--comum, .posicao--fora { background: transparent; border: 2px solid var(--line); }
+.posicao--fora .posicao__texto { color: var(--ink-muted); font-size: 13px; }
+
+/* Cards de resumo em 2×2 quando a coluna principal fica estreita (com a lateral ao lado). */
+@container (max-width: 860px) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Telas largas: a lateral vira uma coluna à direita, fixa durante a rolagem. */
+@media (min-width: 1500px) {
+  :host { max-width: 1560px; grid-template-columns: minmax(0, 1fr) 340px; column-gap: 32px; }
+  :host > * { grid-column: 1 / -1; }
+  .topo, .secoes { grid-column: 1; }
+  .lateral { grid-column: 2; grid-row: 2 / span 2; grid-template-columns: 1fr; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; }
 }

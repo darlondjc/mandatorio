@@ -8,6 +8,9 @@ import { Photo } from '../../shared/avatar';
 import { Segmento, SplitBar } from '../../shared/split-bar';
 import { Aba, Tabs } from '../../shared/tabs';
 import { Voltar } from '../../shared/voltar';
+import { Icon } from '../../shared/icon';
+import { perfilTematico, VOLTADO_A } from '../../core/temas';
+import { posicoesDoSenador } from '../rankings/criterios';
 
 type FiltroVoto = 'abertas' | 'divergiu' | 'ausente' | 'secretas';
 
@@ -20,7 +23,7 @@ const ABAS: Aba[] = [
 
 @Component({
   selector: 'mt-senador-page',
-  imports: [RouterLink, Photo, SplitBar, Tabs, Voltar],
+  imports: [RouterLink, Photo, SplitBar, Tabs, Voltar, Icon],
   templateUrl: './senador-page.html',
   styleUrl: './senador-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,10 +46,22 @@ export class SenadorPage {
     params: () => ({ codigo: this.codigo(), limite: this.limiteVotos() }),
     loader: ({ params }) => this.ds.votos(params.codigo, params.limite),
   });
+  // Carregado já na abertura: alimenta o perfil de atuação (é um documento só).
   protected readonly projetos = resource({
-    params: () => (this.abaAtiva() === 'projetos' ? this.codigo() : undefined),
+    params: () => this.codigo(),
     loader: ({ params }) => this.ds.proposicoes(params),
   });
+  protected readonly ranking = resource({ loader: () => this.ds.ranking() });
+
+  protected readonly perfilTematico = computed(() => perfilTematico(this.projetos.value() ?? []));
+  protected readonly voltadoA = VOLTADO_A;
+
+  /** Posição em cada ranking (só para quem está em exercício: os rankings são deles). */
+  protected readonly posicoes = computed(() => {
+    const r = this.ranking.value();
+    return r && this.senador.value()?.emExercicio ? posicoesDoSenador(r, this.codigo()) : [];
+  });
+
   protected readonly gastos = resource({
     params: () => (this.abaAtiva() === 'gastos' ? this.codigo() : undefined),
     loader: ({ params }) => this.ds.gastos(params),
