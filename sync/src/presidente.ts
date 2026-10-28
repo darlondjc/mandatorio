@@ -267,11 +267,19 @@ export function resumir(atos: Pick<AtosMandato, 'medidas' | 'vetos' | 'projetos'
   };
 }
 
-export async function coletarPresidentes(): Promise<{ presidentes: Presidente[]; atos: AtosMandato[] }> {
+/**
+ * Coleta todos os presidentes do cadastro. Se um mandato falhar (a API da Câmara às vezes
+ * devolve 504), ele fica de fora das gravações e o presidente mantém o resumo já publicado,
+ * lido por `anterior`; os outros mandatos seguem normalmente.
+ */
+export async function coletarPresidentes(
+  anterior: (id: string) => Promise<Presidente | null> = async () => null,
+): Promise<{ presidentes: Presidente[]; atos: AtosMandato[]; falhas: string[] }> {
   const agora = new Date().toISOString();
   const hoje = agora.slice(0, 10);
   const presidentes: Presidente[] = [];
   const atos: AtosMandato[] = [];
+  const falhas: string[] = [];
   for (const p of lerCadastro()) {
     if (!p.foto) {
       const f = await fotoWikidata(p.nome, p.wikidata);
@@ -280,13 +288,19 @@ export async function coletarPresidentes(): Promise<{ presidentes: Presidente[];
     const mandatos: MandatoPresidente[] = [];
     for (const m of p.mandatos) {
       console.log(`Presidente: ${p.nome} ${m.id}…`);
-      const [medidas, vets, projetos] = [await medidasProvisorias(m, m.id), await vetos(m, m.id), await projetosExecutivo(m, m.id)];
-      console.log(`  ${medidas.length} MPs, ${vets.length} vetos, ${projetos.length} projetos`);
-      const registro = { presidenteId: p.id, mandato: m.id, medidas, vetos: vets, projetos, atualizadoEm: agora };
-      atos.push(registro);
-      mandatos.push({ ...m, atual: m.inicio <= hoje && hoje < m.fim, resumo: resumir(registro) });
+      try {
+        const [medidas, vets, projetos] = [await medidasProvisorias(m, m.id), await vetos(m, m.id), await projetosExecutivo(m, m.id)];
+        console.log(`  ${medidas.length} MPs, ${vets.length} vetos, ${projetos.length} projetos`);
+        const registro = { presidenteId: p.id, mandato: m.id, medidas, vetos: vets, projetos, atualizadoEm: agora };
+        atos.push(registro);
+        mandatos.push({ ...m, atual: m.inicio <= hoje && hoje < m.fim, resumo: resumir(registro) });
+      } catch (e) {
+        const antigo = (await anterior(p.id).catch(() => null))?.mandatos.find((x) => x.id === m.id);
+        falhas.push(`${p.id} ${m.id}: ${(e as Error).message}${antigo ? ' (mantido o resumo anterior)' : ' (sem dados anteriores)'}`);
+        if (antigo) mandatos.push({ ...m, atual: m.inicio <= hoje && hoje < m.fim, resumo: antigo.resumo });
+      }
     }
-    presidentes.push({ ...p, mandatos });
+    if (mandatos.length) presidentes.push({ ...p, mandatos });
   }
-  return { presidentes, atos };
+  return { presidentes, atos, falhas };
 }

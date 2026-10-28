@@ -5,7 +5,7 @@
 //   --only=senado|presidente   roda uma parte só
 
 import { mkdirSync, writeFileSync } from 'node:fs';
-import type { Sincronizacao, VotoSenador } from '../../src/app/core/models.ts';
+import type { Presidente, Sincronizacao, VotoSenador } from '../../src/app/core/models.ts';
 import { diagnostico } from './http.ts';
 import { coletarPresidentes, deliberacoesVistas, diagFotos } from './presidente.ts';
 import { coletarSenado, diagAutorias } from './senado.ts';
@@ -15,6 +15,28 @@ const dryRun = args.includes('--dry-run');
 const only = args.find((a) => a.startsWith('--only='))?.split('=')[1];
 
 type Gravacao = { caminho: string; dados: object };
+
+let banco: Promise<import('firebase-admin/firestore').Firestore> | null = null;
+
+function firestore() {
+  banco ??= (async () => {
+    const credencial = process.env['FIREBASE_SERVICE_ACCOUNT'];
+    if (!credencial) throw new Error('Defina FIREBASE_SERVICE_ACCOUNT com o JSON da conta de serviço, ou use --dry-run.');
+    const { initializeApp, cert } = await import('firebase-admin/app');
+    const { getFirestore } = await import('firebase-admin/firestore');
+    const db = getFirestore(initializeApp({ credential: cert(JSON.parse(credencial)) }));
+    db.settings({ ignoreUndefinedProperties: true });
+    return db;
+  })();
+  return banco;
+}
+
+/** Documento já publicado (null no dry-run ou se não existir). */
+async function lerDoc<T>(caminho: string): Promise<T | null> {
+  if (dryRun) return null;
+  const snap = await (await firestore()).doc(caminho).get();
+  return snap.exists ? (snap.data() as T) : null;
+}
 
 async function gravar(itens: Gravacao[]) {
   if (dryRun) {
@@ -27,13 +49,7 @@ async function gravar(itens: Gravacao[]) {
     console.log(`(dry-run) ${itens.length} documentos salvos em sync/out/`);
     return;
   }
-  const credencial = process.env['FIREBASE_SERVICE_ACCOUNT'];
-  if (!credencial) throw new Error('Defina FIREBASE_SERVICE_ACCOUNT com o JSON da conta de serviço, ou use --dry-run.');
-  const { initializeApp, cert } = await import('firebase-admin/app');
-  const { getFirestore } = await import('firebase-admin/firestore');
-  const app = initializeApp({ credential: cert(JSON.parse(credencial)) });
-  const db = getFirestore(app);
-  db.settings({ ignoreUndefinedProperties: true });
+  const db = await firestore();
   const writer = db.bulkWriter();
   for (const { caminho, dados } of itens) writer.set(db.doc(caminho), dados);
   await writer.close();
@@ -103,7 +119,7 @@ async function main() {
 
   if (!only || only === 'presidente') {
     try {
-      const p = await coletarPresidentes();
+      const p = await coletarPresidentes((id) => lerDoc<Presidente>(`presidentes/${id}`));
       fontes.push('Câmara dos Deputados — Dados Abertos', 'Congresso Nacional — Vetos');
       for (const pres of p.presidentes) itens.push({ caminho: `presidentes/${pres.id}`, dados: pres });
       for (const a of p.atos) itens.push({ caminho: `presidentes/${a.presidenteId}/mandatos/${a.mandato}`, dados: a });
@@ -114,6 +130,9 @@ async function main() {
       }).join('\n'));
       anotar('notice', 'Presidente — fotos', diagFotos.join('\n') || 'fotos já definidas no cadastro');
       anotar('notice', 'Presidente — deliberações de veto', JSON.stringify(Object.fromEntries(deliberacoesVistas)));
+      if (p.falhas.length) {
+        anotar('warning', 'Presidente — mandatos com falha', p.falhas.join('\n'));
+      }
     } catch (e) {
       erros.push('Presidente');
       console.error(e);

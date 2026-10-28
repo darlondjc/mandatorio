@@ -41,6 +41,9 @@ function registrarFalha(url: string, msg: string) {
   diagnostico.falhas.set(r, f);
 }
 
+/** Falhas que costumam passar sozinhas: 5xx, 429 e tempo esgotado. Essas ganham mais tentativas. */
+const TRANSITORIA = /^HTTP (5\d\d|429)|timeout|aborted|ECONNRESET|ETIMEDOUT|fetch failed/i;
+
 export async function getJson<T = unknown>(url: string, tentativas = 4): Promise<T> {
   for (let i = 1; ; i++) {
     const agora = Date.now();
@@ -48,7 +51,10 @@ export async function getJson<T = unknown>(url: string, tentativas = 4): Promise
     ultima = Date.now();
     diagnostico.chamadas++;
     try {
-      const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': USER_AGENT } });
+      const res = await fetch(url, {
+        headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
+        signal: AbortSignal.timeout(90_000),
+      });
       if (res.status === 404) throw new NaoEncontrado(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200).replace(/\s+/g, ' ')}`);
       const texto = await res.text();
@@ -62,12 +68,13 @@ export async function getJson<T = unknown>(url: string, tentativas = 4): Promise
       if (!diagnostico.formatos.has(r)) diagnostico.formatos.set(r, formato(json).slice(0, 700));
       return json;
     } catch (e) {
-      if (e instanceof NaoEncontrado || i >= tentativas) {
+      const transitoria = TRANSITORIA.test(`${(e as Error).message} ${(e as { name?: string }).name}`);
+      if (e instanceof NaoEncontrado || i >= (transitoria ? tentativas + 3 : tentativas)) {
         const causa = (e as { cause?: { code?: string; message?: string } }).cause;
         registrarFalha(url, (e as Error).message + (causa ? ` (${causa.code ?? causa.message})` : ''));
         throw e;
       }
-      await espera(1000 * 2 ** (i - 1));
+      await espera(Math.min(30_000, (transitoria ? 3000 : 1000) * 2 ** (i - 1)));
     }
   }
 }
