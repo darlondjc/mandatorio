@@ -1,6 +1,7 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, isDevMode, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 
+import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
 import { DataSource } from './core/data-source';
 import { firebaseConfig } from './core/firebase-config';
@@ -15,5 +16,7 @@ export const appConfig: ApplicationConfig = {
       provide: DataSource,
       useFactory: () => (firebaseConfig ? new FirestoreDataSource(firebaseConfig) : new SampleDataSource()),
     },
+    // Os dados (Firestore) não passam pelo service worker: o SDK já mantém seu próprio cache.
+    provideServiceWorker('ngsw-worker.js', { enabled: !isDevMode(), registrationStrategy: 'registerWhenStable:30000' }),
   ],
 };

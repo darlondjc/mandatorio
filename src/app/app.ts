@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { SwUpdate } from '@angular/service-worker';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { DataSource } from './core/data-source';
@@ -17,12 +18,22 @@ export class App {
   protected readonly exemplo = this.ds.exemplo;
   protected readonly menuAberto = signal(false);
   protected readonly atualizado = signal<string | null>(null);
+  protected readonly novaVersao = signal(false);
 
   constructor() {
     this.ds.sincronizacao().then((s) => this.atualizado.set(s ? data(s.atualizadoEm) : null)).catch(() => {});
     inject(Router)
       .events.pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe(() => this.menuAberto.set(false));
+    const sw = inject(SwUpdate, { optional: true });
+    if (sw?.isEnabled) {
+      sw.versionUpdates.pipe(filter((e) => e.type === 'VERSION_READY')).subscribe(() => this.novaVersao.set(true));
+      sw.unrecoverable.subscribe(() => location.reload());
+    }
+  }
+
+  protected recarregar() {
+    location.reload();
   }
 
   protected alternarTema() {

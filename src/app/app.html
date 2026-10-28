@@ -59,4 +59,11 @@
     }
     <router-outlet />
   </main>
+  @if (novaVersao()) {
+    <div class="nova-versao" role="status">
+      <span>Há uma versão nova do Mandatório.</span>
+      <button type="button" class="mt-btn mt-btn--brand mt-btn--sm" (click)="recarregar()">Atualizar</button>
+      <button type="button" class="mt-btn mt-btn--ghost mt-btn--sm" (click)="novaVersao.set(false)">Depois</button>
+    </div>
+  }
 </div>
