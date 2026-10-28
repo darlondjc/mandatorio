@@ -26,7 +26,7 @@ export class FirestoreDataSource extends DataSource {
 
   constructor(
     private readonly config: FirebaseOptions,
-    /** Chave do reCAPTCHA v3 para o App Check; sem ela, o App Check fica desligado. */
+    /** Chave do reCAPTCHA Enterprise para o App Check; sem ela, o App Check fica desligado. */
     private readonly appCheckSiteKey: string | null = null,
   ) {
     super();
@@ -39,8 +39,9 @@ export class FirestoreDataSource extends DataSource {
       // O App Check precisa estar ligado antes da primeira leitura: com a aplicação obrigatória
       // ativada no console, o Firestore recusa pedidos sem o token dele.
       if (this.appCheckSiteKey) {
-        const { initializeAppCheck, ReCaptchaV3Provider } = await import('firebase/app-check');
-        initializeAppCheck(firebase, { provider: new ReCaptchaV3Provider(this.appCheckSiteKey), isTokenAutoRefreshEnabled: true });
+        // reCAPTCHA Enterprise: o v3 clássico não é mais aceito no registro do App Check.
+        const { initializeAppCheck, ReCaptchaEnterpriseProvider } = await import('firebase/app-check');
+        initializeAppCheck(firebase, { provider: new ReCaptchaEnterpriseProvider(this.appCheckSiteKey), isTokenAutoRefreshEnabled: true });
       }
       return { db: fs.getFirestore(firebase), fs };
     })();
