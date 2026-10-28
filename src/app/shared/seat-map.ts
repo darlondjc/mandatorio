@@ -97,6 +97,14 @@ export class SeatMap {
   readonly destaque = input<string | null>(null);
   /** Cadeira a realçar por fora (ex.: o senador sob o mouse na lista). */
   readonly realce = input<string | null>(null);
+  /** Cor de cada cadeira definida por fora (ex.: pelo voto numa votação). Substitui o modo. */
+  readonly cores = input<Record<string, string> | null>(null);
+  /** Texto extra por cadeira, mostrado no balão e lido por leitores de tela (ex.: "Votou Sim"). */
+  readonly detalhes = input<Record<string, string> | null>(null);
+  /** Número e legenda do centro, quando não for a contagem de cadeiras. */
+  readonly centro = input<{ numero: string | number; legenda: string } | null>(null);
+  /** Cadeiras a apagar (ex.: as que não batem com um filtro de voto). */
+  readonly apagadas = input<Set<string> | null>(null);
 
   /** Cadeira sob o mouse ou com foco do teclado. */
   protected readonly sobre = signal<string | null>(null);
@@ -110,7 +118,8 @@ export class SeatMap {
     const meio = SEAT / 2 / W * 100;
     // Perto das bordas, o balão se apoia para dentro para não sair do quadro.
     const desloc = s.x < 12 ? '-12%' : s.x > 86 ? '-88%' : '-50%';
-    return { x: s.x + meio, y: s.y, nome: c.nome, sub: `${c.partido} · ${c.uf}`, desloc };
+    const extra = this.detalhes()?.[c.codigo];
+    return { x: s.x + meio, y: s.y, nome: c.nome, sub: `${c.partido} · ${c.uf}${extra ? ' · ' + extra : ''}`, desloc };
   });
 
   protected readonly assentos = computed(() => {
@@ -120,6 +129,9 @@ export class SeatMap {
     );
     const pos = posicoes(ordenadas.length);
     const filtro = this.filtroPartido();
+    const cores = this.cores();
+    const detalhes = this.detalhes();
+    const apagadas = this.apagadas();
     return ordenadas.map((c, i) => {
       const p = pos[i];
       const x = CX + p.r * Math.cos(p.t) - SEAT / 2;
@@ -129,19 +141,23 @@ export class SeatMap {
         x: (x / W) * 100,
         y: (y / H) * 100,
         rot: 90 - (p.t * 180) / Math.PI,
-        cor: this.modo() === 'genero' ? (c.sexo === 'F' ? 'var(--coral-500)' : 'var(--abstain)') : corPartido(c.partido),
-        apagada: !!filtro && c.partido !== filtro,
-        rotulo: `${c.nome}, ${c.partido}–${c.uf}`,
+        cor: cores?.[c.codigo] ?? (this.modo() === 'genero' ? (c.sexo === 'F' ? 'var(--coral-500)' : 'var(--abstain)') : corPartido(c.partido)),
+        apagada: (!!filtro && c.partido !== filtro) || !!apagadas?.has(c.codigo),
+        rotulo: `${c.nome}, ${c.partido}–${c.uf}${detalhes?.[c.codigo] ? ', ' + detalhes[c.codigo] : ''}`,
       };
     });
   });
 
   protected readonly total = computed(() => {
+    const c = this.centro();
+    if (c) return c.numero;
     const f = this.filtroPartido();
     return f ? this.cadeiras().filter((c) => c.partido === f).length : this.cadeiras().length;
   });
 
   protected readonly legenda = computed(() => {
+    const c = this.centro();
+    if (c) return c.legenda;
     const f = this.filtroPartido();
     if (f) return `cadeiras do ${f}`;
     if (this.modo() === 'genero') {

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { etapaProjeto, resumir, situacaoMP, situacaoVeto } from './presidente.ts';
 import { citaSenador, maioriaPorPartido } from './senado.ts';
-import { assuntoDoVeto, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
+import { assuntoDoVeto, descricaoVotacao, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
 
 test('normaliza votos do Senado', () => {
   assert.equal(normalizarVoto('Sim'), 'sim');
@@ -55,14 +55,14 @@ test('etapa de projeto e situação de veto', () => {
 
 test('maioria do partido ignora ausências e empata em null', () => {
   const m = maioriaPorPartido({
-    id: '1', data: '2026-01-01', materia: 'PL 1/2026', ementa: '', resultado: null,
+    id: '1', data: '2026-01-01', materia: 'PL 1/2026', ementa: '', descricao: null, resultado: null,
     votos: [
-      { codigo: 'a', partido: 'X', sigla: 'Sim' },
-      { codigo: 'b', partido: 'X', sigla: 'Sim' },
-      { codigo: 'c', partido: 'X', sigla: 'Não' },
-      { codigo: 'd', partido: 'X', sigla: 'MIS' },
-      { codigo: 'e', partido: 'Y', sigla: 'Sim' },
-      { codigo: 'f', partido: 'Y', sigla: 'Não' },
+      { codigo: 'a', nome: 'a', partido: 'X', uf: 'DF', sigla: 'Sim' },
+      { codigo: 'b', nome: 'b', partido: 'X', uf: 'DF', sigla: 'Sim' },
+      { codigo: 'c', nome: 'c', partido: 'X', uf: 'DF', sigla: 'Não' },
+      { codigo: 'd', nome: 'd', partido: 'X', uf: 'DF', sigla: 'MIS' },
+      { codigo: 'e', nome: 'e', partido: 'Y', uf: 'DF', sigla: 'Sim' },
+      { codigo: 'f', nome: 'f', partido: 'Y', uf: 'DF', sigla: 'Não' },
     ],
   });
   assert.equal(m.get('X'), 'sim');
@@ -111,4 +111,11 @@ test('reconhece o senador no campo de autoria', () => {
   assert.equal(citaSenador('Senador Marcos Cesar Pontes', 'Astronauta Marcos Pontes', 'Marcos Cesar Pontes'), true);
   assert.equal(citaSenador('Senador Davi Alcolumbre (UNIÃO/AP)', 'Alan Rick', 'Alan Rick Miranda'), false);
   assert.equal(citaSenador('', 'Alan Rick', 'Alan Rick Miranda'), false);
+});
+
+test('descrição da votação só quando acrescenta algo à ementa', () => {
+  assert.equal(descricaoVotacao('Votação em 1º turno', 'Altera a Constituição'), 'Votação em 1º turno');
+  assert.equal(descricaoVotacao('Altera a Constituição', 'Altera a  Constituição'), null);
+  assert.equal(descricaoVotacao('  ', 'x'), null);
+  assert.equal(descricaoVotacao(undefined, 'x'), null);
 });

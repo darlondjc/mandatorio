@@ -8,6 +8,7 @@ import {
   Senador,
   Sincronizacao,
   Veto,
+  Votacao,
   VotoSenador,
 } from './models';
 
@@ -25,6 +26,7 @@ export abstract class DataSource {
   abstract votos(codigo: string, limite: number): Promise<VotoSenador[]>;
   abstract gastos(codigo: string): Promise<GastoAno[]>;
   abstract proposicoes(codigo: string): Promise<Proposicao[]>;
+  abstract votacao(id: string): Promise<Votacao | null>;
   abstract presidentes(): Promise<Presidente[]>;
   abstract medidas(presidenteId: string, mandato: string): Promise<MedidaProvisoria[]>;
   abstract vetos(presidenteId: string, mandato: string): Promise<Veto[]>;

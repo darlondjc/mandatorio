@@ -13,6 +13,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/senador/senador-page').then((m) => m.SenadorPage),
   },
   {
+    path: 'votacao/:id',
+    title: 'Votação · Mandatório',
+    loadComponent: () => import('./pages/votacao/votacao-page').then((m) => m.VotacaoPage),
+  },
+  {
     path: 'presidente',
     title: 'Presidente · Mandatório',
     loadComponent: () => import('./pages/presidente/presidente-page').then((m) => m.PresidentePage),

@@ -80,6 +80,10 @@ async function main() {
         for (const g of s.gastosPorSenador.get(sen.codigo) ?? []) itens.push({ caminho: `senadores/${sen.codigo}/gastos/${g.ano}`, dados: g });
         itens.push({ caminho: `senadores/${sen.codigo}/listas/proposicoes`, dados: { itens: s.proposicoesPorSenador.get(sen.codigo) ?? [] } });
       }
+      for (const v of s.votacoes) itens.push({ caminho: `votacoes/${v.id}`, dados: v });
+      const repetidas = new Map<string, number>();
+      s.votacoes.forEach((v) => repetidas.set(v.materia, (repetidas.get(v.materia) ?? 0) + 1));
+      anotar('notice', 'Senado — votações', `${s.votacoes.length} votações (${s.votacoes.filter((v) => v.secreta).length} secretas) · ${s.votacoes.filter((v) => v.descricao).length} com descrição · ${[...repetidas.values()].filter((n) => n > 1).length} matérias votadas mais de uma vez\nexemplos de descrição: ${[...new Set(s.votacoes.map((v) => v.descricao).filter(Boolean))].slice(0, 12).join(' | ').slice(0, 1800)}`);
       const votos = [...s.votosPorSenador.values()].reduce((a, v) => a + v.length, 0);
       const dist = { sim: 0, nao: 0, abstencao: 0, secreto: 0, ausente: 0, divergiu: 0 };
       for (const lista of s.votosPorSenador.values()) for (const v of lista) { dist[v.voto]++; if (v.divergiu) dist.divergiu++; }

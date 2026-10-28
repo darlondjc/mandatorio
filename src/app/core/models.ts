@@ -6,6 +6,7 @@
 //   plenario/senado                        -> Plenario
 //   senadores/{codigo}                     -> Senador
 //   senadores/{codigo}/votos/{ano}         -> VotosAno (todas as votações do ano num documento)
+//   votacoes/{id}                          -> Votacao (placar e voto de cada senador)
 //   senadores/{codigo}/gastos/{ano}        -> GastoAno
 //   senadores/{codigo}/listas/proposicoes  -> ListaProposicoes
 //   presidentes/{id}                       -> Presidente
@@ -95,6 +96,8 @@ export interface VotoSenador {
   data: DataISO;
   materia: string; // "PL 4.512/2025"
   ementa: string;
+  /** O que foi votado: turno, destaque, requerimento… Distingue votações da mesma matéria. */
+  descricao?: string | null;
   voto: Voto;
   /** Sigla original da API (Sim, Não, Abstenção, P-NRV, MIS, LP…). */
   votoOriginal: string;
@@ -237,5 +240,29 @@ export interface AtosMandato {
   medidas: MedidaProvisoria[];
   vetos: Veto[];
   projetos: ProjetoExecutivo[];
+  atualizadoEm: string;
+}
+
+export interface VotoNaVotacao {
+  codigo: string;
+  nome: string;
+  partido: string;
+  uf: string;
+  voto: Voto;
+  votoOriginal: string;
+}
+
+/** Uma votação nominal do plenário do Senado, com o voto de cada senador. */
+export interface Votacao {
+  id: string;
+  data: DataISO;
+  materia: string;
+  ementa: string;
+  descricao: string | null;
+  resultado: string | null;
+  /** Votação secreta: só se sabe quem votou, não como. */
+  secreta: boolean;
+  placar: Record<Voto, number>;
+  votos: VotoNaVotacao[];
   atualizadoEm: string;
 }

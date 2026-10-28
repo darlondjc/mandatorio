@@ -79,3 +79,15 @@ export function assuntoDoVeto(ementa: string): string {
   if (q) return q[1].trim();
   return ementa.replace(/^Veto (total|parcial)\s*(aposto ao|ao)\s*/i, '').trim() || ementa;
 }
+
+/**
+ * Descrição da votação (turno, destaque, requerimento…), quando ela acrescenta algo à ementa.
+ * É o que diferencia votações da mesma matéria, como 1º e 2º turno de uma PEC.
+ */
+export function descricaoVotacao(descricao: unknown, ementa: unknown): string | null {
+  if (typeof descricao !== 'string') return null;
+  const d = descricao.replace(/\s+/g, ' ').trim();
+  if (!d) return null;
+  if (typeof ementa === 'string' && semAcento(d) === semAcento(ementa.replace(/\s+/g, ' ').trim())) return null;
+  return d;
+}

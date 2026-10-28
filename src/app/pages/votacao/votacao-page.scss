@@ -1,0 +1,41 @@
+:host { display: flex; flex-direction: column; gap: 22px; max-width: 1200px; }
+
+.voltar {
+  align-self: flex-start; padding: 0; border: 0; background: none; cursor: pointer;
+  color: var(--brand-700); font: 600 15px var(--font-sans);
+}
+
+.cabecalho { display: flex; flex-direction: column; gap: 12px; }
+.ementa { font-size: 28px; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; max-width: 900px; }
+.descricao { font-size: 16px; color: var(--ink); max-width: 760px; }
+.nota { font-size: 14px; color: var(--ink-muted); max-width: 760px; }
+.rejeitado { background: var(--coral-500); color: var(--on-coral); }
+
+.painel {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: var(--space-6) 28px var(--space-5);
+  border-radius: var(--radius-xl); background: var(--brand-100);
+}
+.legenda { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: center; }
+.mt-swatch.vazia { border: 1.5px solid var(--abstain); }
+
+.tabela { overflow-x: auto; border: 2px solid var(--line); border-radius: var(--radius-lg); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 10px 14px; text-align: center; border-bottom: 1px solid var(--line); }
+thead th { font-weight: 500; color: var(--ink-muted); font-size: 13px; }
+thead th:first-child { text-align: left; }
+tbody th { text-align: left; font-weight: 600; white-space: nowrap; }
+tbody tr:last-child > * { border-bottom: 0; }
+
+.contagem { font-family: var(--font-sans); font-size: 15px; font-weight: 500; }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-3); }
+.nome { gap: 0; min-width: 0; flex: 1; }
+.mt-sencard .mt-vote { flex-shrink: 0; }
+
+.aviso-erro { padding: var(--space-4); border-radius: var(--radius-lg); background: var(--coral-100); color: var(--coral-900); }
+
+@media (max-width: 720px) {
+  .ementa { font-size: 22px; }
+  .painel { padding: var(--space-4); border-radius: var(--radius-lg); }
+  th, td { padding: 8px 10px; }
+}

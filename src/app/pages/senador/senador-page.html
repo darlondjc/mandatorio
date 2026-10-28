@@ -104,10 +104,13 @@
           }
           <div class="mt-stack">
             @for (v of votosFiltrados(); track v.id) {
-              <article class="mt-voterow">
+              <a class="mt-voterow" [routerLink]="['/votacao', v.id]" [attr.aria-label]="rotuloVoto[v.voto] + ' em ' + v.materia + (v.descricao ? ', ' + v.descricao : '') + '. Ver a votação completa'">
                 <span [class]="classeVoto(v.voto)" [title]="v.votoOriginal">{{ rotuloVoto[v.voto] }}</span>
                 <div class="mt-stack titulo">
                   <span class="mt-voterow__title">{{ v.ementa }}</span>
+                  @if (v.descricao) {
+                    <span class="mt-voterow__desc">{{ v.descricao }}</span>
+                  }
                   <span class="mt-voterow__meta">{{ v.materia }} · {{ data(v.data) }}</span>
                 </div>
                 <span class="mt-voterow__side">
@@ -122,7 +125,7 @@
                     <br /><strong>{{ v.resultado }}</strong>
                   }
                 </span>
-              </article>
+              </a>
             } @empty {
               @if (!votos.isLoading()) {
                 <p class="muted">Nenhuma votação com esse filtro entre as carregadas.</p>

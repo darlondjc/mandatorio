@@ -13,11 +13,12 @@ import type {
   Plenario,
   Proposicao,
   Senador,
+  Votacao as VotacaoCompleta,
   Voto,
   VotoSenador,
 } from '../../src/app/core/models.ts';
 import { emParalelo, getJson, lista, NaoEncontrado } from './http.ts';
-import { identificacao, isoData, normalizarVoto, resultadoVotacao, semAcento } from './util.ts';
+import { descricaoVotacao, identificacao, isoData, normalizarVoto, resultadoVotacao, semAcento } from './util.ts';
 
 const LEGIS = 'https://legis.senado.leg.br/dadosabertos';
 const ADM = 'https://adm.senado.gov.br/adm-dadosabertos/api/v1';
@@ -46,6 +47,7 @@ export interface ResultadoSenado {
   votosPorSenador: Map<string, VotoSenador[]>;
   gastosPorSenador: Map<string, GastoAno[]>;
   proposicoesPorSenador: Map<string, Proposicao[]>;
+  votacoes: VotacaoCompleta[];
 }
 
 // ---------------------------------------------------------------- senadores
@@ -181,8 +183,9 @@ interface Votacao {
   data: string;
   materia: string;
   ementa: string;
+  descricao: string | null;
   resultado: string | null;
-  votos: { codigo: string; partido: string; sigla: string }[];
+  votos: { codigo: string; nome: string; partido: string; uf: string; sigla: string }[];
 }
 
 /** Votações nominais do plenário, mês a mês (a API limita o intervalo). */
@@ -199,7 +202,9 @@ async function votacoes(inicio: string, fim: string): Promise<Votacao[]> {
     for (const v of lista<Json>(Array.isArray(j) ? j : j?.votacoes ?? j?.Votacoes)) {
       const votos = lista<Json>(v.votos ?? v.Votos).map((x) => ({
         codigo: String(x.codigoParlamentar ?? x.CodigoParlamentar),
+        nome: x.nomeParlamentar ?? x.NomeParlamentar ?? '',
         partido: x.siglaPartidoParlamentar ?? x.SiglaPartido ?? '',
+        uf: x.siglaUFParlamentar ?? x.siglaUfParlamentar ?? x.SiglaUF ?? '',
         sigla: x.siglaVotoParlamentar ?? x.descricaoVotoParlamentar ?? x.SiglaVoto ?? '',
       }));
       if (!votos.length) continue; // votação simbólica
@@ -209,6 +214,7 @@ async function votacoes(inicio: string, fim: string): Promise<Votacao[]> {
         data: isoData(v.dataSessao ?? v.DataSessao) ?? a,
         materia: v.identificacao ?? (sigla ? identificacao(sigla, v.numero, v.ano) : (v.descricaoVotacao ?? 'Votação')),
         ementa: v.ementa ?? v.descricaoVotacao ?? '',
+        descricao: descricaoVotacao(v.descricaoVotacao, v.ementa),
         resultado: resultadoVotacao(v.resultadoVotacao ?? v.descricaoResultado),
         votos,
       });
@@ -307,6 +313,7 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
         data: v.data,
         materia: v.materia,
         ementa: v.ementa,
+        descricao: v.descricao,
         voto,
         votoOriginal: x.sigla,
         maioriaPartido: m,
@@ -385,6 +392,29 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
     votosPorSenador,
     gastosPorSenador,
     proposicoesPorSenador: new Map(base.map((s, i) => [s.codigo, props[i]])),
+    votacoes: vots.map((v) => votacaoCompleta(v, agora)),
+  };
+}
+
+/** A votação como o site mostra: placar, se foi secreta e o voto de cada senador. */
+function votacaoCompleta(v: Votacao, agora: string): VotacaoCompleta {
+  const placar: Record<Voto, number> = { sim: 0, nao: 0, abstencao: 0, secreto: 0, ausente: 0 };
+  const votos = v.votos.map((x) => {
+    const voto = normalizarVoto(x.sigla);
+    placar[voto]++;
+    return { codigo: x.codigo, nome: x.nome, partido: x.partido, uf: x.uf, voto, votoOriginal: x.sigla };
+  });
+  return {
+    id: v.id,
+    data: v.data,
+    materia: v.materia,
+    ementa: v.ementa,
+    descricao: v.descricao,
+    resultado: v.resultado,
+    secreta: placar.secreto > 0 && placar.sim + placar.nao === 0,
+    placar,
+    votos: votos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+    atualizadoEm: agora,
   };
 }
 

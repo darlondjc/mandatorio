@@ -9,6 +9,7 @@ import {
   Presidente,
   Senador,
   Sincronizacao,
+  Votacao,
   VotosAno,
   VotoSenador,
 } from './models';
@@ -71,6 +72,10 @@ export class FirestoreDataSource extends DataSource {
 
   async proposicoes(codigo: string) {
     return (await this.getDoc<ListaProposicoes>(`senadores/${codigo}/listas/proposicoes`))?.itens ?? [];
+  }
+
+  votacao(id: string) {
+    return this.getDoc<Votacao>(`votacoes/${id}`);
   }
 
   presidentes() {

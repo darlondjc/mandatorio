@@ -9,6 +9,7 @@ import {
   Proposicao,
   Senador,
   Veto,
+  Votacao,
   Voto,
   VotoSenador,
 } from './models';
@@ -124,6 +125,10 @@ function gerar(): Base {
     );
   }
 
+  // Algumas votações são secretas (indicação de autoridades): quem esteve presente "votou".
+  const secreta = (i: number) => i % 10 === 4;
+  for (const lista of brutos.values()) lista.forEach((v, i) => { if (secreta(i) && v !== 'ausente') lista[i] = 'secreto'; });
+
   const maioria = (partido: string, i: number): Voto | null => {
     const cont = { sim: 0, nao: 0 };
     for (const c of cadeiras) {
@@ -138,13 +143,16 @@ function gerar(): Base {
   const votos = new Map<string, VotoSenador[]>();
   const senadores: Senador[] = cadeiras.map((c, idx) => {
     const lista = brutos.get(c.codigo)!.map((v, i): VotoSenador => {
-      const [materia, ementa] = MATERIAS[i % MATERIAS.length];
+      const [materia, ementa] = secreta(i)
+        ? [`MSF ${10 + i}/2026`, 'Submete à apreciação do Senado a indicação de embaixador do Brasil']
+        : MATERIAS[i % MATERIAS.length];
       const m = maioria(c.partido, i);
       return {
         id: `v${i}`,
         data: datas[i],
         materia,
         ementa,
+        descricao: i >= MATERIAS.length && !secreta(i) ? (i < 2 * MATERIAS.length ? 'Votação em 2º turno' : 'Destaque para votação em separado') : null,
         voto: v,
         votoOriginal: { sim: 'Sim', nao: 'Não', abstencao: 'Abstenção', secreto: 'Votou', ausente: 'MIS' }[v],
         maioriaPartido: m,
@@ -302,6 +310,31 @@ export class SampleDataSource extends DataSource {
   async votos(codigo: string, limite: number) {
     return (this.dados.votos.get(codigo) ?? []).slice(0, limite);
   }
+  async votacao(id: string): Promise<Votacao | null> {
+    const placar: Record<Voto, number> = { sim: 0, nao: 0, abstencao: 0, secreto: 0, ausente: 0 };
+    let base: VotoSenador | undefined;
+    const votos = this.dados.plenario.cadeiras.flatMap((c) => {
+      const v = this.dados.votos.get(c.codigo)?.find((x) => x.id === id);
+      if (!v) return [];
+      base ??= v;
+      placar[v.voto]++;
+      return [{ codigo: c.codigo, nome: c.nome, partido: c.partido, uf: c.uf, voto: v.voto, votoOriginal: v.votoOriginal }];
+    });
+    if (!base) return null;
+    return {
+      id,
+      data: base.data,
+      materia: base.materia,
+      ementa: base.ementa,
+      descricao: base.descricao ?? null,
+      resultado: base.resultado,
+      secreta: placar.secreto > 0 && placar.sim + placar.nao === 0,
+      placar,
+      votos: votos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+      atualizadoEm: '2026-10-27T06:00:00Z',
+    };
+  }
+
   async gastos(codigo: string): Promise<GastoAno[]> {
     const s = await this.senador(codigo);
     if (!s) return [];
