@@ -45,8 +45,9 @@
 .barra { position: relative; height: 10px; border-radius: var(--radius-pill); background: var(--line); }
 .barra__valor { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--brand-700); }
 /* Tom da ordem: verde quando estar no topo é bom, coral quando é ruim, neutro na fidelidade. */
-.tom--bom { --tom: var(--brand-700); --tom-texto: var(--brand-700); --tom-sobre: var(--on-brand); }
-.tom--ruim { --tom: var(--coral-500); --tom-texto: var(--coral-900); --tom-sobre: var(--on-coral); }
+.tom--bom { --tom: var(--brand-700); --tom-fundo: var(--brand-700); --tom-texto: var(--brand-700); --tom-sobre: var(--on-brand); }
+/* --tom: barras (gráfico); --tom-fundo: selos com texto (coral-700, ver tokens). */
+.tom--ruim { --tom: var(--coral-500); --tom-fundo: var(--coral-700); --tom-texto: var(--coral-900); --tom-sobre: var(--on-coral); }
 .tom--neutro { --tom: var(--abstain); --tom-texto: var(--ink); --tom-sobre: var(--ink); }
 .tom--bom .barra__valor, .tom--ruim .barra__valor, .tom--neutro .barra__valor { background: var(--tom); }
 .tom--bom .valor__num, .tom--ruim .valor__num { color: var(--tom-texto); }
@@ -56,7 +57,7 @@
 .ordem--bom mt-icon { color: var(--brand-700); }
 .ordem--ruim mt-icon { color: var(--coral-900); }
 .ordem--bom[aria-pressed="true"] { background: var(--brand-700); border-color: var(--brand-700); color: var(--on-brand); }
-.ordem--ruim[aria-pressed="true"] { background: var(--coral-500); border-color: var(--coral-500); color: var(--on-coral); }
+.ordem--ruim[aria-pressed="true"] { background: var(--coral-700); border-color: var(--coral-700); color: var(--on-coral); }
 .ordem[aria-pressed="true"] mt-icon { color: inherit; }
 .legenda { display: flex; align-items: center; gap: 6px; justify-content: flex-end; margin-bottom: calc(-1 * var(--space-2)); font-size: 12px; color: var(--ink-muted); }
 .legenda__traco { display: inline-block; width: 2px; height: 14px; background: var(--ink); opacity: 0.55; }
@@ -97,7 +98,7 @@
     font: 600 11px/1 var(--font-sans); color: var(--ink);
   }
   .linha--podio .pos { background: var(--ink); border-color: var(--ink); color: var(--surface); }
-  .tom--bom .linha--podio .pos, .tom--ruim .linha--podio .pos { background: var(--tom); border-color: var(--tom); color: var(--tom-sobre); }
+  .tom--bom .linha--podio .pos, .tom--ruim .linha--podio .pos { background: var(--tom-fundo); border-color: var(--tom-fundo); color: var(--tom-sobre); }
   .quem { grid-area: quem; }
   .quem__nome { white-space: normal; line-height: 1.25; }
   .quem__sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

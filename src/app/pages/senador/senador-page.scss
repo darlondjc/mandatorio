@@ -108,7 +108,7 @@
 .posicao__texto strong { font-weight: 600; }
 a.posicao:hover { outline: 2px solid var(--line); }
 .posicao--bom { background: var(--brand-700); color: var(--on-brand); }
-.posicao--ruim { background: var(--coral-500); color: var(--on-coral); }
+.posicao--ruim { background: var(--coral-700); color: var(--on-coral); }
 .posicao--bom .posicao__criterio, .posicao--ruim .posicao__criterio { color: inherit; opacity: 0.85; }
 .posicao--neutro { background: var(--surface); border: 2px solid var(--ink); }
 .posicao--comum, .posicao--fora { background: transparent; border: 2px solid var(--line); }
