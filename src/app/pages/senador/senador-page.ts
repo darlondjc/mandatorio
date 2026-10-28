@@ -7,7 +7,7 @@ import { Photo } from '../../shared/avatar';
 import { Segmento, SplitBar } from '../../shared/split-bar';
 import { Aba, Tabs } from '../../shared/tabs';
 
-type FiltroVoto = 'todas' | 'divergiu' | 'ausente';
+type FiltroVoto = 'abertas' | 'divergiu' | 'ausente' | 'secretas';
 
 const ABAS: Aba[] = [
   { id: 'votos', rotulo: 'Como vota' },
@@ -50,7 +50,7 @@ export class SenadorPage {
     loader: ({ params }) => this.ds.gastos(params),
   });
 
-  protected readonly filtro = signal<FiltroVoto>('todas');
+  protected readonly filtro = signal<FiltroVoto>('abertas');
   protected readonly anoGasto = signal<number | null>(null);
 
   protected readonly data = data;
@@ -112,8 +112,11 @@ export class SenadorPage {
         return lista.filter((v) => v.divergiu);
       case 'ausente':
         return lista.filter((v) => v.voto === 'ausente');
+      case 'secretas':
+        return lista.filter((v) => v.voto === 'secreto');
       default:
-        return lista;
+        // Votações secretas (indicações de autoridades) ficam num filtro próprio: o voto não é público.
+        return lista.filter((v) => v.voto !== 'secreto');
     }
   });
 

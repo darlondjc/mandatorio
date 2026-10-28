@@ -58,16 +58,23 @@ export function corPartido(sigla: string): string {
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '');
+  const apelidos: Record<string, string> = { pode: 'podemos', 'uniao brasil': 'uniao' };
+  const c = apelidos[chave] ?? chave;
   const conhecidos = ['pt', 'psb', 'pdt', 'mdb', 'psd', 'podemos', 'psdb', 'uniao', 'republicanos', 'pp', 'pl', 'novo'];
-  return `var(--party-${conhecidos.includes(chave) ? chave : 'outros'})`;
+  return `var(--party-${conhecidos.includes(c) ? c : 'outros'})`;
 }
 
 /** Partidos de cor clara recebem texto escuro no avatar. */
 export function textoSobrePartido(sigla: string): string {
-  return ['UNIÃO', 'PP', 'PODEMOS', 'PSB', 'NOVO'].includes(sigla) ? 'var(--on-coral)' : '#ffffff';
+  return ['UNIÃO', 'PP', 'PODEMOS', 'PODE', 'PSB', 'NOVO'].includes(sigla) ? 'var(--on-coral)' : '#ffffff';
 }
 
 export function iniciais(nome: string): string {
   const partes = nome.split(/\s+/).filter((p) => p.length > 2 || /^[A-ZÁ-Ú]/.test(p));
   return ((partes[0]?.[0] ?? '') + (partes.at(-1)?.[0] ?? '')).toUpperCase();
+}
+
+/** As fotos oficiais vêm com http://; dentro de um site https o navegador as bloquearia. */
+export function fotoSegura(url: string | null | undefined): string | null {
+  return url ? url.replace(/^http:\/\//, 'https://') : null;
 }

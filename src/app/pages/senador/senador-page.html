@@ -92,9 +92,12 @@
         @case ('votos') {
           <mt-split-bar [segmentos]="segmentos()" [nota]="notaDivergencia()" />
           <div class="mt-row" role="group" aria-label="Filtrar votações">
-            <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'todas'" (click)="filtro.set('todas')">Todas</button>
+            <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'abertas'" (click)="filtro.set('abertas')">Votações abertas</button>
             <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'divergiu'" (click)="filtro.set('divergiu')">Diferente do partido</button>
             <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'ausente'" (click)="filtro.set('ausente')">Ausências</button>
+            @if (s.resumo.distribuicao.secreto) {
+              <button class="filtro" type="button" [attr.aria-pressed]="filtro() === 'secretas'" (click)="filtro.set('secretas')">Secretas · {{ s.resumo.distribuicao.secreto }}</button>
+            }
           </div>
           @if (votos.isLoading() && !votos.value()) {
             <p class="muted">Carregando votações…</p>
@@ -108,7 +111,11 @@
                   <span class="mt-voterow__meta">{{ v.materia }} · {{ data(v.data) }}</span>
                 </div>
                 <span class="mt-voterow__side">
-                  Maioria do {{ s.partido }}: <strong>{{ orientacao(v) }}</strong>
+                  @if (v.voto === 'secreto') {
+                    Votação secreta
+                  } @else {
+                    Maioria do {{ s.partido }}: <strong>{{ orientacao(v) }}</strong>
+                  }
                   @if (v.divergiu) {
                     <span class="mt-voterow__diff">votou diferente</span>
                   } @else if (v.resultado) {

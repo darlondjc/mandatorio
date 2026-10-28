@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { corPartido, iniciais, textoSobrePartido } from '../core/format';
+import { corPartido, fotoSegura, iniciais, textoSobrePartido } from '../core/format';
 
 /** Foto oficial em círculo com anel verde (ProfilePhoto) ou, sem foto, iniciais. */
 @Component({
@@ -7,8 +7,8 @@ import { corPartido, iniciais, textoSobrePartido } from '../core/format';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="mt-photo" [class.mt-photo--sm]="pequena()">
-      @if (foto() && !falhou()) {
-        <img class="mt-photo__img" [src]="foto()" [alt]="'Foto oficial de ' + nome()" (error)="falhou.set(true)" />
+      @if (src() && !falhou()) {
+        <img class="mt-photo__img" [src]="src()" [alt]="'Foto oficial de ' + nome()" (error)="falhou.set(true)" />
       } @else {
         <div class="mt-photo__img sem-foto" role="img" [attr.aria-label]="nome()">{{ ini() }}</div>
       }
@@ -23,6 +23,7 @@ export class Photo {
   readonly nome = input.required<string>();
   readonly foto = input<string | null>(null);
   readonly pequena = input(false);
+  protected readonly src = computed(() => fotoSegura(this.foto()));
   protected readonly falhou = signal(false);
   protected readonly ini = computed(() => iniciais(this.nome()));
 }
@@ -32,8 +33,8 @@ export class Photo {
   selector: 'mt-avatar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (foto() && !falhou()) {
-      <img class="mt-avatar" [src]="foto()" alt="" (error)="falhou.set(true)" loading="lazy" />
+    @if (src() && !falhou()) {
+      <img class="mt-avatar" [src]="src()" alt="" (error)="falhou.set(true)" loading="lazy" />
     } @else {
       <span class="mt-avatar" aria-hidden="true" [style.background]="cor()" [style.color]="texto()">{{ ini() }}</span>
     }
@@ -44,6 +45,7 @@ export class Avatar {
   readonly nome = input.required<string>();
   readonly partido = input.required<string>();
   readonly foto = input<string | null>(null);
+  protected readonly src = computed(() => fotoSegura(this.foto()));
   protected readonly falhou = signal(false);
   protected readonly ini = computed(() => iniciais(this.nome()));
   protected readonly cor = computed(() => corPartido(this.partido()));

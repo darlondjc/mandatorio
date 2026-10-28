@@ -96,5 +96,9 @@ test('resultado e textos de veto', () => {
   assert.equal(situacaoVeto('PARCIALMENTE_REJEITADO'), 'derrubado-parcial');
   assert.equal(situacaoVeto('REJEITADO'), 'derrubado');
   assert.equal(situacaoVeto('MANTIDO'), 'mantido');
+  assert.equal(situacaoVeto('MANTIDO_PARCIALMENTE'), 'derrubado-parcial');
+  assert.equal(situacaoVeto('MANTIDA_MATERIA'), 'mantido');
+  assert.equal(situacaoVeto('PREJUDICADO'), 'prejudicado');
+  assert.equal(situacaoVeto('REJEITADO_PLENARIO'), 'derrubado');
   assert.equal(situacaoVeto(''), 'aguardando');
 });

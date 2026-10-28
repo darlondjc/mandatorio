@@ -23,7 +23,7 @@ const LEGIS = 'https://legis.senado.leg.br/dadosabertos';
 const ADM = 'https://adm.senado.gov.br/adm-dadosabertos/api/v1';
 
 /** Ordem dos partidos no semicírculo (da esquerda para a direita), aproximando o espectro político. */
-const ORDEM_PARTIDOS = ['PSOL', 'REDE', 'PT', 'PCdoB', 'PV', 'PSB', 'PDT', 'MDB', 'PSD', 'CIDADANIA', 'PODEMOS', 'PSDB', 'SOLIDARIEDADE', 'AVANTE', 'UNIÃO', 'REPUBLICANOS', 'PP', 'PL', 'NOVO'];
+const ORDEM_PARTIDOS = ['PSOL', 'REDE', 'PT', 'PCdoB', 'PV', 'PSB', 'PDT', 'MDB', 'PSD', 'CIDADANIA', 'PODEMOS', 'PODE', 'PSDB', 'SOLIDARIEDADE', 'AVANTE', 'UNIÃO', 'REPUBLICANOS', 'PP', 'PL', 'NOVO'];
 
 type Json = Record<string, any>;
 
@@ -78,7 +78,7 @@ async function senadoresEmExercicio(): Promise<{ base: SenadorBase[]; legislatur
       sexo: id.SexoParlamentar === 'Feminino' ? 'F' : 'M',
       partido: id.SiglaPartidoParlamentar ?? 'S/Partido',
       uf: id.UfParlamentar ?? m.UfParlamentar,
-      foto: id.UrlFotoParlamentar ?? null,
+      foto: id.UrlFotoParlamentar ? String(id.UrlFotoParlamentar).replace(/^http:\/\//, 'https://') : null,
       email: id.EmailParlamentar ?? null,
       bloco: id.Bloco?.NomeBloco ?? null,
       mandato: {

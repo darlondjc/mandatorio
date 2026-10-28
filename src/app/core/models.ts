@@ -145,6 +145,7 @@ export interface ResumoMandatoPresidente {
   vetosMantidos: number;
   vetosDerrubados: number;
   vetosAguardando: number;
+  vetosPrejudicados?: number;
 }
 
 export interface MandatoPresidente {
@@ -196,7 +197,8 @@ export interface MedidaProvisoria {
   url: string | null;
 }
 
-export type SituacaoVeto = 'aguardando' | 'mantido' | 'derrubado' | 'derrubado-parcial';
+/** `prejudicado`: o Congresso não chegou a deliberar (perda de objeto). */
+export type SituacaoVeto = 'aguardando' | 'mantido' | 'derrubado' | 'derrubado-parcial' | 'prejudicado';
 
 export interface Veto {
   id: string;

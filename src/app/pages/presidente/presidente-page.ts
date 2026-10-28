@@ -24,6 +24,7 @@ export const ROTULO_VETO: Record<SituacaoVeto, string> = {
   mantido: 'Mantido',
   derrubado: 'Derrubado',
   'derrubado-parcial': 'Derrubado em parte',
+  prejudicado: 'Prejudicado',
 };
 export const ETAPAS: { id: EtapaProjeto; rotulo: string }[] = [
   { id: 'camara', rotulo: 'Câmara' },
@@ -111,6 +112,7 @@ export class PresidentePage {
       { rotulo: 'mantidos', valor: r.vetosMantidos, cor: 'var(--brand-700)' },
       { rotulo: 'derrubados', valor: r.vetosDerrubados, cor: 'var(--coral-500)' },
       { rotulo: 'aguardando', valor: r.vetosAguardando, cor: 'var(--line)' },
+      ...(r.vetosPrejudicados ? [{ rotulo: 'prejudicados', valor: r.vetosPrejudicados, cor: 'var(--abstain)' }] : []),
     ];
   });
 

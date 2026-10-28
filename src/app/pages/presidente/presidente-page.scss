@@ -44,7 +44,7 @@
 }
 .selo--lei, .selo--veto-mantido { background: var(--brand-700); color: var(--on-brand); }
 .selo--tramitando, .selo--veto-aguardando { background: var(--surface); color: var(--brand-700); border-color: var(--brand-700); }
-.selo--caducou { background: var(--line); color: var(--ink); }
+.selo--caducou, .selo--veto-prejudicado { background: var(--line); color: var(--ink); }
 .selo--rejeitada, .selo--veto-derrubado, .selo--veto-derrubado-parcial { background: var(--coral-500); color: var(--on-coral); }
 
 .prazo { display: flex; flex-direction: column; gap: 4px; }

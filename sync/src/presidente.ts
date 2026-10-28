@@ -133,7 +133,9 @@ async function projetosExecutivo(m: Cadastro['mandatos'][number], mandatoId: str
 /** Situação do veto a partir do tipo de deliberação do Congresso (derrubar um veto = "rejeitar"). */
 export function situacaoVeto(texto: string): SituacaoVeto {
   const s = semAcento(texto).replace(/_/g, ' ');
-  if (/parcial|em parte/.test(s) && /(derrubad|rejeitad)/.test(s)) return 'derrubado-parcial';
+  if (/prejudicad/.test(s)) return 'prejudicado';
+  // "Mantido parcialmente" = parte do veto foi derrubada.
+  if (/parcial|em parte/.test(s) && /(derrubad|rejeitad|mantid)/.test(s)) return 'derrubado-parcial';
   if (/derrubad|rejeitad/.test(s)) return 'derrubado';
   if (/mantid/.test(s)) return 'mantido';
   return 'aguardando';
@@ -199,6 +201,7 @@ export function resumir(atos: Pick<AtosMandato, 'medidas' | 'vetos' | 'projetos'
     vetosMantidos: vt('mantido'),
     vetosDerrubados: vt('derrubado') + vt('derrubado-parcial'),
     vetosAguardando: vt('aguardando'),
+    vetosPrejudicados: vt('prejudicado'),
   };
 }
 
