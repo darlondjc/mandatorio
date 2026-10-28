@@ -19,7 +19,7 @@ import type {
   Veto,
 } from '../../src/app/core/models.ts';
 import { emParalelo, getJson, lista } from './http.ts';
-import { hojeISO, identificacao, isoData, semAcento, somarDiasSemRecesso } from './util.ts';
+import { assuntoDoVeto, hojeISO, identificacao, isoData, materiaDoVeto, semAcento, somarDiasSemRecesso } from './util.ts';
 
 const CAMARA = 'https://dadosabertos.camara.leg.br/api/v2';
 const LEGIS = 'https://legis.senado.leg.br/dadosabertos';
@@ -87,7 +87,8 @@ async function doMandato(m: Cadastro['mandatos'][number], siglaTipo: string, ext
 }
 
 async function medidasProvisorias(m: Cadastro['mandatos'][number], mandatoId: string): Promise<MedidaProvisoria[]> {
-  return (await doMandato(m, 'MPV')).map(({ p, d }): MedidaProvisoria => {
+  const unicas = [...new Map((await doMandato(m, 'MPV')).map((x) => [`${x.p.numero}/${x.p.ano}`, x])).values()];
+  return unicas.map(({ p, d }): MedidaProvisoria => {
     const dataEdicao = isoData(d.dataApresentacao) ?? `${p.ano}-01-01`;
     const prazoFinal = somarDiasSemRecesso(dataEdicao, PRAZO_MP);
     const status = d.statusProposicao ?? {};
@@ -126,15 +127,20 @@ async function projetosExecutivo(m: Cadastro['mandatos'][number], mandatoId: str
       });
     }
   }
-  return out.sort((a, b) => b.dataApresentacao.localeCompare(a.dataApresentacao));
+  return [...new Map(out.map((p) => [p.numero, p])).values()].sort((a, b) => b.dataApresentacao.localeCompare(a.dataApresentacao));
 }
 
+/** Situação do veto a partir do tipo de deliberação do Congresso (derrubar um veto = "rejeitar"). */
 export function situacaoVeto(texto: string): SituacaoVeto {
-  const s = semAcento(texto);
-  if (/derrubad|rejeitad/.test(s)) return /parcial|em parte/.test(s) && /mantid/.test(s) ? 'derrubado-parcial' : 'derrubado';
+  const s = semAcento(texto).replace(/_/g, ' ');
+  if (/parcial|em parte/.test(s) && /(derrubad|rejeitad)/.test(s)) return 'derrubado-parcial';
+  if (/derrubad|rejeitad/.test(s)) return 'derrubado';
   if (/mantid/.test(s)) return 'mantido';
   return 'aguardando';
 }
+
+/** Valores de siglaTipoDeliberacao vistos, para o diagnóstico. */
+export const deliberacoesVistas = new Map<string, number>();
 
 async function vetos(m: Cadastro['mandatos'][number], mandatoId: string): Promise<Veto[]> {
   const anoIni = Number(m.inicio.slice(0, 4));
@@ -153,24 +159,27 @@ async function vetos(m: Cadastro['mandatos'][number], mandatoId: string): Promis
       const dataLeitura = isoData(v.dataApresentacao ?? v.dataAutuacao ?? v.data);
       if (!dataLeitura || dataLeitura < m.inicio || dataLeitura > m.fim) continue;
       const ementa: string = v.ementa ?? '';
-      const situacaoTexto = `${v.situacaoAtual ?? ''} ${v.descricaoSituacao ?? ''} ${v.tramitando === 'Não' ? 'encerrado' : ''}`;
+      const deliberacao = String(v.siglaTipoDeliberacao ?? '');
+      deliberacoesVistas.set(deliberacao || '(vazio)', (deliberacoesVistas.get(deliberacao || '(vazio)') ?? 0) + 1);
+      const situacaoTexto = `${deliberacao} ${v.situacaoAtual ?? ''} ${v.descricaoSituacao ?? ''}`;
       const numero = v.identificacao ?? identificacao('VET', v.numero, v.ano ?? ano);
       out.push({
         id: `vet-${String(numero).replace(/\D+/g, '-').replace(/^-|-$/g, '')}`,
         mandato: mandatoId,
         numero,
         tipo: /veto total/i.test(ementa) || /total/i.test(v.tipoVeto ?? '') ? 'total' : 'parcial',
-        materia: /(PL|PLP|PLN|PLV)[^\d]*(\d+[.\d]*\/\d{4})/.exec(ementa)?.[0] ?? null,
-        ementa: ementa.replace(/^Veto (total|parcial)\s*(aposto ao|ao)\s*/i, '').trim() || ementa,
+        materia: materiaDoVeto(ementa),
+        ementa: assuntoDoVeto(ementa),
         dataLeitura,
         situacao: situacaoVeto(situacaoTexto),
-        dataDeliberacao: isoData(v.dataUltimaTramitacao ?? v.dataDeliberacao),
+        dataDeliberacao: isoData(v.dataDeliberacao),
         dispositivosVetados: v.quantidadeDispositivos ? Number(v.quantidadeDispositivos) : null,
         url: v.id ? `https://www.congressonacional.leg.br/materias/vetos/-/veto/detalhe/${v.id}` : null,
       });
     }
   }
-  return out.sort((a, b) => (b.dataLeitura ?? '').localeCompare(a.dataLeitura ?? ''));
+  const unicos = [...new Map(out.map((v) => [v.numero, v])).values()];
+  return unicos.sort((a, b) => (b.dataLeitura ?? '').localeCompare(a.dataLeitura ?? ''));
 }
 
 export function resumir(atos: Pick<AtosMandato, 'medidas' | 'vetos' | 'projetos'>): ResumoMandatoPresidente {

@@ -7,8 +7,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Sincronizacao, VotoSenador } from '../../src/app/core/models.ts';
 import { diagnostico } from './http.ts';
-import { coletarPresidentes } from './presidente.ts';
-import { avisoDescontinuacao, coletarSenado } from './senado.ts';
+import { coletarPresidentes, deliberacoesVistas } from './presidente.ts';
+import { avisoDescontinuacao, coletarSenado, fonteAutorias } from './senado.ts';
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
@@ -81,13 +81,14 @@ async function main() {
         itens.push({ caminho: `senadores/${sen.codigo}/listas/proposicoes`, dados: { itens: s.proposicoesPorSenador.get(sen.codigo) ?? [] } });
       }
       const votos = [...s.votosPorSenador.values()].reduce((a, v) => a + v.length, 0);
-      const dist = { sim: 0, nao: 0, abstencao: 0, ausente: 0, divergiu: 0 };
+      const dist = { sim: 0, nao: 0, abstencao: 0, secreto: 0, ausente: 0, divergiu: 0 };
       for (const lista of s.votosPorSenador.values()) for (const v of lista) { dist[v.voto]++; if (v.divergiu) dist.divergiu++; }
       const originais = new Map<string, number>();
       for (const lista of s.votosPorSenador.values()) for (const v of lista) originais.set(v.votoOriginal, (originais.get(v.votoOriginal) ?? 0) + 1);
       const ex = s.senadores[0];
       anotar('notice', 'Senado — votos', `${JSON.stringify(dist)}\nsiglas originais: ${[...originais].map(([k, n]) => `${k}=${n}`).join(' ')}\nexemplo: ${JSON.stringify({ nome: ex.nome, partido: ex.partido, mandato: ex.mandato, nascimento: ex.nascimento, naturalidade: ex.naturalidade, comissoes: ex.comissoes.length, resumo: ex.resumo, voto: s.votosPorSenador.get(ex.codigo)?.[0] }).slice(0, 1500)}`);
       if (avisoDescontinuacao) anotar('warning', 'Senado — aviso da API', avisoDescontinuacao);
+      anotar('notice', 'Senado — autorias', `fonte /processo: ${fonteAutorias.processo} senadores · autorias.json: ${fonteAutorias.autorias} · leis: ${s.senadores.reduce((a, x) => a + x.resumo.proposicoesLei, 0)} · exemplo: ${JSON.stringify(s.proposicoesPorSenador.get(ex.codigo)?.slice(0, 2)).slice(0, 700)}`);
       anotar('notice', 'Senado', `${s.senadores.length} senadores · ${s.plenario.partidos.length} partidos · ${votos} votos individuais · ${[...s.gastosPorSenador.values()].filter((g) => g.length).length} com gastos · ${[...s.proposicoesPorSenador.values()].reduce((a, p) => a + p.length, 0)} proposições`);
     } catch (e) {
       erros.push('Senado');
@@ -102,7 +103,12 @@ async function main() {
       fontes.push('Câmara dos Deputados — Dados Abertos', 'Congresso Nacional — Vetos');
       for (const pres of p.presidentes) itens.push({ caminho: `presidentes/${pres.id}`, dados: pres });
       for (const a of p.atos) itens.push({ caminho: `presidentes/${a.presidenteId}/mandatos/${a.mandato}`, dados: a });
-      anotar('notice', 'Presidente', p.atos.map((a) => `${a.presidenteId} ${a.mandato}: ${a.medidas.length} MPs · ${a.vetos.length} vetos · ${a.projetos.length} projetos`).join('\n'));
+      const conta = <T,>(xs: T[], f: (x: T) => string) => JSON.stringify(xs.reduce<Record<string, number>>((o, x) => ((o[f(x)] = (o[f(x)] ?? 0) + 1), o), {}));
+      anotar('notice', 'Presidente', p.atos.map((a) => {
+        const nums = a.medidas.map((m) => Number(m.numero.replace(/\D/g, '').slice(0, -4)));
+        return `${a.presidenteId} ${a.mandato}: ${a.medidas.length} MPs (nº ${Math.min(...nums)}–${Math.max(...nums)}) ${conta(a.medidas, (m) => m.situacao)}\n${a.vetos.length} vetos ${conta(a.vetos, (v) => v.situacao)} ${conta(a.vetos, (v) => v.tipo)} sem matéria: ${a.vetos.filter((v) => !v.materia).length}\n${a.projetos.length} projetos ${conta(a.projetos, (x) => x.etapa)}\nexemplos: ${JSON.stringify([a.medidas[0], a.vetos[0], a.projetos[0]]).slice(0, 1800)}`;
+      }).join('\n'));
+      anotar('notice', 'Presidente — deliberações de veto', JSON.stringify(Object.fromEntries(deliberacoesVistas)));
     } catch (e) {
       erros.push('Presidente');
       console.error(e);

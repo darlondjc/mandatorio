@@ -34,6 +34,7 @@ button.mt-chip[aria-pressed="true"] { border-color: var(--ink); }
 .mt-vote--sim { background: var(--brand-700); color: var(--on-brand); }
 .mt-vote--nao { background: var(--coral-500); color: var(--on-coral); }
 .mt-vote--abstencao { background: var(--line); color: var(--ink); }
+.mt-vote--secreto { background: var(--surface); color: var(--brand-700); border-color: var(--brand-700); }
 .mt-vote--ausente { background: var(--surface); color: var(--ink-muted); border: 2px dashed var(--abstain); }
 .mt-vote--sm { min-width: 72px; padding: 4px 0; font-size: 13px; }
 

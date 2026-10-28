@@ -37,6 +37,7 @@ export const ROTULO_VOTO: Record<Voto, string> = {
   sim: 'Sim',
   nao: 'Não',
   abstencao: 'Abstenção',
+  secreto: 'Secreto',
   ausente: 'Ausente',
 };
 

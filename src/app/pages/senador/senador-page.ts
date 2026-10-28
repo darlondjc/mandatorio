@@ -93,6 +93,7 @@ export class SenadorPage {
       { rotulo: 'Sim', valor: d.sim, cor: 'var(--brand-700)' },
       { rotulo: 'Não', valor: d.nao, cor: 'var(--coral-500)' },
       { rotulo: 'Abstenção', valor: d.abstencao, cor: 'var(--abstain)' },
+      ...(d.secreto ? [{ rotulo: 'Secreto', valor: d.secreto, cor: 'var(--brand-800)' }] : []),
       { rotulo: 'Ausente', valor: d.ausente, cor: 'var(--line)' },
     ];
   });

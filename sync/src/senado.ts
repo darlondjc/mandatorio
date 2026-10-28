@@ -17,7 +17,7 @@ import type {
   VotoSenador,
 } from '../../src/app/core/models.ts';
 import { emParalelo, getJson, lista, NaoEncontrado } from './http.ts';
-import { identificacao, isoData, normalizarVoto, semAcento } from './util.ts';
+import { identificacao, isoData, normalizarVoto, resultadoVotacao, semAcento } from './util.ts';
 
 const LEGIS = 'https://legis.senado.leg.br/dadosabertos';
 const ADM = 'https://adm.senado.gov.br/adm-dadosabertos/api/v1';
@@ -123,6 +123,44 @@ async function detalhes(codigo: string) {
 /** Preenchido quando a API avisa que o endpoint de autorias será desativado. */
 export let avisoDescontinuacao: string | null = null;
 
+const SIGLAS_PROPOSICAO = ['PL', 'PLS', 'PEC', 'PLP', 'PDL', 'PRS'];
+
+/** Contagem de qual fonte de autorias foi usada, para o diagnóstico. */
+export const fonteAutorias = { processo: 0, autorias: 0 };
+
+/**
+ * Proposições de autoria do senador. Usa o serviço /processo (substituto do autorias.json,
+ * descontinuado). Como o parâmetro de autor não é documentado com clareza, confere se cada item
+ * cita o senador na autoria; se nada sobrar, volta para o serviço antigo.
+ */
+async function proposicoesDoSenador(codigo: string, nome: string): Promise<Proposicao[]> {
+  try {
+    const j = await getJson<any>(`${LEGIS}/processo?codigoParlamentarAutor=${codigo}`);
+    const alvo = semAcento(nome);
+    const itens = lista<Json>(Array.isArray(j) ? j : j?.processos).filter((p) => semAcento(String(p.autoria ?? '')).includes(alvo));
+    if (itens.length) {
+      fonteAutorias.processo++;
+      return itens
+        .map((p): Proposicao => {
+          const norma = p.normaGerada ? String(p.normaGerada) : '';
+          return {
+            id: String(p.id ?? p.codigoMateria),
+            materia: String(p.identificacao ?? '').replace(/(\d)(?=(\d{3})+\/)/g, '$1.'),
+            ementa: p.ementa ?? '',
+            data: isoData(p.dataApresentacao) ?? '',
+            situacao: norma ? `Virou ${norma}` : p.dataDeliberacao ? 'Deliberada' : 'Em tramitação',
+            virouLei: !!norma,
+            url: p.codigoMateria ? `https://www25.senado.leg.br/web/atividade/materias/-/materia/${p.codigoMateria}` : null,
+          };
+        })
+        .filter((p) => SIGLAS_PROPOSICAO.some((s) => p.materia.startsWith(s + ' ')))
+        .sort((a, b) => b.data.localeCompare(a.data));
+    }
+  } catch {}
+  fonteAutorias.autorias++;
+  return autorias(codigo);
+}
+
 async function autorias(codigo: string): Promise<Proposicao[]> {
   try {
     const j = await getJson<Json>(`${LEGIS}/senador/${codigo}/autorias.json`);
@@ -145,7 +183,7 @@ async function autorias(codigo: string): Promise<Proposicao[]> {
           url: m.Codigo ? `https://www25.senado.leg.br/web/atividade/materias/-/materia/${m.Codigo}` : null,
         };
       })
-      .filter((p) => ['PL', 'PLS', 'PEC', 'PLP', 'PDL', 'PRS'].some((s) => p.materia.startsWith(s + ' ')))
+      .filter((p) => SIGLAS_PROPOSICAO.some((s) => p.materia.startsWith(s + ' ')))
       .sort((a, b) => b.data.localeCompare(a.data));
   } catch {
     return [];
@@ -187,7 +225,7 @@ async function votacoes(inicio: string, fim: string): Promise<Votacao[]> {
         data: isoData(v.dataSessao ?? v.DataSessao) ?? a,
         materia: v.identificacao ?? (sigla ? identificacao(sigla, v.numero, v.ano) : (v.descricaoVotacao ?? 'Votação')),
         ementa: v.ementa ?? v.descricaoVotacao ?? '',
-        resultado: v.resultadoVotacao ?? v.descricaoResultado ?? null,
+        resultado: resultadoVotacao(v.resultadoVotacao ?? v.descricaoResultado),
         votos,
       });
     }
@@ -259,7 +297,7 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
 
   console.log('Senado: detalhes, comissões e autorias…');
   const det = await emParalelo(base, 4, (s) => detalhes(s.codigo));
-  const props = await emParalelo(base, 4, (s) => autorias(s.codigo));
+  const props = await emParalelo(base, 4, (s) => proposicoesDoSenador(s.codigo, s.nome));
 
   console.log(`Senado: votações nominais desde ${inicio}…`);
   const vots = await votacoes(inicio, hoje);
@@ -300,7 +338,7 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
 
   const senadores: Senador[] = base.map((s, i) => {
     const vs = votosPorSenador.get(s.codigo)!;
-    const distribuicao: Record<Voto, number> = { sim: 0, nao: 0, abstencao: 0, ausente: 0 };
+    const distribuicao: Record<Voto, number> = { sim: 0, nao: 0, abstencao: 0, secreto: 0, ausente: 0 };
     vs.forEach((v) => distribuicao[v.voto]++);
     const comparaveis = vs.filter((v) => v.maioriaPartido && (v.voto === 'sim' || v.voto === 'nao'));
     return {

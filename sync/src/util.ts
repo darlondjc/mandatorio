@@ -25,13 +25,14 @@ export function identificacao(sigla: string, numero: number | string, ano: numbe
 
 /**
  * Converte a sigla de voto do Senado nos quatro estados do Mandatório.
- * Sim/Não são votos; Abstenção, Obstrução e P-NRV (presente, não registrou voto) contam como abstenção;
+ * Sim/Não são votos; Votou é voto em votação secreta (presente, voto não divulgado); Abstenção, Obstrução e P-NRV (presente, não registrou voto) contam como abstenção;
  * o resto (MIS, LP, LS, AP, NCom, Ausente…) é ausência.
  */
 export function normalizarVoto(sigla: string | null | undefined): Voto {
   const s = (sigla ?? '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   if (s === 'sim') return 'sim';
   if (s === 'nao') return 'nao';
+  if (s === 'votou') return 'secreto';
   if (s.startsWith('abst') || s.startsWith('obstr') || s === 'p-nrv' || s === 'presidente (art. 51 ri)' || s.startsWith('presidente'))
     return 'abstencao';
   return 'ausente';
@@ -53,4 +54,28 @@ export function somarDiasSemRecesso(inicioISO: string, dias: number): string {
 
 export function semAcento(s: string): string {
   return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+/** Resultado da votação no Senado: a API usa A/R. */
+export function resultadoVotacao(v: unknown): string | null {
+  if (typeof v !== 'string' || !v) return null;
+  const s = v.trim().toUpperCase();
+  if (s === 'A') return 'Aprovado';
+  if (s === 'R') return 'Rejeitado';
+  return v;
+}
+
+/** "Veto Parcial aposto ao Projeto de Lei Complementar nº 121, de 2025, que …" -> "PLP 121/2025" */
+export function materiaDoVeto(ementa: string): string | null {
+  const m = /Projeto de Lei( Complementar)?( de Convers[aã]o)?( do Congresso Nacional)?[^nº]*n[º°o]\s*([\d.]+),?\s*de\s*(\d{4})/i.exec(ementa);
+  if (!m) return null;
+  const sigla = m[1] ? 'PLP' : m[2] ? 'PLV' : m[3] ? 'PLN' : 'PL';
+  return `${sigla} ${m[4]}/${m[5]}`;
+}
+
+/** Texto entre aspas depois de "que", quando houver; senão a ementa sem o prefixo do veto. */
+export function assuntoDoVeto(ementa: string): string {
+  const q = /que\s*[“"']([^”"']+)[”"']/.exec(ementa);
+  if (q) return q[1].trim();
+  return ementa.replace(/^Veto (total|parcial)\s*(aposto ao|ao)\s*/i, '').trim() || ementa;
 }

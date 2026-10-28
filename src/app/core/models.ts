@@ -17,7 +17,8 @@
 /** Datas sempre como string ISO `AAAA-MM-DD`. */
 export type DataISO = string;
 
-export type Voto = 'sim' | 'nao' | 'abstencao' | 'ausente';
+/** `secreto`: votação secreta (ex.: indicação de autoridades). O senador votou, mas o voto não é público. */
+export type Voto = 'sim' | 'nao' | 'abstencao' | 'secreto' | 'ausente';
 
 export interface Sincronizacao {
   atualizadoEm: string; // ISO com hora

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { etapaProjeto, resumir, situacaoMP, situacaoVeto } from './presidente.ts';
 import { maioriaPorPartido } from './senado.ts';
-import { identificacao, isoData, normalizarVoto, somarDiasSemRecesso } from './util.ts';
+import { assuntoDoVeto, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
 
 test('normaliza votos do Senado', () => {
   assert.equal(normalizarVoto('Sim'), 'sim');
@@ -11,6 +11,8 @@ test('normaliza votos do Senado', () => {
   assert.equal(normalizarVoto('Abstenção'), 'abstencao');
   assert.equal(normalizarVoto('P-NRV'), 'abstencao');
   assert.equal(normalizarVoto('Obstrução'), 'abstencao');
+  assert.equal(normalizarVoto('Votou'), 'secreto');
+  assert.equal(normalizarVoto('AP'), 'ausente');
   assert.equal(normalizarVoto('MIS'), 'ausente');
   assert.equal(normalizarVoto('LP'), 'ausente');
   assert.equal(normalizarVoto(undefined), 'ausente');
@@ -80,4 +82,19 @@ test('resumo do mandato presidencial', () => {
   assert.equal(r.vetosDerrubados, 1);
   assert.equal(r.vetosTotais, 1);
   assert.equal(r.projetosLei, 1);
+});
+
+test('resultado e textos de veto', () => {
+  assert.equal(resultadoVotacao('A'), 'Aprovado');
+  assert.equal(resultadoVotacao('R'), 'Rejeitado');
+  assert.equal(resultadoVotacao(''), null);
+  assert.equal(materiaDoVeto('Veto Parcial aposto ao Projeto de Lei nº 2.159, de 2021, que "Dispõe sobre o licenciamento"'), 'PL 2.159/2021');
+  assert.equal(materiaDoVeto('Veto Total aposto ao Projeto de Lei Complementar nº 121, de 2025'), 'PLP 121/2025');
+  assert.equal(materiaDoVeto('Veto Parcial aposto ao Projeto de Lei do Congresso Nacional nº 5, de 2024'), 'PLN 5/2024');
+  assert.equal(materiaDoVeto('Veto sem referência'), null);
+  assert.equal(assuntoDoVeto('Veto Parcial aposto ao Projeto de Lei nº 2.159, de 2021, que "Dispõe sobre o licenciamento ambiental."'), 'Dispõe sobre o licenciamento ambiental.');
+  assert.equal(situacaoVeto('PARCIALMENTE_REJEITADO'), 'derrubado-parcial');
+  assert.equal(situacaoVeto('REJEITADO'), 'derrubado');
+  assert.equal(situacaoVeto('MANTIDO'), 'mantido');
+  assert.equal(situacaoVeto(''), 'aguardando');
 });

@@ -146,7 +146,7 @@ function gerar(): Base {
         materia,
         ementa,
         voto: v,
-        votoOriginal: { sim: 'Sim', nao: 'Não', abstencao: 'Abstenção', ausente: 'MIS' }[v],
+        votoOriginal: { sim: 'Sim', nao: 'Não', abstencao: 'Abstenção', secreto: 'Votou', ausente: 'MIS' }[v],
         maioriaPartido: m,
         divergiu: m !== null && (v === 'sim' || v === 'nao') && v !== m,
         resultado: i % 7 === 3 ? 'Rejeitado' : 'Aprovado',
@@ -154,7 +154,7 @@ function gerar(): Base {
     }).reverse();
     votos.set(c.codigo, lista);
 
-    const dist = { sim: 0, nao: 0, abstencao: 0, ausente: 0 };
+    const dist = { sim: 0, nao: 0, abstencao: 0, secreto: 0, ausente: 0 };
     lista.forEach((v) => dist[v.voto]++);
     const comparaveis = lista.filter((v) => v.maioriaPartido && (v.voto === 'sim' || v.voto === 'nao'));
     const com = comparaveis.filter((v) => !v.divergiu).length;
