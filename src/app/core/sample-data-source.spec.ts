@@ -17,12 +17,33 @@ describe('SampleDataSource', () => {
     const s = (await ds.senador(p.cadeiras[0].codigo))!;
     const votos = await ds.votos(s.codigo, 1000);
     const d = s.resumo.distribuicao;
-    expect(d.sim + d.nao + d.abstencao + d.ausente).toBe(votos.length);
+    expect(d.sim + d.nao + d.abstencao + d.secreto + d.ausente).toBe(votos.length);
     expect(votos.filter((v) => v.divergiu).length).toBe(s.resumo.votosComparaveis - s.resumo.votosComPartido);
   });
 
   it('respeita o limite de votos pedido', async () => {
     const p = (await ds.plenario())!;
     expect((await ds.votos(p.cadeiras[1].codigo, 10)).length).toBe(10);
+  });
+});
+
+describe('SampleDataSource — votações', () => {
+  const ds = new SampleDataSource();
+
+  it('monta o placar de uma votação a partir dos votos', async () => {
+    const v = (await ds.votacao('v0'))!;
+    const total = Object.values(v.placar).reduce((a, b) => a + b, 0);
+    expect(total).toBe(v.votos.length);
+    expect(v.secreta).toBe(false);
+  });
+
+  it('marca como secreta a votação em que ninguém votou Sim ou Não', async () => {
+    const v = (await ds.votacao('v4'))!;
+    expect(v.secreta).toBe(true);
+    expect(v.placar.sim + v.placar.nao).toBe(0);
+  });
+
+  it('devolve null para votação inexistente', async () => {
+    expect(await ds.votacao('nao-existe')).toBeNull();
   });
 });
