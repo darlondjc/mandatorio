@@ -3,7 +3,7 @@
 .pular {
   position: absolute; left: 8px; top: -60px; z-index: 50;
   padding: 10px 16px; border-radius: var(--radius-pill);
-  background: var(--ink); color: var(--on-ink); font-weight: 700;
+  background: var(--ink); color: var(--on-ink); font-weight: 600;
   &:focus { top: 8px; }
 }
 

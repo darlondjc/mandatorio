@@ -165,6 +165,10 @@ export interface Presidente {
   nome: string;
   nomeCompleto: string;
   foto: string | null;
+  /** Página da foto no Wikimedia Commons, para o crédito. */
+  fotoFonte?: string | null;
+  /** Identificador no Wikidata (ex.: Q37181), de onde vem a foto. */
+  wikidata?: string;
   nascimento: DataISO | null;
   naturalidade: string | null;
   perfil: string | null;

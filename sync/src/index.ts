@@ -108,6 +108,7 @@ async function main() {
         const nums = a.medidas.map((m) => Number(m.numero.replace(/\D/g, '').slice(0, -4)));
         return `${a.presidenteId} ${a.mandato}: ${a.medidas.length} MPs (nº ${Math.min(...nums)}–${Math.max(...nums)}) ${conta(a.medidas, (m) => m.situacao)}\n${a.vetos.length} vetos ${conta(a.vetos, (v) => v.situacao)} ${conta(a.vetos, (v) => v.tipo)} sem matéria: ${a.vetos.filter((v) => !v.materia).length}\n${a.projetos.length} projetos ${conta(a.projetos, (x) => x.etapa)}\nexemplos: ${JSON.stringify([a.medidas[0], a.vetos[0], a.projetos[0]]).slice(0, 1800)}`;
       }).join('\n'));
+      anotar('notice', 'Presidente — fotos', p.presidentes.map((x) => `${x.nome}: ${x.foto ?? 'sem foto'}`).join('\n'));
       anotar('notice', 'Presidente — deliberações de veto', JSON.stringify(Object.fromEntries(deliberacoesVistas)));
     } catch (e) {
       erros.push('Presidente');

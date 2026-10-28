@@ -15,7 +15,7 @@ import { corPartido, fotoSegura, iniciais, textoSobrePartido } from '../core/for
     </div>
   `,
   styles: `
-    .sem-foto { display: grid; place-items: center; font: 800 40px/1 var(--font-display); color: var(--brand-700); }
+    .sem-foto { display: grid; place-items: center; font: 600 40px/1 var(--font-display); color: var(--brand-700); }
     .mt-photo--sm .sem-foto { font-size: 30px; }
   `,
 })

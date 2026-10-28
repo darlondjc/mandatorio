@@ -5,18 +5,21 @@
 .seletor {
   height: 40px; padding: 0 var(--space-4); max-width: 100%;
   border: 2px solid var(--line); border-radius: var(--radius-pill);
-  background: var(--surface-raised); color: var(--ink); font: 700 14px var(--font-sans);
+  background: var(--surface-raised); color: var(--ink); font: 600 14px var(--font-sans);
 }
 
 .perfil { display: flex; gap: 28px; align-items: center; }
+.foto { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.foto figcaption { font-size: 11px; }
+.foto figcaption a { color: var(--ink-muted); }
 .perfil__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
-.nome { font-size: 52px; font-weight: 800; line-height: 1; letter-spacing: -0.035em; }
+.nome { font-size: 52px; font-weight: 500; line-height: 1; letter-spacing: -0.02em; }
 .resumo { max-width: 660px; font-size: 16px; color: var(--ink-muted); }
 
 .dados { margin: 0; display: flex; flex-wrap: wrap; gap: 10px; font-size: 14px; }
 .dados > div { display: flex; gap: 6px; padding: 8px 14px; border-radius: var(--radius-pill); background: var(--brand-100); }
 .dados dt { color: var(--ink-muted); }
-.dados dd { margin: 0; font-weight: 700; }
+.dados dd { margin: 0; font-weight: 600; }
 
 .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 
@@ -40,7 +43,7 @@
 
 .selo {
   justify-self: start; min-width: 136px; padding: 6px 10px; text-align: center;
-  border-radius: var(--radius-pill); border: 2px solid transparent; font: 800 13px/1.2 var(--font-sans);
+  border-radius: var(--radius-pill); border: 2px solid transparent; font: 600 13px/1.2 var(--font-sans);
 }
 .selo--lei, .selo--veto-mantido { background: var(--brand-700); color: var(--on-brand); }
 .selo--tramitando, .selo--veto-aguardando { background: var(--surface); color: var(--brand-700); border-color: var(--brand-700); }
@@ -60,7 +63,7 @@
   background: var(--brand-100); color: var(--ink-muted);
 }
 .etapa--feita { background: var(--line); color: var(--ink); }
-.etapa--atual { background: var(--brand-700); color: var(--on-brand); font-weight: 800; }
+.etapa--atual { background: var(--brand-700); color: var(--on-brand); font-weight: 600; }
 
 .aviso-erro { padding: var(--space-4); border-radius: var(--radius-lg); background: var(--coral-100); color: var(--coral-900); }
 
@@ -72,7 +75,7 @@
   .perfil { flex-direction: column; text-align: center; gap: var(--space-3); }
   .perfil__texto { align-items: center; }
   .perfil__texto .mt-row { justify-content: center; }
-  .nome { font-size: 32px; letter-spacing: -0.03em; }
+  .nome { font-size: 32px; letter-spacing: -0.02em; }
   .resumo { font-size: 14px; }
   .topo { justify-content: center; }
   .topo > .orgao { display: none; }

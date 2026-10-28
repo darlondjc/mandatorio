@@ -1,17 +1,17 @@
 :host { display: flex; flex-direction: column; gap: 22px; max-width: 1200px; }
 
-.voltar { align-self: flex-start; font-weight: 700; text-decoration: none; }
+.voltar { align-self: flex-start; font-weight: 600; text-decoration: none; }
 
 .perfil { display: flex; gap: 28px; align-items: center; }
 .perfil__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
-.nome { font-size: 52px; font-weight: 800; line-height: 1; letter-spacing: -0.035em; }
+.nome { font-size: 52px; font-weight: 500; line-height: 1; letter-spacing: -0.02em; }
 .resumo { max-width: 640px; font-size: 16px; color: var(--ink-muted); }
 .perfil__acoes { display: flex; flex-direction: column; gap: var(--space-2); }
 
 .dados { margin: 0; display: flex; flex-wrap: wrap; gap: 10px; font-size: 14px; }
 .dados > div { display: flex; gap: 6px; padding: 8px 14px; border-radius: var(--radius-pill); background: var(--brand-100); }
 .dados dt { color: var(--ink-muted); }
-.dados dd { margin: 0; font-weight: 700; }
+.dados dd { margin: 0; font-weight: 600; }
 
 .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 
@@ -31,7 +31,7 @@
 
 .gastos__topo { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; }
 .gastos { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-8); }
-.subtitulo { font-size: 16px; font-weight: 700; }
+.subtitulo { font-size: 16px; font-weight: 600; }
 .categoria { display: flex; flex-direction: column; gap: 4px; }
 .categoria__linha { display: flex; justify-content: space-between; gap: var(--space-3); font-size: 14px; }
 .barra { height: 10px; border-radius: var(--radius-pill); background: var(--line); overflow: hidden; }
@@ -53,7 +53,7 @@
   .perfil__texto { align-items: center; }
   .perfil__texto .mt-row { justify-content: center; }
   .perfil__acoes { width: 100%; }
-  .nome { font-size: 32px; letter-spacing: -0.03em; }
+  .nome { font-size: 32px; letter-spacing: -0.02em; }
   .resumo { font-size: 14px; }
   .cards { gap: 10px; }
   .cards .mt-stat { padding: 14px; flex-direction: column; align-items: flex-start; gap: 8px; }

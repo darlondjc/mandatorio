@@ -28,6 +28,26 @@ const PRAZO_MP = 120;
 type Json = Record<string, any>;
 type Cadastro = Omit<Presidente, 'mandatos'> & { mandatos: Omit<MandatoPresidente, 'atual' | 'resumo'>[] };
 
+/**
+ * Foto oficial pelo Wikidata (propriedade P18, imagem) servida pelo Wikimedia Commons.
+ * Usada quando o cadastro não traz uma URL de foto.
+ */
+async function fotoWikidata(qid: string): Promise<{ foto: string; fonte: string } | null> {
+  try {
+    const j = await getJson<Json>(`https://www.wikidata.org/wiki/Special:EntityData/${qid}.json`);
+    const arquivo: string | undefined = j?.entities?.[qid]?.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+    if (!arquivo) return null;
+    const nome = encodeURIComponent(arquivo.replace(/ /g, '_'));
+    return {
+      foto: `https://commons.wikimedia.org/wiki/Special:FilePath/${nome}?width=400`,
+      fonte: `https://commons.wikimedia.org/wiki/File:${nome}`,
+    };
+  } catch (e) {
+    console.warn(`Foto do Wikidata ${qid} indisponível: ${(e as Error).message}`);
+    return null;
+  }
+}
+
 export function lerCadastro(): Cadastro[] {
   const j = JSON.parse(readFileSync(new URL('./presidentes.json', import.meta.url), 'utf8'));
   return j.presidentes;
@@ -211,6 +231,10 @@ export async function coletarPresidentes(): Promise<{ presidentes: Presidente[];
   const presidentes: Presidente[] = [];
   const atos: AtosMandato[] = [];
   for (const p of lerCadastro()) {
+    if (!p.foto && p.wikidata) {
+      const f = await fotoWikidata(p.wikidata);
+      if (f) Object.assign(p, { foto: f.foto, fotoFonte: f.fonte });
+    }
     const mandatos: MandatoPresidente[] = [];
     for (const m of p.mandatos) {
       console.log(`Presidente: ${p.nome} ${m.id}…`);

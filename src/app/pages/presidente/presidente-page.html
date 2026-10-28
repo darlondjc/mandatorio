@@ -18,7 +18,12 @@
   </div>
 
   <section class="perfil">
-    <mt-photo [nome]="sel.presidente.nome" [foto]="sel.presidente.foto" />
+    <figure class="foto">
+      <mt-photo [nome]="sel.presidente.nome" [foto]="sel.presidente.foto" />
+      @if (sel.presidente.fotoFonte) {
+        <figcaption><a [href]="sel.presidente.fotoFonte" target="_blank" rel="noopener">Foto: Wikimedia Commons</a></figcaption>
+      }
+    </figure>
     <div class="perfil__texto">
       <div class="mt-row">
         <span class="mt-chip mt-chip--brand">{{ sel.mandato.partido }}</span>
