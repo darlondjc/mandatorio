@@ -63,7 +63,19 @@
   background: var(--brand-100); color: var(--ink-muted);
 }
 .etapa--feita { background: var(--line); color: var(--ink); }
-.etapa--atual { background: var(--brand-700); color: var(--on-brand); font-weight: 600; }
+.etapa--atual { background: var(--c, var(--brand-700)); color: var(--on, var(--on-brand)); font-weight: 600; }
+
+// Chip de filtro de etapa: tom claro da cor da etapa; selecionado, a cor cheia.
+.chip-etapa {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px 6px 10px; border: 2px solid transparent; border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c) 20%, var(--surface)); color: var(--ink);
+  font: 600 13px var(--font-sans); cursor: pointer;
+  &:hover { border-color: var(--c); }
+  &[aria-pressed='true'] { background: var(--c); color: var(--on); }
+}
+.chip-etapa__ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.chip-etapa[aria-pressed='true'] .chip-etapa__ponto { background: var(--on); }
 
 .aviso-erro { padding: var(--space-4); border-radius: var(--radius-lg); background: var(--coral-100); color: var(--coral-900); }
 

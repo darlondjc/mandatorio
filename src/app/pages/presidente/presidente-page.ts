@@ -32,6 +32,8 @@ export const ETAPAS: { id: EtapaProjeto; rotulo: string }[] = [
   { id: 'sancao', rotulo: 'Sanção' },
   { id: 'lei', rotulo: 'Lei' },
 ];
+/** Etapas oferecidas no filtro: as do caminho do projeto mais o arquivamento. */
+const FILTRO_ETAPAS: { id: EtapaProjeto; rotulo: string }[] = [...ETAPAS, { id: 'arquivado', rotulo: 'Arquivado' }];
 const PRAZO_MP_DIAS = 120;
 
 @Component({
@@ -87,6 +89,7 @@ export class PresidentePage {
 
   protected readonly filtroMP = signal<SituacaoMP | null>(null);
   protected readonly filtroVeto = signal<SituacaoVeto | null>(null);
+  protected readonly filtroEtapa = signal<EtapaProjeto | null>(null);
 
   protected readonly cards = computed(() => {
     const r = this.selecionado()?.mandato.resumo;
@@ -132,9 +135,25 @@ export class PresidentePage {
 
   protected readonly listaVeto = computed(() => (this.vetos.value() ?? []).filter((v) => !this.filtroVeto() || v.situacao === this.filtroVeto()));
 
+  protected readonly chipsEtapa = computed(() => {
+    const lista = this.projetos.value() ?? [];
+    return FILTRO_ETAPAS.map((e) => ({ ...e, total: lista.filter((p) => p.etapa === e.id).length })).filter((e) => e.total > 0);
+  });
+
   protected readonly listaProjetos = computed(() =>
-    (this.projetos.value() ?? []).map((p) => ({ ...p, passo: ETAPAS.findIndex((e) => e.id === p.etapa) })),
+    (this.projetos.value() ?? [])
+      .filter((p) => !this.filtroEtapa() || p.etapa === this.filtroEtapa())
+      .map((p) => ({ ...p, passo: ETAPAS.findIndex((e) => e.id === p.etapa) })),
   );
+
+  /** Variáveis CSS da cor de uma etapa (tokens etapa-*). */
+  protected corEtapa(id: EtapaProjeto) {
+    return { '--c': `var(--etapa-${id})`, '--on': `var(--on-etapa-${id})` };
+  }
+
+  protected alternarEtapa(id: EtapaProjeto) {
+    this.filtroEtapa.update((atual) => (atual === id ? null : id));
+  }
 
   protected trocarMandato(chave: string) {
     const [p, m] = chave.split('/');
