@@ -122,7 +122,7 @@ async function main() {
       anotar('notice', 'Senado — autorias', `${diagAutorias.comItens} senadores com proposições · leis: ${s.senadores.reduce((a, x) => a + x.resumo.proposicoesLei, 0)} · exemplo: ${JSON.stringify(s.proposicoesPorSenador.get(ex.codigo)?.slice(0, 2)).slice(0, 700)}`);
       const d = diagFotosSenado;
       anotar('notice', 'Senado — fotos', `largura das fotos do Senado: ${JSON.stringify(Object.fromEntries(d.tamanhosSenado))}\npropriedades do Wikidata: ${d.propriedades.join(' | ') || 'nenhuma'}\n${d.noWikidata} senadores com imagem no Wikidata · ${d.trocadas} trocadas pelo Commons\n${d.exemplos.join('\n')}${d.erros.length ? '\nerros: ' + d.erros.join(' | ') : ''}`);
-      anotar('notice', 'Senado — suplentes em exercício', `${diagSaidas.suplentes.length}\n${diagSaidas.suplentes.slice(0, 12).join('\n')}`);
+      anotar('notice', 'Senado — suplentes em exercício', `${diagSaidas.suplentes.length}\n${diagSaidas.suplentes.slice(0, 12).join('\n')}${diagSaidas.semMandato.length ? `\nsem mandato identificado: ${diagSaidas.semMandato.join(' | ')}` : ''}`);
       anotar('notice', 'Senado — saíram', `${diagSaidas.total} senadores votaram nesta legislatura e não estão em exercício\n${diagSaidas.exemplos.join('\n')}`);
       anotar('notice', 'Senado', `${s.senadores.length} senadores · ${s.plenario.partidos.length} partidos · ${votos} votos individuais · ${[...s.gastosPorSenador.values()].filter((g) => g.length).length} com gastos · ${[...s.proposicoesPorSenador.values()].reduce((a, p) => a + p.length, 0)} proposições`);
     } catch (e) {

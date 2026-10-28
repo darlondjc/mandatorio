@@ -36,6 +36,7 @@
 .quem { display: flex; flex-direction: column; min-width: 0; }
 .quem__nome { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .quem__sub { font-size: 13px; color: var(--ink-muted); }
+.quem__situacao { font-size: 12px; font-weight: 600; color: var(--brand-700); }
 
 .barra { position: relative; height: 10px; border-radius: var(--radius-pill); background: var(--line); }
 .barra__valor { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--brand-700); }

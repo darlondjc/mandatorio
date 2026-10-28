@@ -42,6 +42,8 @@ interface SenadorBase {
   email: string | null;
   bloco: string | null;
   mandato: Senador['mandato'];
+  /** O mandato como veio em lista/atual.json: alternativa quando mandatos.json não traz o atual. */
+  mandatoBruto?: Json;
 }
 
 export interface ResultadoSenado {
@@ -86,6 +88,7 @@ async function senadoresEmExercicio(): Promise<{ base: SenadorBase[]; legislatur
       foto: id.UrlFotoParlamentar ? String(id.UrlFotoParlamentar).replace(/^http:\/\//, 'https://') : null,
       email: id.EmailParlamentar ?? null,
       bloco: id.Bloco?.NomeBloco ?? null,
+      mandatoBruto: m,
       mandato: {
         inicio: isoData(leg1.DataInicio) ?? '',
         fim: isoData(leg2.DataFim ?? leg1.DataFim) ?? '',
@@ -176,7 +179,7 @@ export function mandatoDaLegislatura(mandatos: Json[], legislatura: number) {
 }
 
 /** Diagnóstico de quem saiu: quantos, e um exemplo do que veio da API. */
-export const diagSaidas = { total: 0, exemplos: [] as string[], suplentes: [] as string[] };
+export const diagSaidas = { total: 0, exemplos: [] as string[], suplentes: [] as string[], semMandato: [] as string[] };
 
 const SIGLAS_PROPOSICAO = ['PL', 'PLS', 'PEC', 'PLP', 'PDL', 'PRS'];
 const PARTICULAS = new Set(['da', 'de', 'do', 'das', 'dos', 'e']);
@@ -376,7 +379,12 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
   diagSaidas.exemplos = ex.slice(0, 6).map((s, i) => `${s.nome} (${s.partido}-${s.uf}, ${s.participacao ?? '?'}): saída ${s.saida.data ?? '?'} ${s.saida.motivo ?? ''} · ${detEx[i].listaMandatos.length} mandatos na API`);
 
   // Em exercício: titular ou suplente, e desde quando (um suplente herda as datas do mandato da vaga).
-  const atuaisMandato = base.map((_, i) => mandatoDaLegislatura(det[i].listaMandatos, legislatura));
+  const atuaisMandato = base.map(
+    (s, i) => mandatoDaLegislatura(det[i].listaMandatos, legislatura) ?? mandatoDaLegislatura(s.mandatoBruto ? [s.mandatoBruto] : [], legislatura),
+  );
+  diagSaidas.semMandato = base
+    .filter((_, i) => !atuaisMandato[i])
+    .map((s, i) => `${s.nome}: ${det[base.indexOf(s)].listaMandatos.length} mandatos em mandatos.json; chaves em lista/atual: ${Object.keys(s.mandatoBruto ?? {}).join(',')}`);
   diagSaidas.suplentes = base
     .map((s, i) => ({ s, m: atuaisMandato[i], bruto: det[i].listaMandatos.find((x) => /suplente/i.test(String(x.DescricaoParticipacao ?? ''))) }))
     .filter((x) => /suplente/i.test(x.m?.participacao ?? ''))

@@ -22,7 +22,7 @@
         <span class="mt-chip mt-chip--brand">{{ s.partido }}</span>
         <span class="mt-chip">{{ ufNome(s.uf) }}</span>
         @if (s.emExercicio) {
-          <span class="mt-chip">Em exercício</span>
+          <span class="mt-chip">{{ situacao() ?? 'Em exercício' }}</span>
         } @else {
           <span class="mt-chip">{{ s.saida?.data ? 'Saiu em ' + data(s.saida!.data!) : 'Fora de exercício' }}</span>
         }

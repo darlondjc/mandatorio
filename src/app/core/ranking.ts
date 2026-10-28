@@ -19,6 +19,8 @@ export function linhaRanking(s: Senador): LinhaRanking {
     proposicoes: r.proposicoes,
     leis: r.proposicoesLei,
     primeiraVotacao: r.primeiraVotacao ?? null,
+    participacao: s.participacao ?? null,
+    exercicioDesde: s.exercicioDesde ?? null,
   };
 }
 
@@ -29,15 +31,32 @@ export function inicioDaLegislatura(dataISO: string): string {
 }
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const mesAno = (iso: string) => `${MESES[Number(iso.slice(5, 7)) - 1]}/${iso.slice(0, 4)}`;
+
+export interface Exercicio {
+  participacao?: string | null;
+  exercicioDesde?: string | null;
+  primeiraVotacao?: string | null;
+  votacoes: number;
+}
 
 /**
- * Explica por que alguém tem menos votações que o total da legislatura: chegou depois
- * ("desde mar/2026") ou ficou um tempo fora do exercício ("com afastamento").
+ * Situação no cargo, para quem não está no mandato de forma contínua desde o início da
+ * legislatura: suplentes ("1º Suplente desde mar/2026", sempre; "…, de volta desde…" se já
+ * tinha estado no cargo antes), quem voltou de um
+ * afastamento ("De volta desde abr/2026") ou quem tem menos votações sem data conhecida.
+ * null para o titular que está no cargo desde o começo.
  */
-export function periodoExercicio(votacoes: number, total: number | undefined, primeira: string | null | undefined, inicio: string): string | null {
-  if (!total || votacoes >= total) return null;
-  if (primeira && Date.parse(primeira) - Date.parse(inicio) > 60 * 864e5) {
-    return `desde ${MESES[Number(primeira.slice(5, 7)) - 1]}/${primeira.slice(0, 4)}`;
+export function situacaoExercicio(e: Exercicio, inicioLegislatura: string, totalVotacoes?: number): string | null {
+  const desde = e.exercicioDesde ?? e.primeiraVotacao ?? null;
+  const tarde = !!desde && Date.parse(desde) - Date.parse(inicioLegislatura) > 60 * 864e5;
+  if (/suplente/i.test(e.participacao ?? '')) {
+    if (!desde) return e.participacao ?? null;
+    // Já tinha votado antes do exercício atual: entrou, saiu e voltou.
+    const voltou = !!e.primeiraVotacao && Date.parse(desde) - Date.parse(e.primeiraVotacao) > 30 * 864e5;
+    return `${e.participacao}${voltou ? ', de volta' : ''} desde ${mesAno(desde)}`;
   }
-  return 'com afastamento';
+  if (tarde) return `${/titular/i.test(e.participacao ?? '') ? 'De volta' : 'Em exercício'} desde ${mesAno(desde!)}`;
+  if (totalVotacoes && e.votacoes < totalVotacoes * 0.97) return 'Teve afastamento';
+  return null;
 }

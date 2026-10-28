@@ -3,6 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
 import { data, ufNome } from '../../core/format';
 import { Historico } from '../../core/historico';
+import type { LinhaRanking } from '../../core/models';
+import { situacaoExercicio } from '../../core/ranking';
 import { Avatar } from '../../shared/avatar';
 import { Tabs } from '../../shared/tabs';
 import { classificar, CRITERIOS, Ordem } from './criterios';
@@ -57,6 +59,12 @@ export class RankingsPage {
   /** A posição é sempre a do Senado inteiro; os filtros só escondem linhas. */
   protected readonly visiveis = computed(() => this.classificacao()?.ranqueados.filter((p) => this.passa(p.linha)) ?? []);
   protected readonly foraVisiveis = computed(() => this.classificacao()?.fora.filter((f) => this.passa(f.linha)) ?? []);
+
+  /** "1º Suplente desde mar/2026", "De volta desde abr/2026"… em todas as abas. */
+  protected situacao(l: LinhaRanking) {
+    const r = this.ranking.value();
+    return r ? situacaoExercicio(l, r.inicio, r.votacoes) : null;
+  }
 
   protected largura(valor: number) {
     const max = this.classificacao()?.maximo || 1;

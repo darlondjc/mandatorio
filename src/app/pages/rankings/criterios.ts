@@ -1,7 +1,6 @@
 // Critérios dos rankings: como cada um calcula o valor, quem entra e como explicar.
 import { data, dinheiro, dinheiroCurto, pctExibido } from '../../core/format';
 import type { LinhaRanking, RankingSenado } from '../../core/models';
-import { periodoExercicio } from '../../core/ranking';
 
 export type CriterioId = 'presenca' | 'fidelidade' | 'gastos' | 'projetos';
 export type Ordem = 'desc' | 'asc';
@@ -53,10 +52,7 @@ export const CRITERIOS: Criterio[] = [
     chave: pct1,
     formatarMedia: pctTexto,
     base: (l) => l.votacoes,
-    nota: (l, r) => {
-      const periodo = periodoExercicio(l.votacoes, r.votacoes, l.primeiraVotacao, r.inicio);
-      return `${l.presentes} de ${l.votacoes} votações${periodo ? ` · ${periodo}` : ''}`;
-    },
+    nota: (l) => `${l.presentes} de ${l.votacoes} votações`,
     fora: (l) => poucas(l),
   },
   {

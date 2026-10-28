@@ -63,6 +63,9 @@
               <span class="quem">
                 <span class="quem__nome">{{ p.linha.nome }}</span>
                 <span class="quem__sub">{{ p.linha.partido }} · {{ ufNome(p.linha.uf) }}</span>
+                @if (situacao(p.linha); as sit) {
+                  <span class="quem__situacao">{{ sit }}</span>
+                }
               </span>
               <span class="barra" aria-hidden="true">
                 <span class="barra__valor" [style.width.%]="largura(p.valor)"></span>
@@ -87,7 +90,7 @@
         <summary>Fora deste ranking · {{ foraVisiveis().length }}</summary>
         <ul>
           @for (f of foraVisiveis(); track f.linha.codigo) {
-            <li><a [routerLink]="['/senado', f.linha.codigo]">{{ f.linha.nome }}</a> <span class="muted">({{ f.linha.partido }}-{{ f.linha.uf }}): {{ f.motivo }}</span></li>
+            <li><a [routerLink]="['/senado', f.linha.codigo]">{{ f.linha.nome }}</a> <span class="muted">({{ f.linha.partido }}-{{ f.linha.uf }}@if (situacao(f.linha); as sit) {, {{ sit.charAt(0).toLowerCase() + sit.slice(1) }}}): {{ f.motivo }}</span></li>
           }
         </ul>
       </details>

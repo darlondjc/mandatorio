@@ -59,11 +59,8 @@ describe('ordem entre iguais e período em exercício', () => {
     expect(c.ranqueados.map((p) => [p.linha.codigo, p.posicao])).toEqual([['antigo', 1], ['outro', 1], ['novo', 3]]);
   });
 
-  it('explica quem chegou depois ou ficou afastado', () => {
+  it('a nota de presença traz só os números', () => {
     const r = { ...ranking([]), votacoes: 426 };
-    const nota = (l: Partial<LinhaRanking>) => crit('presenca').nota(linha('a', 'X', l), r);
-    expect(nota({ votacoes: 59, presentes: 59, primeiraVotacao: '2026-03-10' })).toBe('59 de 59 votações · desde mar/2026');
-    expect(nota({ votacoes: 399, presentes: 380, primeiraVotacao: '2023-02-07' })).toBe('380 de 399 votações · com afastamento');
-    expect(nota({ votacoes: 426, presentes: 400, primeiraVotacao: '2023-02-07' })).toBe('400 de 426 votações');
+    expect(crit('presenca').nota(linha('a', 'X', { votacoes: 59, presentes: 59 }), r)).toBe('59 de 59 votações');
   });
 });

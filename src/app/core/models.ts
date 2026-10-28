@@ -317,6 +317,8 @@ export interface LinhaRanking {
   proposicoes: number;
   leis: number;
   primeiraVotacao?: DataISO | null;
+  participacao?: string | null;
+  exercicioDesde?: DataISO | null;
 }
 
 export interface RankingSenado {
