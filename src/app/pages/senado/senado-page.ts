@@ -20,6 +20,8 @@ export class SenadoPage {
   protected readonly partido = signal<string | null>(null);
   protected readonly busca = signal('');
   protected readonly uf = signal('');
+  /** Senador sob o mouse (ou com foco) na lista: realça a cadeira no plenário. */
+  protected readonly realce = signal<string | null>(null);
 
   protected readonly corPartido = corPartido;
   protected readonly ufNome = ufNome;
