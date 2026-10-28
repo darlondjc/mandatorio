@@ -56,15 +56,28 @@
 @media (max-width: 720px) {
   .resumo { flex-direction: column; align-items: flex-start; padding: var(--space-4); border-radius: var(--radius-lg); }
   .media { align-items: flex-start; }
+  /* Mobile: posição estreita, nome com a linha toda e a nota embaixo da barra. */
   .linha {
-    grid-template-columns: 34px auto 1fr auto;
-    grid-template-areas: 'pos av quem valor' 'pos barra barra barra';
-    row-gap: 8px; padding: 10px var(--space-3);
+    grid-template-columns: 24px 40px minmax(0, 1fr) auto;
+    grid-template-areas:
+      'pos av quem num'
+      'pos av barra barra'
+      '. . nota nota';
+    column-gap: 10px; row-gap: 6px; padding: 10px 12px;
   }
-  .pos { grid-area: pos; font-size: 16px; }
-  mt-avatar { grid-area: av; }
+  .pos { grid-area: pos; align-self: center; font-size: 14px; text-align: left; }
+  mt-avatar { grid-area: av; align-self: center; }
+  :host ::ng-deep .linha .mt-avatar { width: 40px; height: 40px; font-size: 14px; }
   .quem { grid-area: quem; }
-  .valor { grid-area: valor; }
-  .valor__num { font-size: 17px; }
-  .barra { grid-area: barra; height: 8px; }
+  .quem__nome { white-space: normal; line-height: 1.25; }
+  .quem__sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .valor { display: contents; }
+  .valor__num { grid-area: num; align-self: start; font-size: 18px; }
+  .valor__nota { grid-area: nota; text-align: left; margin-top: -2px; }
+  .barra { grid-area: barra; align-self: center; height: 6px; }
+}
+
+@media (max-width: 360px) {
+  .valor__num { font-size: 16px; }
+  .linha { column-gap: 8px; padding-inline: 10px; }
 }
