@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter } from 'rxjs';
 import { DataSource } from './core/data-source';
 import { Historico } from './core/historico';
+import { appCheckSiteKey } from './core/app-check-config';
 import { data } from './core/format';
 import { Icon } from './shared/icon';
 
@@ -19,6 +20,8 @@ export class App {
   // Começa a registrar o caminho desde a primeira página.
   private readonly historico = inject(Historico);
   protected readonly exemplo = this.ds.exemplo;
+  /** Com App Check, o selo do reCAPTCHA fica escondido e o aviso exigido pelo Google vai no rodapé do menu. */
+  protected readonly recaptcha = !this.ds.exemplo && !!appCheckSiteKey;
   protected readonly menuAberto = signal(false);
   protected readonly atualizado = signal<string | null>(null);
   protected readonly novaVersao = signal(false);

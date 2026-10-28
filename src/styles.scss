@@ -33,3 +33,6 @@ button { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* Selo do reCAPTCHA (App Check): escondido, com o aviso exigido pelo Google no menu lateral. */
+.grecaptcha-badge { visibility: hidden; }

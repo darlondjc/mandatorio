@@ -36,6 +36,9 @@
   outline: none;
 }
 
+.recaptcha { font-size: 11px; }
+.recaptcha a { color: inherit; }
+
 .aviso {
   margin-bottom: var(--space-6); padding: 10px var(--space-4);
   border-radius: var(--radius-lg); background: var(--coral-100); color: var(--coral-900); font-size: 14px;
