@@ -6,6 +6,7 @@ import { Cadeira, PartidoBancada, Voto } from '../../core/models';
 import { SeatMap } from '../../shared/seat-map';
 import { Segmento, SplitBar } from '../../shared/split-bar';
 import { Voltar } from '../../shared/voltar';
+import { DescricaoCurtaPipe } from '../../shared/descricao-curta';
 
 /** Cor de cada voto no plenário. Ausente é a cadeira vazia. */
 const COR_VOTO: Record<Voto, string> = {
@@ -19,7 +20,7 @@ const ORDEM_VOTOS: Voto[] = ['sim', 'nao', 'abstencao', 'secreto', 'ausente'];
 
 @Component({
   selector: 'mt-votacao-page',
-  imports: [RouterLink, SeatMap, SplitBar, Voltar],
+  imports: [RouterLink, SeatMap, SplitBar, Voltar, DescricaoCurtaPipe],
   templateUrl: './votacao-page.html',
   styleUrl: './votacao-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

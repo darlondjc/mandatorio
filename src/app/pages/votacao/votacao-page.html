@@ -22,8 +22,11 @@
       }
     </div>
     <h1 class="ementa">{{ v.ementa }}</h1>
+    @if (v.descricao | descricaoCurta; as curta) {
+      <p class="descricao"><span class="o-que">O que foi votado:</span> {{ curta }}</p>
+    }
     @if (v.descricao) {
-      <p class="descricao">{{ v.descricao }}</p>
+      <p class="nota">Texto do Senado: “{{ v.descricao }}”</p>
     }
     @if (v.secreta) {
       <p class="nota">Em votações secretas, como a indicação de autoridades, o Senado só divulga quem votou, não como cada senador votou.</p>

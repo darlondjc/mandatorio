@@ -8,6 +8,7 @@ import { Photo } from '../../shared/avatar';
 import { Segmento, SplitBar } from '../../shared/split-bar';
 import { Aba, Tabs } from '../../shared/tabs';
 import { Voltar } from '../../shared/voltar';
+import { DescricaoCurtaPipe } from '../../shared/descricao-curta';
 import { Icon } from '../../shared/icon';
 import { perfilTematico, VOLTADO_A } from '../../core/temas';
 import { posicoesDoSenador } from '../rankings/criterios';
@@ -23,7 +24,7 @@ const ABAS: Aba[] = [
 
 @Component({
   selector: 'mt-senador-page',
-  imports: [RouterLink, Photo, SplitBar, Tabs, Voltar, Icon],
+  imports: [RouterLink, Photo, SplitBar, Tabs, Voltar, Icon, DescricaoCurtaPipe],
   templateUrl: './senador-page.html',
   styleUrl: './senador-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

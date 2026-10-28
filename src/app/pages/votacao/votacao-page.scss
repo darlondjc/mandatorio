@@ -3,7 +3,8 @@
 
 .cabecalho { display: flex; flex-direction: column; gap: 12px; }
 .ementa { font-size: 28px; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; max-width: 900px; }
-.descricao { font-size: 16px; color: var(--ink); max-width: 760px; }
+.descricao { font-size: 17px; font-weight: 500; color: var(--ink); max-width: 760px; }
+.o-que { color: var(--ink-muted); font-weight: 400; }
 .nota { font-size: 14px; color: var(--ink-muted); max-width: 760px; }
 .rejeitado { background: var(--coral-700); color: var(--on-coral); }
 

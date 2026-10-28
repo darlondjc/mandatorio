@@ -23,6 +23,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/rankings/rankings-page').then((m) => m.RankingsPage),
   },
   {
+    path: 'comparar',
+    title: 'Comparar senadores · Mandatório',
+    loadComponent: () => import('./pages/comparar/comparar-page').then((m) => m.CompararPage),
+  },
+  {
     path: 'presidente',
     title: 'Presidente · Mandatório',
     loadComponent: () => import('./pages/presidente/presidente-page').then((m) => m.PresidentePage),

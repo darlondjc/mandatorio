@@ -51,6 +51,7 @@ function caminho(url: string) {
 export function rotuloVoltar(url: string): string {
   const c = caminho(url);
   if (c.startsWith('/rankings')) return 'Voltar ao ranking';
+  if (c.startsWith('/comparar')) return 'Voltar à comparação';
   if (c.startsWith('/votacao/')) return 'Voltar à votação';
   if (c.startsWith('/senado/')) return 'Voltar ao perfil anterior';
   if (c.startsWith('/senado')) return 'Voltar ao plenário';

@@ -193,10 +193,19 @@ export interface Classificacao {
   maximo: number;
 }
 
-export function classificar(ranking: RankingSenado, criterio: Criterio, ordem: Ordem): Classificacao {
+function contexto(ranking: RankingSenado): Contexto {
   const bancada = new Map<string, number>();
   ranking.linhas.forEach((l) => bancada.set(l.partido, (bancada.get(l.partido) ?? 0) + 1));
-  const ctx: Contexto = { ranking, bancada };
+  return { ranking, bancada };
+}
+
+/** Por que alguém fica fora deste critério (mesmas regras do ranking), ou null se entra. */
+export function motivoFora(ranking: RankingSenado, criterio: Criterio, linha: LinhaRanking): string | null {
+  return criterio.fora(linha, contexto(ranking));
+}
+
+export function classificar(ranking: RankingSenado, criterio: Criterio, ordem: Ordem): Classificacao {
+  const ctx = contexto(ranking);
   const fora: Classificacao['fora'] = [];
   const dentro: { linha: LinhaRanking; valor: number }[] = [];
   for (const linha of ranking.linhas) {
