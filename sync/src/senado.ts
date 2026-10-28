@@ -429,6 +429,8 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
       comissoes: saiu ? [] : d.comissoes,
       resumo: {
         votacoes: vs.length,
+        primeiraVotacao: vs.reduce<string | null>((m, v) => (!m || v.data < m ? v.data : m), null),
+        votacoesLegislatura: vots.length,
         distribuicao,
         votosComparaveis: comparaveis.length,
         votosComPartido: comparaveis.filter((v) => !v.divergiu).length,

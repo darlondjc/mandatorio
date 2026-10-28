@@ -220,6 +220,8 @@ function gerar(): Base {
       }),
       resumo: {
         votacoes: lista.length,
+        primeiraVotacao: lista.at(-1)?.data ?? null,
+        votacoesLegislatura: VOTACOES,
         distribuicao: dist,
         votosComparaveis: comparaveis.length,
         votosComPartido: com,
@@ -373,6 +375,7 @@ export class SampleDataSource extends DataSource {
       inicio: p.inicio,
       cotaAno: 2026,
       atualizadoEm: p.atualizadoEm,
+      votacoes: VOTACOES,
       linhas: this.dados.senadores.filter((s) => s.emExercicio).map(linhaRanking),
     };
   }

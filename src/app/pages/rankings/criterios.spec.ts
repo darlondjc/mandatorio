@@ -23,10 +23,10 @@ describe('classificar', () => {
     expect(asc.ranqueados[0].linha.codigo).toBe('d');
   });
 
-  it('empata quem aparece com a mesma porcentagem, mantendo o valor exato na ordem', () => {
+  it('mesma porcentagem na tela: quem tem mais votações fica acima, sem dividir a posição', () => {
     const r = ranking([linha('a', 'X', { presentes: 424, votacoes: 426 }), linha('b', 'X', { presentes: 59, votacoes: 59 })]);
     const c = classificar(r, crit('presenca'), 'desc');
-    expect(c.ranqueados.map((p) => [p.linha.codigo, p.posicao])).toEqual([['b', 1], ['a', 1]]);
+    expect(c.ranqueados.map((p) => [p.linha.codigo, p.posicao])).toEqual([['a', 1], ['b', 2]]);
   });
 
   it('deixa de fora quem chegou há pouco e o único do partido', () => {
@@ -42,5 +42,25 @@ describe('classificar', () => {
     const g = classificar(r, crit('gastos'), 'asc');
     expect(g.ranqueados.map((p) => p.linha.codigo)).toEqual(['b']);
     expect(g.fora[0].motivo).toContain('2026');
+  });
+});
+
+describe('ordem entre iguais e período em exercício', () => {
+  it('entre os 100%, fica acima quem tem mais votações', () => {
+    const r = ranking([
+      linha('novo', 'X', { votacoes: 59, presentes: 59 }),
+      linha('antigo', 'X', { votacoes: 426, presentes: 426 }),
+      linha('outro', 'Y', { votacoes: 426, presentes: 426 }),
+    ]);
+    const c = classificar(r, crit('presenca'), 'desc');
+    expect(c.ranqueados.map((p) => [p.linha.codigo, p.posicao])).toEqual([['antigo', 1], ['outro', 1], ['novo', 3]]);
+  });
+
+  it('explica quem chegou depois ou ficou afastado', () => {
+    const r = { ...ranking([]), votacoes: 426 };
+    const nota = (l: Partial<LinhaRanking>) => crit('presenca').nota(linha('a', 'X', l), r);
+    expect(nota({ votacoes: 59, presentes: 59, primeiraVotacao: '2026-03-10' })).toBe('59 de 59 votações · desde mar/2026');
+    expect(nota({ votacoes: 399, presentes: 380, primeiraVotacao: '2023-02-07' })).toBe('380 de 399 votações · com afastamento');
+    expect(nota({ votacoes: 426, presentes: 400, primeiraVotacao: '2023-02-07' })).toBe('400 de 426 votações');
   });
 });

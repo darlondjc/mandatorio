@@ -92,6 +92,7 @@ export class FirestoreDataSource extends DataSource {
       inicio: p.inicio,
       cotaAno: atuais[0]?.resumo.cotaAnoReferencia ?? new Date().getFullYear(),
       atualizadoEm: p.atualizadoEm,
+      votacoes: Math.max(0, ...atuais.map((s) => s.resumo.votacoesLegislatura ?? s.resumo.votacoes)),
       linhas: atuais.map(linhaRanking),
     };
   }

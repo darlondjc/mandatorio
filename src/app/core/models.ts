@@ -84,6 +84,10 @@ export interface ResumoSenador {
   cotaMediaSenado: number;
   proposicoes: number;
   proposicoesLei: number;
+  /** Data da primeira votação em exercício nesta legislatura. */
+  primeiraVotacao?: DataISO | null;
+  /** Votações nominais do plenário na legislatura inteira, para comparar com `votacoes`. */
+  votacoesLegislatura?: number;
 }
 
 export interface Senador {
@@ -306,6 +310,7 @@ export interface LinhaRanking {
   cota: number;
   proposicoes: number;
   leis: number;
+  primeiraVotacao?: DataISO | null;
 }
 
 export interface RankingSenado {
@@ -314,5 +319,7 @@ export interface RankingSenado {
   inicio: DataISO;
   cotaAno: number;
   atualizadoEm: string;
+  /** Votações nominais da legislatura até agora. */
+  votacoes?: number;
   linhas: LinhaRanking[];
 }

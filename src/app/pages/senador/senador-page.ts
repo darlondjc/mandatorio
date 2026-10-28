@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
+import { inicioDaLegislatura, periodoExercicio } from '../../core/ranking';
 import { data, dinheiro, dinheiroCurto, pct, ROTULO_VOTO, ufNome } from '../../core/format';
 import { Voto, VotoSenador } from '../../core/models';
 import { Photo } from '../../shared/avatar';
@@ -65,12 +66,16 @@ export class SenadorPage {
     if (!s) return null;
     const r = s.resumo;
     const presentes = r.votacoes - r.distribuicao.ausente;
+    // Quem saiu já tem a data de saída no topo do perfil.
+    const periodo = s.emExercicio
+      ? periodoExercicio(r.votacoes, r.votacoesLegislatura, r.primeiraVotacao, inicioDaLegislatura(s.atualizadoEm))
+      : null;
     const presenca = pct(presentes, r.votacoes);
     const alinhamento = pct(r.votosComPartido, r.votosComparaveis);
     const difCota = r.cotaMediaSenado ? Math.round(((r.cotaAno - r.cotaMediaSenado) / r.cotaMediaSenado) * 100) : null;
     return {
       presenca,
-      presencaNota: `${presentes} de ${r.votacoes} votações`,
+      presencaNota: `${presentes} de ${r.votacoes} votações${periodo ? ` · ${periodo}` : ''}`,
       alinhamento,
       alinhamentoNota: r.mediaPartido != null ? `média do partido: ${r.mediaPartido}%` : `${r.votosComparaveis} votos comparados`,
       cota: dinheiroCurto(r.cotaAno),

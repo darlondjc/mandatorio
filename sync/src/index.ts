@@ -104,6 +104,7 @@ async function main() {
         inicio: s.plenario.inicio,
         cotaAno: s.senadores[0]?.resumo.cotaAnoReferencia ?? new Date().getFullYear(),
         atualizadoEm: s.plenario.atualizadoEm,
+        votacoes: s.votacoes.length,
         linhas: s.senadores.filter((x) => x.emExercicio).map(linhaRanking),
       };
       itens.push({ caminho: 'rankings/senado', dados: ranking });

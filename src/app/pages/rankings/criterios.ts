@@ -1,6 +1,7 @@
 // Critérios dos rankings: como cada um calcula o valor, quem entra e como explicar.
 import { data, dinheiro, dinheiroCurto } from '../../core/format';
 import type { LinhaRanking, RankingSenado } from '../../core/models';
+import { periodoExercicio } from '../../core/ranking';
 
 export type CriterioId = 'presenca' | 'fidelidade' | 'gastos' | 'projetos';
 export type Ordem = 'desc' | 'asc';
@@ -25,6 +26,8 @@ export interface Criterio {
   formatar: (v: number) => string;
   /** Valor como aparece na tela: empata quem mostra o mesmo número. */
   chave: (v: number) => number;
+  /** Base da porcentagem. Entre quem mostra o mesmo número, fica acima quem tem mais. */
+  base?: (l: LinhaRanking) => number;
   /** Texto curto para a média do Senado. */
   formatarMedia: (v: number) => string;
   nota: (l: LinhaRanking, r: RankingSenado) => string;
@@ -47,7 +50,11 @@ export const CRITERIOS: Criterio[] = [
     formatar: pctTexto,
     chave: Math.round,
     formatarMedia: pctTexto,
-    nota: (l) => `${l.presentes} de ${l.votacoes} votações`,
+    base: (l) => l.votacoes,
+    nota: (l, r) => {
+      const periodo = periodoExercicio(l.votacoes, r.votacoes, l.primeiraVotacao, r.inicio);
+      return `${l.presentes} de ${l.votacoes} votações${periodo ? ` · ${periodo}` : ''}`;
+    },
     fora: (l) => poucas(l),
   },
   {
@@ -60,6 +67,7 @@ export const CRITERIOS: Criterio[] = [
     formatar: pctTexto,
     chave: Math.round,
     formatarMedia: pctTexto,
+    base: (l) => l.comparaveis,
     nota: (l) => {
       const dif = l.comparaveis - l.comPartido;
       return `${dif} ${dif === 1 ? 'voto diferente' : 'votos diferentes'} em ${l.comparaveis}`;
@@ -125,17 +133,23 @@ export function classificar(ranking: RankingSenado, criterio: Criterio, ordem: O
     else dentro.push({ linha, valor: criterio.valor(linha) });
   }
   const sinal = ordem === 'desc' ? -1 : 1;
-  // Empata quem aparece com o mesmo número (87,4% e 87,2% são "87%"); dentro do empate,
-  // o valor exato decide a ordem, e depois o nome.
+  // Primeiro o número que aparece na tela (87,4% e 87,2% são "87%"). Entre iguais, fica
+  // acima quem tem mais votações na conta: 100% de 426 vale mais que 100% de 59. Depois o
+  // valor exato e o nome. Só divide a posição quem empata no número e na base.
   const chave = criterio.chave;
+  const base = criterio.base ?? (() => 0);
   dentro.sort(
-    (a, b) => sinal * (chave(a.valor) - chave(b.valor)) || sinal * (a.valor - b.valor) || a.linha.nome.localeCompare(b.linha.nome, 'pt-BR'),
+    (a, b) =>
+      sinal * (chave(a.valor) - chave(b.valor)) ||
+      base(b.linha) - base(a.linha) ||
+      sinal * (a.valor - b.valor) ||
+      a.linha.nome.localeCompare(b.linha.nome, 'pt-BR'),
   );
   const ranqueados: Posicao[] = [];
   dentro.forEach((d, i) => {
     const anterior = ranqueados[i - 1];
-    const posicao = anterior && chave(anterior.valor) === chave(d.valor) ? anterior.posicao : i + 1;
-    ranqueados.push({ ...d, posicao });
+    const empata = anterior && chave(anterior.valor) === chave(d.valor) && base(anterior.linha) === base(d.linha);
+    ranqueados.push({ ...d, posicao: empata ? anterior.posicao : i + 1 });
   });
   fora.sort((a, b) => a.linha.nome.localeCompare(b.linha.nome, 'pt-BR'));
   return {
