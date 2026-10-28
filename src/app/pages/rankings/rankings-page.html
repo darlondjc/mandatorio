@@ -62,6 +62,11 @@
     }
 
     @if (visiveis().length) {
+      @if (classificacao()?.media != null) {
+        <p class="legenda" aria-hidden="true">
+          <span class="legenda__traco"></span> média do Senado ({{ atual().formatarMedia(classificacao()!.media!) }})
+        </p>
+      }
       <ol class="lista" [class]="'tom--' + tom()">
         @for (p of visiveis(); track p.linha.codigo) {
           <li>
@@ -80,7 +85,7 @@
               <span class="barra" aria-hidden="true">
                 <span class="barra__valor" [style.width.%]="largura(p.valor)"></span>
                 @if (classificacao()?.media != null) {
-                  <span class="barra__media" [style.left.%]="largura(classificacao()!.media!)"></span>
+                  <span class="barra__media" [style.left.%]="largura(classificacao()!.media!)" [title]="'Média do Senado: ' + atual().formatarMedia(classificacao()!.media!)"></span>
                 }
               </span>
               <span class="valor">

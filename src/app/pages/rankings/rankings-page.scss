@@ -56,6 +56,8 @@
 .ordem--bom[aria-pressed="true"] { background: var(--brand-700); border-color: var(--brand-700); color: var(--on-brand); }
 .ordem--ruim[aria-pressed="true"] { background: var(--coral-500); border-color: var(--coral-500); color: var(--on-coral); }
 .ordem[aria-pressed="true"] mt-icon { color: inherit; }
+.legenda { display: flex; align-items: center; gap: 6px; justify-content: flex-end; margin-bottom: calc(-1 * var(--space-2)); font-size: 12px; color: var(--ink-muted); }
+.legenda__traco { display: inline-block; width: 2px; height: 14px; background: var(--ink); opacity: 0.55; }
 .barra__media { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--ink); opacity: 0.55; }
 
 .valor { display: flex; flex-direction: column; align-items: flex-end; text-align: right; }
