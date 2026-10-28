@@ -156,6 +156,8 @@ export function mandatoDaLegislatura(mandatos: Json[], legislatura: number) {
       fim: isoData(leg2.DataFim ?? leg1.DataFim) ?? '',
       legislaturas: [numero(leg1), numero(leg2)].filter(Boolean),
     },
+    /** Início do período em exercício mais recente (o atual, para quem está no cargo). */
+    exercicioDesde: isoData(ultimo?.DataInicio),
     saida: {
       data: isoData(ultimo?.DataFim),
       motivo: (ultimo?.DescricaoCausaAfastamento as string | undefined)?.trim() || null,
@@ -363,6 +365,8 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
   diagSaidas.total = ex.length;
   diagSaidas.exemplos = ex.slice(0, 6).map((s, i) => `${s.nome} (${s.partido}-${s.uf}, ${s.participacao ?? '?'}): saída ${s.saida.data ?? '?'} ${s.saida.motivo ?? ''} · ${detEx[i].listaMandatos.length} mandatos na API`);
 
+  // Em exercício: titular ou suplente, e desde quando (um suplente herda as datas do mandato da vaga).
+  const atuaisMandato = base.map((_, i) => mandatoDaLegislatura(det[i].listaMandatos, legislatura));
   const todos = [...base, ...ex];
   const todosDet = [...det, ...detEx];
   const props = await emParalelo(todos, 4, (s) => proposicoesDoSenador(s.codigo, s.nome, s.nomeCompleto));
@@ -419,6 +423,8 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
     const d = todosDet[i];
     return {
       ...s,
+      participacao: saiu ? (s as (typeof ex)[number]).participacao : (atuaisMandato[i]?.participacao ?? null),
+      exercicioDesde: saiu ? (mandatoDaLegislatura(d.listaMandatos, legislatura)?.exercicioDesde ?? null) : (atuaisMandato[i]?.exercicioDesde ?? null),
       foto: fotos.get(s.codigo)?.foto ?? s.foto,
       fotoFonte: fotos.get(s.codigo)?.fonte ?? null,
       emExercicio: !saiu,

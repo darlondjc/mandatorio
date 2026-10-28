@@ -14,7 +14,16 @@ export function dinheiro(v: number): string {
 }
 
 export function pct(parte: number, total: number): number {
-  return total > 0 ? Math.round((parte / total) * 100) : 0;
+  return total > 0 ? pctExibido((parte / total) * 100) : 0;
+}
+
+/** Arredonda sem mentir nas pontas: 99,5% vira 99% (100% só se for completo) e 0,4% vira 1%. */
+export function pctExibido(v: number, casas = 0): number {
+  const passo = 10 ** -casas;
+  const r = Math.round(v / passo) * passo;
+  if (r >= 100 && v < 100) return 100 - passo;
+  if (r <= 0 && v > 0) return passo;
+  return Number(r.toFixed(casas));
 }
 
 /** "2026-09-16" -> "16/09/2026" */

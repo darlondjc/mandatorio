@@ -165,6 +165,8 @@ function gerar(): Base {
   const votos = new Map<string, VotoSenador[]>();
   const senadores: Senador[] = todas.map((c, idx) => {
     const saiu = idx >= cadeiras.length;
+    /** Suplente que assumiu a vaga de quem saiu. */
+    const vaga = SAIDAS.find((x) => cadeiras[x.vaga].codigo === c.codigo);
     const lista = brutos.get(c.codigo)!.flatMap((v, i): VotoSenador[] => {
       if (!ativo(c.codigo, i)) return [];
       const [materia, ementa] = secreta(i)
@@ -203,7 +205,8 @@ function gerar(): Base {
       email: null,
       emExercicio: !saiu,
       saida: saiu ? { data: datas[SAIDAS[idx - cadeiras.length].ate - 1], motivo: SAIDAS[idx - cadeiras.length].motivo } : null,
-      participacao: saiu && idx - cadeiras.length !== 1 ? '1º Suplente' : 'Titular',
+      participacao: (saiu && idx - cadeiras.length !== 1) || vaga ? '1º Suplente' : 'Titular',
+      exercicioDesde: vaga ? datas[vaga.ate] : saiu ? datas[0] : mandatoInicio,
       mandato: {
         inicio: mandatoInicio,
         fim: mandatoInicio === '2019-02-01' ? '2027-01-31' : '2031-01-31',

@@ -23,10 +23,13 @@ describe('classificar', () => {
     expect(asc.ranqueados[0].linha.codigo).toBe('d');
   });
 
-  it('mesma porcentagem na tela: quem tem mais votações fica acima, sem dividir a posição', () => {
+  it('99,5% não aparece como 100%: só quem esteve em todas tem 100%', () => {
     const r = ranking([linha('a', 'X', { presentes: 424, votacoes: 426 }), linha('b', 'X', { presentes: 59, votacoes: 59 })]);
     const c = classificar(r, crit('presenca'), 'desc');
-    expect(c.ranqueados.map((p) => [p.linha.codigo, p.posicao])).toEqual([['a', 1], ['b', 2]]);
+    expect(c.ranqueados.map((p) => [p.linha.codigo, p.posicao])).toEqual([['b', 1], ['a', 2]]);
+    expect(crit('presenca').formatar(c.ranqueados[1].valor)).toBe('99,5%');
+    expect(crit('presenca').formatar(99.97)).toBe('99,9%');
+    expect(crit('presenca').formatar(100)).toBe('100%');
   });
 
   it('deixa de fora quem chegou há pouco e o único do partido', () => {

@@ -1,5 +1,5 @@
 // Critérios dos rankings: como cada um calcula o valor, quem entra e como explicar.
-import { data, dinheiro, dinheiroCurto } from '../../core/format';
+import { data, dinheiro, dinheiroCurto, pctExibido } from '../../core/format';
 import type { LinhaRanking, RankingSenado } from '../../core/models';
 import { periodoExercicio } from '../../core/ranking';
 
@@ -36,7 +36,9 @@ export interface Criterio {
 }
 
 const pctDe = (a: number, b: number) => (b ? (a / b) * 100 : 0);
-const pctTexto = (v: number) => `${Math.round(v)}%`;
+// Uma casa decimal: com mais de 400 votações, 99,5% e 98,6% são diferenças reais.
+const pct1 = (v: number) => pctExibido(v, 1);
+const pctTexto = (v: number) => `${pct1(v).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
 const poucas = (l: LinhaRanking) => (l.votacoes < MIN_VOTACOES ? `chegou há pouco: ${l.votacoes} ${l.votacoes === 1 ? 'votação' : 'votações'}` : null);
 
 export const CRITERIOS: Criterio[] = [
@@ -48,7 +50,7 @@ export const CRITERIOS: Criterio[] = [
       `Parcela das votações nominais do plenário, desde ${data(r.inicio)}, em que o senador registrou voto (Sim, Não, abstenção, obstrução ou voto secreto). Licenças, missões e faltas contam como ausência. Quem tem menos de ${MIN_VOTACOES} votações fica de fora.`,
     valor: (l) => pctDe(l.presentes, l.votacoes),
     formatar: pctTexto,
-    chave: Math.round,
+    chave: pct1,
     formatarMedia: pctTexto,
     base: (l) => l.votacoes,
     nota: (l, r) => {
@@ -65,7 +67,7 @@ export const CRITERIOS: Criterio[] = [
       `Parcela dos votos Sim ou Não em que o senador acompanhou a maioria do próprio partido. Votações em que o partido empatou, secretas e ausências não entram. Ficam de fora quem tem menos de ${MIN_COMPARAVEIS} votos comparáveis e quem é o único senador do partido.`,
     valor: (l) => pctDe(l.comPartido, l.comparaveis),
     formatar: pctTexto,
-    chave: Math.round,
+    chave: pct1,
     formatarMedia: pctTexto,
     base: (l) => l.comparaveis,
     nota: (l) => {

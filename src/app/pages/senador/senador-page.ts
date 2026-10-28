@@ -61,6 +61,18 @@ export class SenadorPage {
 
   protected readonly tratamento = computed(() => (this.senador.value()?.sexo === 'F' ? 'Senadora' : 'Senador'));
 
+  /** Suplente no cargo: as datas do mandato são as da vaga, não de quando assumiu. */
+  protected readonly suplente = computed(() => {
+    const s = this.senador.value();
+    return !!s?.emExercicio && /suplente/i.test(s.participacao ?? '') && !!s.exercicioDesde;
+  });
+
+  /** Assumiu (ou voltou ao cargo) bem depois do início do mandato. */
+  protected readonly exercicioRecente = computed(() => {
+    const s = this.senador.value();
+    return !!s?.exercicioDesde && Date.parse(s.exercicioDesde) - Date.parse(s.mandato.inicio) > 30 * 864e5;
+  });
+
   protected readonly cards = computed(() => {
     const s = this.senador.value();
     if (!s) return null;

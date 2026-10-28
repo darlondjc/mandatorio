@@ -155,6 +155,7 @@ test('mandato da legislatura e saída de quem deixou o exercício', () => {
   assert.equal(m.participacao, '1º Suplente');
   assert.deepEqual(m.mandato, { inicio: '2023-02-01', fim: '2031-01-31', legislaturas: [57, 58] });
   assert.deepEqual(m.saida, { data: '2024-07-02', motivo: 'Retorno do titular' });
+  assert.equal(m.exercicioDesde, '2024-03-01');
   // Um exercício só, como objeto e não lista.
   const um = mandatoDaLegislatura([{ ...mandatos[0], Exercicios: { Exercicio: { DataInicio: '2023-02-01' } } }], 58)!;
   assert.deepEqual(um.saida, { data: null, motivo: null });

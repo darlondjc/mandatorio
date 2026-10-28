@@ -106,6 +106,8 @@ export interface Senador {
   saida?: Saida | null;
   /** "Titular", "1º Suplente"… */
   participacao?: string | null;
+  /** Início do período em exercício atual (ou do último, para quem saiu). Pode ser bem depois do início do mandato. */
+  exercicioDesde?: DataISO | null;
   mandato: { inicio: DataISO; fim: DataISO; legislaturas: number[]; ordem: number };
   nascimento: DataISO | null;
   naturalidade: string | null;
