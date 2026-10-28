@@ -5,7 +5,8 @@
 //   --only=senado|presidente   roda uma parte só
 
 import { mkdirSync, writeFileSync } from 'node:fs';
-import type { Presidente, Sincronizacao, VotoSenador } from '../../src/app/core/models.ts';
+import type { Presidente, RankingSenado, Sincronizacao, VotoSenador } from '../../src/app/core/models.ts';
+import { linhaRanking } from '../../src/app/core/ranking.ts';
 import { diagnostico } from './http.ts';
 import { coletarPresidentes, deliberacoesVistas, diagFotos } from './presidente.ts';
 import { coletarSenado, diagAutorias, diagSaidas } from './senado.ts';
@@ -97,6 +98,14 @@ async function main() {
         itens.push({ caminho: `senadores/${sen.codigo}/listas/proposicoes`, dados: { itens: s.proposicoesPorSenador.get(sen.codigo) ?? [] } });
       }
       for (const v of s.votacoes) itens.push({ caminho: `votacoes/${v.id}`, dados: v });
+      const ranking: RankingSenado = {
+        legislatura: s.plenario.legislatura,
+        inicio: s.plenario.inicio,
+        cotaAno: s.senadores[0]?.resumo.cotaAnoReferencia ?? new Date().getFullYear(),
+        atualizadoEm: s.plenario.atualizadoEm,
+        linhas: s.senadores.filter((x) => x.emExercicio).map(linhaRanking),
+      };
+      itens.push({ caminho: 'rankings/senado', dados: ranking });
       const repetidas = new Map<string, number>();
       s.votacoes.forEach((v) => repetidas.set(v.materia, (repetidas.get(v.materia) ?? 0) + 1));
       anotar('notice', 'Senado — votações', `${s.votacoes.length} votações (${s.votacoes.filter((v) => v.secreta).length} secretas) · ${s.votacoes.filter((v) => v.descricao).length} com descrição · ${[...repetidas.values()].filter((n) => n > 1).length} matérias votadas mais de uma vez\nexemplos de descrição: ${[...new Set(s.votacoes.map((v) => v.descricao).filter(Boolean))].slice(0, 12).join(' | ').slice(0, 1800)}`);

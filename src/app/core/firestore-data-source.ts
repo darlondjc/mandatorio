@@ -1,12 +1,14 @@
 import type { FirebaseOptions } from 'firebase/app';
 import type { Firestore } from 'firebase/firestore';
 import { DataSource } from './data-source';
+import { linhaRanking } from './ranking';
 import {
   AtosMandato,
   GastoAno,
   ListaProposicoes,
   Plenario,
   Presidente,
+  RankingSenado,
   Senador,
   Sincronizacao,
   Votacao,
@@ -76,6 +78,22 @@ export class FirestoreDataSource extends DataSource {
 
   votacao(id: string) {
     return this.getDoc<Votacao>(`votacoes/${id}`);
+  }
+
+  async ranking(): Promise<RankingSenado | null> {
+    const pronto = await this.getDoc<RankingSenado>('rankings/senado');
+    if (pronto) return pronto;
+    // Antes da primeira sincronização que grava o ranking: monta a partir dos perfis.
+    const [p, senadores] = await Promise.all([this.plenario(), this.getAll<Senador>('senadores')]);
+    if (!p) return null;
+    const atuais = senadores.filter((s) => s.emExercicio);
+    return {
+      legislatura: p.legislatura,
+      inicio: p.inicio,
+      cotaAno: atuais[0]?.resumo.cotaAnoReferencia ?? new Date().getFullYear(),
+      atualizadoEm: p.atualizadoEm,
+      linhas: atuais.map(linhaRanking),
+    };
   }
 
   presidentes() {

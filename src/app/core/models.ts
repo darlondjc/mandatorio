@@ -285,3 +285,32 @@ export interface Votacao {
   votos: VotoNaVotacao[];
   atualizadoEm: string;
 }
+
+/** rankings/senado: uma linha por senador em exercício, só com o necessário para ordenar. */
+export interface LinhaRanking {
+  codigo: string;
+  nome: string;
+  partido: string;
+  uf: string;
+  sexo: 'M' | 'F';
+  foto: string | null;
+  votacoes: number;
+  /** Votações em que não esteve ausente. */
+  presentes: number;
+  /** Votos Sim/Não em que o partido tinha maioria definida. */
+  comparaveis: number;
+  comPartido: number;
+  /** Cota parlamentar (CEAPS) reembolsada no ano de referência. */
+  cota: number;
+  proposicoes: number;
+  leis: number;
+}
+
+export interface RankingSenado {
+  legislatura: number;
+  /** Início do período coberto pelas votações. */
+  inicio: DataISO;
+  cotaAno: number;
+  atualizadoEm: string;
+  linhas: LinhaRanking[];
+}

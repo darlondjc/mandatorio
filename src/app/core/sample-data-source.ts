@@ -7,12 +7,14 @@ import {
   Presidente,
   ProjetoExecutivo,
   Proposicao,
+  RankingSenado,
   Senador,
   Veto,
   Votacao,
   Voto,
   VotoSenador,
 } from './models';
+import { linhaRanking } from './ranking';
 
 // Dados de EXEMPLO, gerados de forma determinística, para desenvolver e demonstrar o site
 // sem Firebase. Nomes de senadores e presidentes são fictícios; números são inventados.
@@ -361,6 +363,17 @@ export class SampleDataSource extends DataSource {
       placar,
       votos: votos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
       atualizadoEm: '2026-10-27T06:00:00Z',
+    };
+  }
+
+  async ranking(): Promise<RankingSenado> {
+    const p = this.dados.plenario;
+    return {
+      legislatura: p.legislatura,
+      inicio: p.inicio,
+      cotaAno: 2026,
+      atualizadoEm: p.atualizadoEm,
+      linhas: this.dados.senadores.filter((s) => s.emExercicio).map(linhaRanking),
     };
   }
 

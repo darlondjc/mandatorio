@@ -5,6 +5,7 @@ import {
   Presidente,
   ProjetoExecutivo,
   Proposicao,
+  RankingSenado,
   Senador,
   Sincronizacao,
   Veto,
@@ -27,6 +28,7 @@ export abstract class DataSource {
   abstract gastos(codigo: string): Promise<GastoAno[]>;
   abstract proposicoes(codigo: string): Promise<Proposicao[]>;
   abstract votacao(id: string): Promise<Votacao | null>;
+  abstract ranking(): Promise<RankingSenado | null>;
   abstract presidentes(): Promise<Presidente[]>;
   abstract medidas(presidenteId: string, mandato: string): Promise<MedidaProvisoria[]>;
   abstract vetos(presidenteId: string, mandato: string): Promise<Veto[]>;

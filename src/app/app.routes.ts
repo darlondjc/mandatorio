@@ -18,6 +18,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/votacao/votacao-page').then((m) => m.VotacaoPage),
   },
   {
+    path: 'rankings',
+    title: 'Rankings · Mandatório',
+    loadComponent: () => import('./pages/rankings/rankings-page').then((m) => m.RankingsPage),
+  },
+  {
     path: 'presidente',
     title: 'Presidente · Mandatório',
     loadComponent: () => import('./pages/presidente/presidente-page').then((m) => m.PresidentePage),
