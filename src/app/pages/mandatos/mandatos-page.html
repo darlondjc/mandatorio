@@ -1,0 +1,93 @@
+<header class="mt-stack cabecalho">
+  <h1 class="page-title">Comparar mandatos</h1>
+  <p class="muted intro">Os mandatos presidenciais lado a lado. Os números são por ano ou em porcentagem, porque os mandatos têm durações diferentes.</p>
+  <a class="link" routerLink="/indicadores">Ver os indicadores ano a ano →</a>
+</header>
+
+@if (dados.isLoading()) {
+  <mt-carregando pagina texto="Carregando os mandatos…" />
+} @else if (dados.error()) {
+  <p class="aviso-erro" role="alert">Não foi possível carregar os mandatos agora. Tente de novo em alguns minutos.</p>
+} @else if (mandatos().length) {
+  <div class="grupos">
+    <div class="grupo" role="group" aria-labelledby="g-atuacao">
+      <span class="grupo__rotulo" id="g-atuacao">Atuação</span>
+      <div class="chips">
+        @for (c of atuacao(); track c.id) {
+          <button class="mt-chip" type="button" [attr.aria-pressed]="c.id === atual().id" (click)="trocar(c.id)">{{ c.rotulo }}</button>
+        }
+      </div>
+    </div>
+    @if (pais().length) {
+      <div class="grupo" role="group" aria-labelledby="g-pais">
+        <span class="grupo__rotulo" id="g-pais">O país (média no mandato)</span>
+        <div class="chips">
+          @for (c of pais(); track c.id) {
+            <button class="mt-chip" type="button" [attr.aria-pressed]="c.id === atual().id" (click)="trocar(c.id)">{{ c.rotulo }}</button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="resumo">
+    <div class="mt-stack texto">
+      <span class="periodo">{{ periodo() }}</span>
+      <p class="explicacao">{{ atual().explicacao }}</p>
+    </div>
+    @if (classificacao().media !== null) {
+      <div class="media">
+        <span class="media__valor">{{ atual().formatar(classificacao().media!) }}</span>
+        <span class="media__rotulo">
+          <svg width="30" height="16" viewBox="0 0 30 16" aria-hidden="true">
+            <rect x="1" y="3" width="28" height="5" rx="2.5" class="icone__barra" />
+            <rect x="17" y="0.5" width="2" height="10" class="icone__traco" />
+            <path d="M14 15.5 18 10.5 22 15.5Z" class="icone__traco" />
+          </svg>
+          média dos mandatos
+        </span>
+      </div>
+    }
+  </div>
+
+  @if (atual().aviso) {
+    <p class="aviso" role="note"><b>Compare com cuidado:</b> {{ atual().aviso }}</p>
+  }
+
+  <div class="controles">
+    <div class="mt-tabs ordem" role="group" aria-label="Ordem">
+      <button class="mt-tab" type="button" [attr.aria-pressed]="!crescente()" [attr.aria-selected]="!crescente()" (click)="trocarOrdem(false)">Maior primeiro</button>
+      <button class="mt-tab" type="button" [attr.aria-pressed]="crescente()" [attr.aria-selected]="crescente()" (click)="trocarOrdem(true)">Menor primeiro</button>
+    </div>
+  </div>
+
+  <ol class="lista">
+    @for (l of classificacao().linhas; track l.m.chave) {
+      <li>
+        <a class="linha" [routerLink]="['/presidente', l.m.presidenteId, l.m.mandatoId]">
+          <span class="pos">{{ l.pos }}º</span>
+          <mt-avatar [nome]="l.m.nome" [partido]="l.m.partido" [foto]="l.m.foto" />
+          <span class="quem">
+            <span class="quem__nome">{{ l.m.curto }}</span>
+            <span class="quem__sub">{{ l.m.inicio.slice(0, 4) }}–{{ l.m.atual ? 'hoje' : anoFinal(l.m) }} · {{ l.m.partido }}@if (l.m.atual) { · em andamento}</span>
+          </span>
+          <span class="barra" aria-hidden="true">
+            @if (classificacao().zeroX !== null) { <span class="barra__zero" [style.left.%]="classificacao().zeroX"></span> }
+            <span class="barra__valor" [class.barra__valor--neg]="l.v < 0" [style.left.%]="l.esq" [style.width.%]="l.larg"></span>
+            @if (classificacao().mediaX !== null) { <span class="barra__media" [style.left.%]="classificacao().mediaX"></span> }
+          </span>
+          <span class="valor">
+            <span class="valor__num">{{ atual().formatar(l.v) }}</span>
+            <span class="valor__nota">{{ l.nota }}</span>
+          </span>
+        </a>
+      </li>
+    }
+  </ol>
+
+  @if (classificacao().sem.length) {
+    <p class="muted sem">Sem dados para: {{ classificacao().sem.map(curto).join(', ') }}.</p>
+  }
+} @else {
+  <p class="muted vazio">Os dados dos mandatos ainda estão sendo coletados.</p>
+}

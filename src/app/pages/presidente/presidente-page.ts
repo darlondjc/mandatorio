@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
 import { Carregando } from '../../shared/carregando';
 import { data, diasAte, pct } from '../../core/format';
+import { formatarFaixa, formatarIndicador, listaMandatos, periodoDosAnos, resumoNoMandato, valoresDaSerie } from '../../core/mandatos';
 import { EtapaProjeto, MandatoIndice, SituacaoMP, SituacaoVeto } from '../../core/models';
 import { Photo } from '../../shared/avatar';
 import { Segmento, SplitBar } from '../../shared/split-bar';
@@ -36,10 +37,12 @@ export const ETAPAS: { id: EtapaProjeto; rotulo: string }[] = [
 /** Etapas oferecidas no filtro: as do caminho do projeto mais o arquivamento. */
 const FILTRO_ETAPAS: { id: EtapaProjeto; rotulo: string }[] = [...ETAPAS, { id: 'arquivado', rotulo: 'Arquivado' }];
 const PRAZO_MP_DIAS = 120;
+/** Indicadores do bloco "O país no mandato", nesta ordem (os que existirem). */
+const NO_MANDATO = ['inflacao', 'desemprego', 'pib', 'salarioMinimo', 'desmatamento', 'feminicidio'];
 
 @Component({
   selector: 'mt-presidente-page',
-  imports: [Carregando, Photo, SplitBar, Tabs],
+  imports: [Carregando, Photo, SplitBar, Tabs, RouterLink],
   templateUrl: './presidente-page.html',
   styleUrl: './presidente-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -91,6 +94,50 @@ export class PresidentePage {
   protected readonly filtroMP = signal<SituacaoMP | null>(null);
   protected readonly filtroVeto = signal<SituacaoVeto | null>(null);
   protected readonly filtroEtapa = signal<EtapaProjeto | null>(null);
+
+  protected readonly indicadores = resource({ loader: () => this.ds.indicadores().catch(() => null) });
+
+  /**
+   * O país no mandato: cada indicador resumido no mandato (média, para taxas; início e fim,
+   * para níveis), comparado com o mandato anterior, e um mini gráfico com o período em destaque.
+   */
+  protected readonly paisNoMandato = computed(() => {
+    const sel = this.selecionado(), series = this.indicadores.value()?.series ?? [];
+    if (!sel || !series.length) return [];
+    const mandatos = listaMandatos(this.presidentes.value() ?? []);
+    const i = mandatos.findIndex((m) => m.chave === sel.chave);
+    const m = mandatos[i], anterior = mandatos[i - 1] ?? null;
+    if (!m) return [];
+    return NO_MANDATO.map((id) => series.find((s) => s.id === id))
+      .filter((s) => !!s)
+      .map((s) => {
+        const real = !!s.reais;
+        const r = resumoNoMandato(s, m, mandatos, real);
+        if (r.media === null) return null;
+        const resumo = (x: typeof r) =>
+          s.tipo === 'taxa' || x.anos.length === 1 ? formatarIndicador(x.media!, s) : formatarFaixa(x.inicio!.valor, x.fim!.valor, s);
+        const ant = anterior ? resumoNoMandato(s, anterior, mandatos, real) : null;
+        const valores = valoresDaSerie(s, real);
+        const anos = Object.keys(valores).map(Number).sort((a, b) => a - b);
+        const vs = anos.map((a) => valores[a]), lo = Math.min(...vs), hi = Math.max(...vs);
+        const X = (a: number) => ((a - anos[0]) / Math.max(1, anos.at(-1)! - anos[0])) * 100;
+        const Y = (v: number) => 30 - ((v - lo) / (hi - lo || 1)) * 26;
+        return {
+          id: s.id,
+          rotulo: s.rotulo,
+          valor: s.tipo === 'taxa' ? `${resumo(r)}${s.unidade === '%' ? ' ao ano' : ''}` : resumo(r),
+          nota: [
+            `${s.tipo === 'taxa' ? 'média ' : ''}${periodoDosAnos(r.anos)}${r.parcial ? ' (parcial)' : ''}`,
+            ant && ant.media !== null ? `${anterior!.curto}: ${resumo(ant)}` : null,
+            real ? `em R$ de ${s.referenciaReal}` : null,
+          ].filter(Boolean).join(' · '),
+          real: real ? s.referenciaReal : null,
+          linha: anos.map((a, k) => `${k ? 'L' : 'M'}${X(a).toFixed(1)},${Y(valores[a]).toFixed(1)}`).join(''),
+          faixa: { x: X(r.anos[0] - 0.5), w: X(r.anos.at(-1)! + 0.5) - X(r.anos[0] - 0.5) },
+        };
+      })
+      .filter((x) => !!x);
+  });
 
   protected readonly cards = computed(() => {
     const r = this.selecionado()?.mandato.resumo;

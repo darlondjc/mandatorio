@@ -53,11 +53,32 @@
 
 .aviso-erro { padding: var(--space-4); border-radius: var(--radius-lg); background: var(--coral-100); color: var(--coral-900); }
 
+/* O país no mandato */
+.comparar { color: var(--brand-700); font-weight: 600; text-decoration: none; }
+.comparar:hover { text-decoration: underline; }
+.pais { display: flex; flex-direction: column; gap: 12px; padding: var(--space-5); border: 2px solid var(--line); border-radius: var(--radius-xl); }
+.pais__topo { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.pais__titulo { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-muted); }
+.pais__link { color: var(--brand-700); font-weight: 600; font-size: 14px; text-decoration: none; }
+.pais__grade { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ind { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 2px solid transparent; border-radius: var(--radius-lg); background: var(--brand-100); color: inherit; text-decoration: none; min-width: 0; }
+.ind:hover { border-color: var(--brand-700); }
+.ind__rotulo { font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+.ind__valor { font: 500 21px/1.15 var(--font-display); font-variant-numeric: tabular-nums; }
+.ind__nota { font-size: 12px; color: var(--ink-muted); }
+.ind__mini { width: 100%; height: 34px; margin-top: 4px; display: block; }
+.ind__faixa { fill: var(--brand-700); opacity: 0.12; }
+.ind__linha { fill: none; stroke: var(--brand-700); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.pais__nota { font-size: 12.5px; }
+
 @media (max-width: 1100px) {
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 720px) {
+  .pais { padding: var(--space-4); border-radius: var(--radius-lg); }
+  .pais__grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ind__valor { font-size: 18px; }
   .perfil { flex-direction: column; text-align: center; gap: var(--space-3); }
   .perfil__texto { align-items: center; }
   .perfil__texto .mt-row { justify-content: center; }

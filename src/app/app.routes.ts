@@ -33,6 +33,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/presidente/presidente-page').then((m) => m.PresidentePage),
   },
   {
+    path: 'presidente/comparar',
+    title: 'Comparar mandatos · Mandatório',
+    loadComponent: () => import('./pages/mandatos/mandatos-page').then((m) => m.MandatosPage),
+  },
+  {
+    path: 'indicadores',
+    title: 'O país em cada mandato · Mandatório',
+    loadComponent: () => import('./pages/indicadores/indicadores-page').then((m) => m.IndicadoresPage),
+  },
+  {
     path: 'presidente/:presidenteId/:mandatoId',
     title: 'Presidente · Mandatório',
     loadComponent: () => import('./pages/presidente/presidente-page').then((m) => m.PresidentePage),

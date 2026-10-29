@@ -7,6 +7,7 @@ const PATHS: Record<string, string> = {
   senado: '<path d="M3 20h18"/><path d="M5 20v-8M9.5 20v-8M14.5 20v-8M19 20v-8"/><path d="M3 10l9-6 9 6"/>',
   comparar: '<path d="M8 3v18M16 3v18"/><path d="M3 8h5M16 16h5"/>',
   rankings: '<path d="M6 20V11M12 20V5M18 20v-6"/>',
+  indicadores: '<path d="M3 20h18"/><path d="M4 15l5-5 4 3 7-8"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
   fechar: '<path d="M6 6l12 12M18 6L6 18"/>',
   voltar: '<path d="M15 6l-6 6 6 6"/>',
