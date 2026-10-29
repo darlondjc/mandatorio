@@ -13,6 +13,10 @@
 .lado { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; color: inherit; text-decoration: none; }
 .lado__nome { font: 500 22px/1.2 var(--font-display); }
 .versus { font: 500 34px var(--font-display); color: var(--ink-muted); text-align: center; }
+/* As fotos ficam na mesma altura mesmo quando um nome quebra em duas linhas: cada lado
+   alinha pelo topo, e o "×" fica no meio das fotos (112px). */
+.duelo { align-items: start; }
+.versus { align-self: start; margin-top: calc(56px - 0.6em); line-height: 1.2; }
 
 /* Cabeçalho fixo: as duas fotos e "vs" no centro, quando as fotos grandes saem da tela.
    Ocupa a área do conteúdo (à direita do menu no desktop, abaixo da barra do topo no celular). */
@@ -94,6 +98,8 @@
 }
 
 @media (max-width: 720px) {
+  .fixo__dentro { align-items: start; }
+  .fixo__vs { margin-top: -3px; }
   .fixo__lado { flex-direction: column; gap: 4px; text-align: center; }
   .fixo__nome { align-items: center; font-size: 13px; max-width: 40vw; }
   .fixo__sub { font-size: 11px; }
