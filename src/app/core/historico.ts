@@ -3,19 +3,24 @@ import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 
 /**
  * Lembra o caminho percorrido dentro do site, para o "Voltar" levar à página de onde a
- * pessoa veio (ranking, votação, plenário…) e não a um destino fixo. Também guarda a
- * rolagem de cada página, para a lista voltar no mesmo ponto.
+ * pessoa veio (ranking, votação, plenário…) e não a um destino fixo. Também cuida da
+ * rolagem: página nova começa do topo; o "Voltar" restaura a posição; trocar só a aba, um
+ * filtro ou o ano (parâmetros do endereço) não move a tela.
  */
 @Injectable({ providedIn: 'root' })
 export class Historico {
   private readonly pilha: string[] = [];
   private atual: string | null = null;
   private voltando = false;
+  /** Se a última navegação mudou de página (e não só os parâmetros, como ?aba=gastos). */
+  private mudouDePagina = false;
   private readonly rolagem = new Map<string, number>();
   /** URL da página anterior dentro do site, ou null se a pessoa chegou direto. */
   readonly anterior = signal<string | null>(null);
 
   constructor() {
+    // A rolagem é decidida aqui, não pelo navegador nem pelo roteador.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     // Atualiza já no início da navegação, antes de a página nova ser criada.
     inject(Router).events.subscribe((e) => {
       if (e instanceof NavigationStart) {
@@ -24,12 +29,17 @@ export class Historico {
         this.registrar(e.url);
       } else if (e instanceof NavigationEnd) {
         this.atual = e.urlAfterRedirects;
+        if (!this.mudouDePagina) return;
+        // Voltando: tenta já; páginas que carregam dados chamam de novo quando prontas.
+        if (this.voltando) requestAnimationFrame(() => this.restaurarRolagem());
+        else window.scrollTo({ top: 0 });
       }
     });
   }
 
   private registrar(url: string) {
     const mudouDePagina = !this.atual || caminho(this.atual) !== caminho(url);
+    this.mudouDePagina = mudouDePagina;
     if (mudouDePagina && this.voltando) this.pilha.pop();
     else if (mudouDePagina && this.atual) this.pilha.push(this.atual);
     this.atual = url;

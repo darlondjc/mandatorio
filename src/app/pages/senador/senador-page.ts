@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, resource, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
 import { Carregando } from '../../shared/carregando';
@@ -9,6 +9,7 @@ import { Photo } from '../../shared/avatar';
 import { Segmento, SplitBar } from '../../shared/split-bar';
 import { Aba, Tabs } from '../../shared/tabs';
 import { Voltar } from '../../shared/voltar';
+import { Historico } from '../../core/historico';
 import { DescricaoCurtaPipe } from '../../shared/descricao-curta';
 import { Icon } from '../../shared/icon';
 import { perfilTematico, VOLTADO_A } from '../../core/temas';
@@ -206,6 +207,18 @@ export class SenadorPage {
   protected readonly maiorCategoria = computed(() => Math.max(1, ...(this.gastoSelecionado()?.porCategoria.map((c) => c.valor) ?? [])));
   protected readonly maiorMes = computed(() => Math.max(1, ...(this.gastoSelecionado()?.porMes ?? [])));
   protected readonly meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+  constructor() {
+    // Voltando de uma votação, a lista de votos volta ao ponto em que estava.
+    const historico = inject(Historico);
+    let restaurou = false;
+    effect(() => {
+      if (!restaurou && this.senador.value() && this.votos.value()) {
+        restaurou = true;
+        historico.restaurarRolagem();
+      }
+    });
+  }
 
   protected trocarAba(id: string) {
     this.router.navigate([], { queryParams: { aba: id === 'votos' ? null : id }, queryParamsHandling: 'merge', replaceUrl: true });

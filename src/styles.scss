@@ -41,11 +41,13 @@ button { font: inherit; }
    --largura-menu (menu lateral no desktop) e --altura-topo (barra do topo no celular). */
 :root { --largura-menu: 232px; --altura-topo: 0px; }
 
-/* Barra de progresso (ngx-progressbar): fina, na cor da marca, acima de tudo. */
+/* Barra de progresso (ngx-progressbar): colada logo abaixo da barra do topo (no celular);
+   no desktop, que não tem barra no topo, no alto da tela. Espessura em número, sem unidade. */
 .progresso {
-  --ng-progress-thickness: 3px;
+  --ng-progress-thickness: 3;
   --ng-progress-color: var(--brand-700);
   --ng-progress-spinner-thickness: 0;
 }
-.progresso .ng-progress-bar-wrapper { z-index: 60; }
+/* O seletor leva o elemento para vencer o estilo encapsulado do componente, de mesma especificidade. */
+ng-progress.progresso .ng-progress-bar-wrapper { top: var(--altura-topo); z-index: 60; }
 @media (max-width: 960px) { :root { --largura-menu: 0px; --altura-topo: 64px; } }

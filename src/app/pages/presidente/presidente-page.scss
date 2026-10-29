@@ -25,6 +25,8 @@
 
 .secoes { display: flex; flex-direction: column; gap: var(--space-4); }
 .painel { display: flex; flex-direction: column; gap: var(--space-4); }
+/* Reserva altura enquanto a aba carrega: a página não encolhe e a tela não pula. */
+.painel { min-height: 60vh; }
 .explica { font-size: 14px; }
 .titulo { gap: 0; min-width: 0; }
 
