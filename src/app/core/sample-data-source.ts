@@ -2,6 +2,7 @@ import { DataSource } from './data-source';
 import {
   Cadeira,
   GastoAno,
+  Indicadores,
   MedidaProvisoria,
   Plenario,
   Presidente,
@@ -443,4 +444,18 @@ export class SampleDataSource extends DataSource {
   async projetos(_p: string, mandato: string) {
     return PROJETOS.map((p) => ({ ...p, mandato }));
   }
+  async indicadores(): Promise<Indicadores> {
+    return INDICADORES;
+  }
 }
+
+// Séries inventadas, só para o gráfico funcionar sem Firebase.
+const serieExemplo = (id: string, rotulo: string, base: number, amplitude: number, tipo: 'taxa' | 'nivel') => {
+  const anos: Record<string, number> = {};
+  for (let a = 2003; a <= 2025; a++) anos[a] = Math.round((base + amplitude * Math.sin(a * 1.3) + (a % 4)) * 10) / 10;
+  return { id, rotulo, titulo: `${rotulo} (exemplo)`, unidade: '%' as const, casas: 1, tipo, fonte: 'Dados de exemplo', url: '', nota: null, anos, reais: null, referenciaReal: null, parciais: [], metodologiaAntigaAte: null, manual: false };
+};
+const INDICADORES: Indicadores = {
+  atualizadoEm: '2026-01-01T00:00:00Z',
+  series: [serieExemplo('inflacao', 'Inflação', 5, 2.5, 'taxa'), serieExemplo('desemprego', 'Desemprego', 9, 3, 'nivel')],
+};

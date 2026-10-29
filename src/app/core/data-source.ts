@@ -1,5 +1,6 @@
 import {
   GastoAno,
+  Indicadores,
   MedidaProvisoria,
   Plenario,
   Presidente,
@@ -33,4 +34,5 @@ export abstract class DataSource {
   abstract medidas(presidenteId: string, mandato: string): Promise<MedidaProvisoria[]>;
   abstract vetos(presidenteId: string, mandato: string): Promise<Veto[]>;
   abstract projetos(presidenteId: string, mandato: string): Promise<ProjetoExecutivo[]>;
+  abstract indicadores(): Promise<Indicadores | null>;
 }

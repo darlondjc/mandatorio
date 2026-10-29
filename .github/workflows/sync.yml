@@ -9,7 +9,7 @@ on:
       parte:
         description: 'O que sincronizar'
         type: choice
-        options: [tudo, senado, presidente]
+        options: [tudo, senado, presidente, indicadores]
         default: tudo
       dry_run:
         description: 'Só coletar (não grava no Firestore; os JSON ficam como artefato)'

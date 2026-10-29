@@ -2,15 +2,16 @@
 //
 //   npm run sync           grava no Firestore (precisa de FIREBASE_SERVICE_ACCOUNT)
 //   npm run sync:dry       só coleta e salva em sync/out/ para conferência
-//   --only=senado|presidente   roda uma parte só
+//   --only=senado|presidente|indicadores   roda uma parte só
 
 import { mkdirSync, writeFileSync } from 'node:fs';
-import type { Presidente, RankingSenado, Sincronizacao, VotoSenador } from '../../src/app/core/models.ts';
+import type { Indicadores, Presidente, RankingSenado, Sincronizacao, VotoSenador } from '../../src/app/core/models.ts';
 import { linhaRanking } from '../../src/app/core/ranking.ts';
 import { mediaTematica } from '../../src/app/core/temas.ts';
 import { diagnostico } from './http.ts';
 import { coletarPresidentes, deliberacoesVistas, diagFotos } from './presidente.ts';
 import { diagFotosSenado } from './fotos.ts';
+import { coletarIndicadores, diagIndicadores } from './indicadores.ts';
 import { coletarSenado, diagAutorias, diagSaidas } from './senado.ts';
 
 const args = process.argv.slice(2);
@@ -156,6 +157,20 @@ async function main() {
       erros.push('Presidente');
       console.error(e);
       anotar('error', 'Presidente falhou', `${(e as Error).message}\n${(e as Error).stack?.split('\n').slice(1, 4).join('\n') ?? ''}`);
+    }
+  }
+
+  if (!only || only === 'indicadores') {
+    try {
+      const ind = await coletarIndicadores(await lerDoc<Indicadores>('indicadores/brasil'));
+      fontes.push('Banco Central — SGS', 'ANP — Levantamento de Preços');
+      if (ind.series.length) itens.push({ caminho: 'indicadores/brasil', dados: ind });
+      const falhou = diagIndicadores.some((l) => l.includes('FALHOU'));
+      anotar(falhou ? 'warning' : 'notice', 'Indicadores', diagIndicadores.join('\n'));
+    } catch (e) {
+      erros.push('Indicadores');
+      console.error(e);
+      anotar('error', 'Indicadores falharam', String((e as Error).message ?? e));
     }
   }
 

@@ -5,6 +5,7 @@ import { linhaRanking } from './ranking';
 import {
   AtosMandato,
   GastoAno,
+  Indicadores,
   ListaProposicoes,
   Plenario,
   Presidente,
@@ -129,5 +130,9 @@ export class FirestoreDataSource extends DataSource {
 
   async projetos(presidenteId: string, mandato: string) {
     return (await this.atosDoMandato(presidenteId, mandato))?.projetos ?? [];
+  }
+
+  indicadores() {
+    return this.getDoc<Indicadores>('indicadores/brasil');
   }
 }

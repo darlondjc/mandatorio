@@ -359,3 +359,35 @@ export interface MediaTemas {
   /** Senadores que entraram na conta (com pelo menos 10 projetos classificados). */
   senadores: number;
 }
+
+/** Indicador do país ano a ano, para o gráfico com os mandatos ao fundo. */
+export interface SerieIndicador {
+  id: string;
+  /** Nome curto, para os chips ("Inflação"). */
+  rotulo: string;
+  /** Título do gráfico ("Inflação (IPCA) no ano"). */
+  titulo: string;
+  unidade: '%' | 'R$' | 'km²' | 'vítimas';
+  casas: number;
+  /** taxa: resume-se o mandato pela média; nível: pelo valor no início e no fim. */
+  tipo: 'taxa' | 'nivel';
+  fonte: string;
+  url: string;
+  nota: string | null;
+  /** Valor de cada ano (chave: o ano), no valor da época. */
+  anos: Record<string, number>;
+  /** Para valores em reais: os mesmos anos corrigidos pelo IPCA até `referenciaReal`. */
+  reais: Record<string, number> | null;
+  referenciaReal: string | null;
+  /** Anos ainda incompletos (o ano corrente), mostrados como parciais. */
+  parciais: string[];
+  /** Até este ano a série usa uma metodologia antiga, não comparável (desenhada tracejada). */
+  metodologiaAntigaAte: number | null;
+  /** Tabela mantida à mão no repositório, a partir de relatórios publicados. */
+  manual: boolean;
+}
+
+export interface Indicadores {
+  atualizadoEm: string;
+  series: SerieIndicador[];
+}

@@ -4,6 +4,8 @@ import { dimensoesImagem } from './fotos.ts';
 import { etapaProjeto, lerCadastro, resumir, situacaoMP, situacaoVeto } from './presidente.ts';
 import { citaSenador, exerciciosDosMandatos, fracaoExercicio, maioriaPorPartido, mandatoDaLegislatura } from './senado.ts';
 import { assuntoDoVeto, descricaoVotacao, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
+import { readFileSync } from 'node:fs';
+import { acumuladoNoAno, corrigir, gasolinaDaPlanilha, indicePrecos, lerXlsx, mediaNoAno, ultimoDoAno } from './indicadores.ts';
 
 test('normaliza votos do Senado', () => {
   assert.equal(normalizarVoto('Sim'), 'sim');
@@ -216,3 +218,22 @@ test('exercício nos anos de um mandato anterior', () => {
   assert.equal(fracaoExercicio(periodos, 2023, '2026-10-28'), 1);
 });
 
+
+test('indicadores: inflação do ano, médias, último valor e correção pelo IPCA', () => {
+  const m = (ano: number, mes: number, valor: number) => ({ ano, mes, valor });
+  const ipca = [...Array.from({ length: 12 }, (_, i) => m(2020, i + 1, 1)), m(2021, 1, 10)];
+  assert.deepEqual(acumuladoNoAno(ipca), { 2020: 12.68 }); // 2021 incompleto fica de fora
+  assert.deepEqual(mediaNoAno([m(2012, 3, 8), m(2012, 4, 6), m(2013, 1, 7)], 2), { 2012: 7 });
+  assert.deepEqual(ultimoDoAno([m(2010, 12, 510), m(2011, 1, 540), m(2011, 3, 545)]), { 2010: 510, 2011: 545 });
+  // R$ 100 em jan/2021 valem R$ 100 no mês de referência (o último); R$ 100 em jan/2020, 10% a mais.
+  const idx = indicePrecos([m(2020, 1, 0), m(2021, 1, 10)]);
+  assert.deepEqual(corrigir([m(2020, 1, 100), m(2021, 1, 100)], idx).map((x) => Math.round(x.valor)), [110, 100]);
+});
+
+test('indicadores: lê a planilha mensal da ANP (.xlsx) e pega só a gasolina comum', () => {
+  const linhas = lerXlsx(new Uint8Array(readFileSync(new URL('./fixtures/anp-exemplo.xlsx', import.meta.url))));
+  const g = gasolinaDaPlanilha(linhas);
+  assert.equal(g.length, 13);
+  assert.deepEqual(g[0], { ano: 2013, mes: 1, valor: 2.81 });
+  assert.deepEqual(g.at(-1), { ano: 2014, mes: 1, valor: 3 });
+});
