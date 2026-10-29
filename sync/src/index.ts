@@ -84,6 +84,21 @@ async function main() {
   const fontes: string[] = [];
   const erros: string[] = [];
 
+  // Primeiro: é rápido, e assim o aviso entra antes do limite de anotações do GitHub.
+  if (!only || only === 'indicadores') {
+    try {
+      const ind = await coletarIndicadores(await lerDoc<Indicadores>('indicadores/brasil'));
+      fontes.push('Banco Central — SGS', 'ANP — Levantamento de Preços');
+      if (ind.series.length) itens.push({ caminho: 'indicadores/brasil', dados: ind });
+      const falhou = diagIndicadores.some((l) => l.includes('FALHOU'));
+      anotar(falhou ? 'warning' : 'notice', 'Indicadores', diagIndicadores.join('\n'));
+    } catch (e) {
+      erros.push('Indicadores');
+      console.error(e);
+      anotar('error', 'Indicadores falharam', String((e as Error).message ?? e));
+    }
+  }
+
   if (!only || only === 'senado') {
     try {
       const s = await coletarSenado();
@@ -157,20 +172,6 @@ async function main() {
       erros.push('Presidente');
       console.error(e);
       anotar('error', 'Presidente falhou', `${(e as Error).message}\n${(e as Error).stack?.split('\n').slice(1, 4).join('\n') ?? ''}`);
-    }
-  }
-
-  if (!only || only === 'indicadores') {
-    try {
-      const ind = await coletarIndicadores(await lerDoc<Indicadores>('indicadores/brasil'));
-      fontes.push('Banco Central — SGS', 'ANP — Levantamento de Preços');
-      if (ind.series.length) itens.push({ caminho: 'indicadores/brasil', dados: ind });
-      const falhou = diagIndicadores.some((l) => l.includes('FALHOU'));
-      anotar(falhou ? 'warning' : 'notice', 'Indicadores', diagIndicadores.join('\n'));
-    } catch (e) {
-      erros.push('Indicadores');
-      console.error(e);
-      anotar('error', 'Indicadores falharam', String((e as Error).message ?? e));
     }
   }
 
