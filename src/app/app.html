@@ -1,5 +1,7 @@
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 
+<!-- Barra fina no topo enquanto a página muda ou há dados chegando (ngx-progressbar). -->
+<ng-progress class="progresso" [debounceTime]="120" [speed]="250" [trickleSpeed]="250" flat />
 <header class="topbar">
   <button class="mt-btn mt-btn--icon" type="button" aria-label="Abrir menu" [attr.aria-expanded]="menuAberto()" aria-controls="menu" (click)="menuAberto.set(true)">
     <mt-icon name="menu" />

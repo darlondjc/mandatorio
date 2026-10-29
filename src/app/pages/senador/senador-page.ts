@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
+import { Carregando } from '../../shared/carregando';
 import { inicioDaLegislatura, mesAno, situacaoExercicio } from '../../core/ranking';
 import { data, dinheiro, dinheiroCurto, pct, ROTULO_VOTO, ufNome } from '../../core/format';
 import { Voto, VotoSenador } from '../../core/models';
@@ -24,7 +25,7 @@ const ABAS: Aba[] = [
 
 @Component({
   selector: 'mt-senador-page',
-  imports: [RouterLink, Photo, SplitBar, Tabs, Voltar, Icon, DescricaoCurtaPipe],
+  imports: [Carregando, RouterLink, Photo, SplitBar, Tabs, Voltar, Icon, DescricaoCurtaPipe],
   templateUrl: './senador-page.html',
   styleUrl: './senador-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

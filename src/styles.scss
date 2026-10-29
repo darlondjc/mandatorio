@@ -40,4 +40,12 @@ button { font: inherit; }
 /* Medidas do esqueleto, para o que fica fixo na tela se alinhar ao conteúdo:
    --largura-menu (menu lateral no desktop) e --altura-topo (barra do topo no celular). */
 :root { --largura-menu: 232px; --altura-topo: 0px; }
+
+/* Barra de progresso (ngx-progressbar): fina, na cor da marca, acima de tudo. */
+.progresso {
+  --ng-progress-thickness: 3px;
+  --ng-progress-color: var(--brand-700);
+  --ng-progress-spinner-thickness: 0;
+}
+.progresso .ng-progress-bar-wrapper { z-index: 60; }
 @media (max-width: 960px) { :root { --largura-menu: 0px; --altura-topo: 64px; } }
