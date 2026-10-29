@@ -1,5 +1,5 @@
 import type { FirebaseOptions } from 'firebase/app';
-import type { Firestore } from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore/lite';
 import { DataSource } from './data-source';
 import { linhaRanking } from './ranking';
 import {
@@ -17,7 +17,7 @@ import {
   VotoSenador,
 } from './models';
 
-type FirestoreModule = typeof import('firebase/firestore');
+type FirestoreModule = typeof import('firebase/firestore/lite');
 
 /**
  * Dados que só mudam com a coleta diária ficam guardados no aparelho por algumas horas: ao
@@ -45,7 +45,11 @@ function guardar(chave: string, valor: unknown) {
   }
 }
 
-/** Lê do Firestore. O SDK é carregado sob demanda para não pesar no carregamento inicial. */
+/**
+ * Lê do Firestore com a versão Lite do SDK: o site só lê, e ela faz cada leitura com uma
+ * chamada simples, sem a conexão de streaming nem o cache offline do SDK completo, com uma
+ * fração do tamanho. Carregada sob demanda para não pesar no carregamento inicial.
+ */
 export class FirestoreDataSource extends DataSource {
   readonly exemplo = false;
   private conn?: Promise<{ db: Firestore; fs: FirestoreModule }>;
@@ -62,7 +66,7 @@ export class FirestoreDataSource extends DataSource {
 
   private connect() {
     this.conn ??= (async () => {
-      const [app, fs] = await Promise.all([import('firebase/app'), import('firebase/firestore')]);
+      const [app, fs] = await Promise.all([import('firebase/app'), import('firebase/firestore/lite')]);
       const firebase = app.initializeApp(this.config);
       // O App Check precisa estar ligado antes da primeira leitura: com a aplicação obrigatória
       // ativada no console, o Firestore recusa pedidos sem o token dele.
