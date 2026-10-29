@@ -57,6 +57,8 @@ export class SenadorPage {
     params: () => this.codigo(),
     loader: ({ params }) => this.ds.proposicoes(params),
   });
+  /** No celular, nome civil, e-mail e bloco ficam atrás de "Mais dados". */
+  protected readonly maisDados = signal(false);
   protected readonly ranking = resource({ loader: () => this.ds.ranking() });
 
   /** Na aba Projetos: os próprios (o que conta no card e no ranking) ou as PECs assinadas. */

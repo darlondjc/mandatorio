@@ -39,9 +39,6 @@
         } @else {
           Foi {{ tratamento().toLowerCase() }} na legislatura atual@if (s.saida?.data) {, até {{ data(s.saida!.data!) }}}. Os números abaixo cobrem o período em exercício.
         }
-        @if (s.nomeCompleto !== s.nome) {
-          Nome civil: {{ s.nomeCompleto }}.
-        }
       </p>
     </div>
     <div class="perfil__acoes">
@@ -52,7 +49,10 @@
     </div>
   </section>
 
-  <dl class="dados">
+  <dl class="dados" id="dados" [class.dados--aberto]="maisDados()">
+    @if (s.nomeCompleto !== s.nome) {
+      <div class="extra"><dt>Nome civil</dt><dd>{{ s.nomeCompleto }}</dd></div>
+    }
     @if (s.nascimento) {
       <div><dt>Nasceu</dt><dd>{{ data(s.nascimento) }}@if (s.naturalidade) {, {{ s.naturalidade }}}</dd></div>
     }
@@ -68,7 +68,7 @@
         <dt>Em exercício</dt>
         <dd>
           @for (p of periodos(); track p.inicio) {
-            <span class="periodo">{{ data(p.inicio) }} {{ p.fim ? 'a ' + data(p.fim) : 'até hoje' }}@if (p.motivo) { <span class="muted">· saiu por {{ p.motivo.toLowerCase() }}</span>}</span>
+            <span class="periodo">{{ data(p.inicio) }} {{ p.fim ? 'a ' + data(p.fim) : 'até hoje' }}@if (p.motivo) {&nbsp;<span class="muted">· saiu por {{ p.motivo.toLowerCase() }}</span>}</span>
           }
         </dd>
       </div>
@@ -79,12 +79,17 @@
       <div><dt>Saída</dt><dd>{{ s.saida!.motivo }}</dd></div>
     }
     @if (s.email) {
-      <div><dt>E-mail</dt><dd>{{ s.email }}</dd></div>
+      <div class="extra"><dt>E-mail</dt><dd><a [href]="'mailto:' + s.email">{{ s.email }}</a></dd></div>
     }
     @if (s.bloco) {
-      <div><dt>Bloco</dt><dd>{{ s.bloco }}</dd></div>
+      <div class="extra"><dt>Bloco</dt><dd>{{ s.bloco }}</dd></div>
     }
   </dl>
+  @if (s.nomeCompleto !== s.nome || s.email || s.bloco) {
+    <button class="mais-dados" type="button" aria-controls="dados" [attr.aria-expanded]="maisDados()" (click)="maisDados.set(!maisDados())">
+      {{ maisDados() ? 'Menos dados' : 'Mais dados' }}
+    </button>
+  }
 
   @if (cards(); as c) {
     <section class="cards" aria-label="Resumo">
