@@ -82,7 +82,9 @@ export function donoDoAno(ano: number, mandatos: MandatoLinha[], hoje = new Date
 
 /** Valores da série (da época ou corrigidos pela inflação, quando houver). */
 export function valoresDaSerie(s: SerieIndicador, corrigido: boolean): Record<string, number> {
-  return corrigido && s.reais ? s.reais : s.anos;
+  if (!corrigido || !s.reais) return s.anos;
+  // Só os anos que a série tem também no valor da época.
+  return Object.fromEntries(Object.entries(s.reais).filter(([a]) => a in s.anos));
 }
 
 export interface ResumoNoMandato {

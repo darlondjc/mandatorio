@@ -254,15 +254,19 @@ async function planilhasDaAnp(): Promise<string[]> {
 
 type Base = Omit<SerieIndicador, 'anos' | 'reais' | 'referenciaReal' | 'parciais' | 'metodologiaAntigaAte' | 'manual'>;
 
+/** Só os anos do gráfico (o ano inicial serve de base para as contas). */
+const doGrafico = (v: Record<string, number>) => Object.fromEntries(Object.entries(v).filter(([a]) => Number(a) >= ANO_INICIAL + 1));
+
 const serie = (b: Base, anos: Record<string, number>, extra: Partial<SerieIndicador> = {}): SerieIndicador => ({
   ...b,
-  anos: Object.fromEntries(Object.entries(anos).filter(([a]) => Number(a) >= ANO_INICIAL + 1)),
   reais: null,
   referenciaReal: null,
   parciais: [],
   metodologiaAntigaAte: null,
   manual: false,
   ...extra,
+  anos: doGrafico(anos),
+  ...(extra.reais ? { reais: doGrafico(extra.reais) } : {}),
 });
 
 interface Manual {

@@ -138,7 +138,7 @@ export class GraficoMandatos {
     const grade = [];
     for (let t = lo; t <= hi + passo / 2; t += passo) {
       const rot = s.unidade === '%' ? `${+t.toFixed(2)}%` : t >= 1000 ? `${+(t / 1000).toFixed(1)} mil` : String(+t.toFixed(2));
-      grade.push({ v: +t.toFixed(6), y: Y(t), rotulo: s.unidade === 'R$' ? `R$ ${rot}` : rot.replace('.', ',') });
+      grade.push({ v: +t.toFixed(6), y: Y(t), rotulo: `${s.unidade === 'R$' ? 'R$ ' : ''}${rot.replace('.', ',')}` });
     }
     const marcos = mob ? [Math.ceil(x0), 2011, 2019, Math.floor(x1 - 0.01)] : [Math.ceil(x0), 2007, 2011, 2015, 2019, 2023, Math.floor(x1 - 0.01)];
     const anosEixo = [...new Set(marcos)].filter((a) => a >= x0 && a <= x1).map((a, i, arr) => ({ ano: a, x: X(a), ancora: i === 0 ? 'start' : i === arr.length - 1 ? 'end' : 'middle' }));

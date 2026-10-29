@@ -49,7 +49,7 @@ export class IndicadoresPage {
     return Object.keys(v)
       .map(Number)
       .sort((a, b) => b - a)
-      .map((a) => ({ ano: a, valor: formatarIndicador(v[a], s), epoca: s.reais ? formatarIndicador(s.anos[a], s) : null, mandato: donoDoAno(a, this.mandatos())?.curto ?? '—', parcial: s.parciais.includes(String(a)) }));
+      .map((a) => ({ ano: a, valor: formatarIndicador(v[a], s), epoca: s.reais ? (s.anos[a] != null ? formatarIndicador(s.anos[a], s) : '—') : null, mandato: donoDoAno(a, this.mandatos())?.curto ?? '—', parcial: s.parciais.includes(String(a)) }));
   });
 
   protected readonly data = data;
