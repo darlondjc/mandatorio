@@ -224,6 +224,35 @@ export function gasolinaDaPlanilha(linhas: (string | number | null)[][]): Mensal
   return out;
 }
 
+/**
+ * Taxa anual de desmatamento da Amazônia Legal (PRODES), somando os nove estados, do mesmo
+ * arquivo que alimenta o painel do INPE no TerraBrasilis. O nome do arquivo leva o ano
+ * ("rates2026.json"); tenta o ano corrente e os anteriores.
+ */
+async function desmatamentoInpe(): Promise<{ anos: Record<string, number>; arquivo: string }> {
+  type Periodo = { endDate: { year: number }; features: { areas: { area: number }[] }[] };
+  const ano = new Date().getFullYear();
+  for (const y of [ano + 1, ano, ano - 1, ano - 2]) {
+    const arquivo = `rates${y}.json`;
+    let dados: { periods?: Periodo[] };
+    try {
+      dados = JSON.parse(new TextDecoder().decode(await baixar(`https://terrabrasilis.dpi.inpe.br/app/prodes/dashboard/deforestation/files/${arquivo}`)));
+    } catch {
+      continue;
+    }
+    const anos = taxasPorAno(dados.periods ?? []);
+    if (Object.keys(anos).length > 10) return { anos, arquivo };
+  }
+  throw new Error('nenhum arquivo de taxas encontrado');
+}
+
+/** Soma das áreas de cada período do PRODES; o ano é o do fim do período (ago–jul). */
+export function taxasPorAno(periodos: { endDate: { year: number }; features: { areas: { area: number }[] }[] }[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const p of periodos) out[p.endDate.year] = Math.round(p.features.reduce((a, f) => a + f.areas.reduce((b, x) => b + x.area, 0), 0));
+  return out;
+}
+
 const ANP = 'https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/precos-revenda-e-de-distribuicao-combustiveis/shlp/mensal';
 
 /**
@@ -389,8 +418,28 @@ export async function coletarIndicadores(anterior: Indicadores | null): Promise<
   });
 
   const manuais = JSON.parse(readFileSync(new URL('./indicadores-manuais.json', import.meta.url), 'utf8')) as Record<string, Manual | string>;
+
+  await tentar('desmatamento', async () => {
+    const m = manuais['desmatamento'] as Manual;
+    try {
+      const { anos, arquivo } = await desmatamentoInpe();
+      const ultimo = Math.max(...Object.keys(anos).map(Number));
+      // O INPE divulga a estimativa do ano em out/nov e a consolida no início do ano seguinte.
+      const hoje = new Date();
+      const estimativa = ultimo >= hoje.getFullYear() || (ultimo === hoje.getFullYear() - 1 && hoje.getMonth() < 3);
+      diagIndicadores.push(`desmatamento: série do TerraBrasilis (${arquivo})`);
+      return serie(
+        { id: 'desmatamento', ...m, url: 'https://terrabrasilis.dpi.inpe.br/app/dashboard/deforestation/biomes/legal_amazon/rates', nota: `${m.nota}${estimativa ? ` O valor de ${ultimo} ainda é a estimativa do INPE; o consolidado sai no início do ano seguinte.` : ''}` },
+        anos,
+      );
+    } catch (e) {
+      diagIndicadores.push(`desmatamento: TerraBrasilis falhou (${String((e as Error).message).slice(0, 120)}); usada a tabela manual`);
+      return serie({ id: 'desmatamento', ...m }, m.anos, { manual: true });
+    }
+  });
+
   for (const [id, m] of Object.entries(manuais)) {
-    if (typeof m === 'string') continue;
+    if (typeof m === 'string' || id === 'desmatamento') continue;
     await tentar(id, async () => serie({ id, ...m, nota: m.nota }, m.anos, { manual: true }));
   }
 

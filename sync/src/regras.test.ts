@@ -5,7 +5,7 @@ import { etapaProjeto, lerCadastro, resumir, situacaoMP, situacaoVeto } from './
 import { citaSenador, exerciciosDosMandatos, fracaoExercicio, maioriaPorPartido, mandatoDaLegislatura } from './senado.ts';
 import { assuntoDoVeto, descricaoVotacao, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
 import { readFileSync } from 'node:fs';
-import { acumuladoNoAno, corrigir, gasolinaDaPlanilha, indicePrecos, lerXlsx, mediaNoAno, ultimoDoAno } from './indicadores.ts';
+import { acumuladoNoAno, corrigir, gasolinaDaPlanilha, indicePrecos, lerXlsx, mediaNoAno, taxasPorAno, ultimoDoAno } from './indicadores.ts';
 
 test('normaliza votos do Senado', () => {
   assert.equal(normalizarVoto('Sim'), 'sim');
@@ -236,4 +236,9 @@ test('indicadores: lê a planilha mensal da ANP (.xlsx) e pega só a gasolina co
   assert.equal(g.length, 13);
   assert.deepEqual(g[0], { ano: 2013, mes: 1, valor: 2.81 });
   assert.deepEqual(g.at(-1), { ano: 2014, mes: 1, valor: 3 });
+});
+
+test('indicadores: soma as taxas do PRODES por ano (fim do período ago–jul)', () => {
+  const p = (ano: number, ...areas: number[]) => ({ endDate: { year: ano }, features: areas.map((area) => ({ areas: [{ area }] })) });
+  assert.deepEqual(taxasPorAno([p(2023, 4000, 3000.4, 2063.7), p(2024, 6518)]), { 2023: 9064, 2024: 6518 });
 });

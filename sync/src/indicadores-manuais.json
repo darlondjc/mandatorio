@@ -1,5 +1,5 @@
 {
-  "_comentario": "Séries sem API estável, digitadas a partir dos relatórios oficiais. Atualizar uma vez por ano, quando sai o número novo (PRODES: novembro; Anuário do FBSP: julho). Conferir cada valor na fonte antes de publicar.",
+  "_comentario": "Séries sem API própria. Feminicídio: digitado do Anuário Brasileiro de Segurança Pública (FBSP), que revisa os anos anteriores a cada edição; atualizar todo ano com a série da edição nova (em 2026: Gráfico 35, 2016–2025). Desmatamento: a coleta busca a série do INPE no TerraBrasilis; esta tabela só vale se a busca falhar.",
   "desmatamento": {
     "rotulo": "Desmatamento",
     "titulo": "Desmatamento na Amazônia Legal",
@@ -10,10 +10,30 @@
     "url": "https://terrabrasilis.dpi.inpe.br/app/dashboard/deforestation/biomes/legal_amazon/rates",
     "nota": "O ano do PRODES vai de agosto do ano anterior a julho: 2023 é de ago/2022 a jul/2023.",
     "anos": {
-      "2003": 25396, "2004": 27772, "2005": 19014, "2006": 14286, "2007": 11651, "2008": 12911,
-      "2009": 7464, "2010": 7000, "2011": 6418, "2012": 4571, "2013": 5891, "2014": 5012,
-      "2015": 6207, "2016": 7893, "2017": 6947, "2018": 7536, "2019": 10129, "2020": 10851,
-      "2021": 13038, "2022": 11594, "2023": 9001, "2024": 6288
+      "2003": 25396,
+      "2004": 27772,
+      "2005": 19014,
+      "2006": 14286,
+      "2007": 11651,
+      "2008": 12911,
+      "2009": 7464,
+      "2010": 7000,
+      "2011": 6418,
+      "2012": 4571,
+      "2013": 5891,
+      "2014": 5012,
+      "2015": 6207,
+      "2016": 7893,
+      "2017": 6947,
+      "2018": 7536,
+      "2019": 10129,
+      "2020": 10851,
+      "2021": 13038,
+      "2022": 11594,
+      "2023": 9064,
+      "2024": 6518,
+      "2025": 5731,
+      "2026": 3335
     }
   },
   "feminicidio": {
@@ -22,11 +42,20 @@
     "unidade": "vítimas",
     "casas": 0,
     "tipo": "nivel",
-    "fonte": "Fórum Brasileiro de Segurança Pública (Anuário Brasileiro de Segurança Pública)",
-    "url": "https://forumseguranca.org.br/anuario-brasileiro-seguranca-publica/",
-    "nota": "A Lei do Feminicídio é de março de 2015; nos primeiros anos muitos estados ainda não registravam o crime à parte, por isso a série começa em 2018. Parte da alta pode vir de registros melhores, não só de mais casos.",
+    "fonte": "Fórum Brasileiro de Segurança Pública (Anuário Brasileiro de Segurança Pública 2026)",
+    "url": "https://forumseguranca.org.br/publicacoes/anuario-brasileiro-de-seguranca-publica/",
+    "nota": "Registros policiais reunidos pelo Anuário, que revisa os anos anteriores a cada edição (aqui, a de 2026). A Lei do Feminicídio é de março de 2015 e a série começa em 2016; nos primeiros anos muitos estados ainda não registravam o crime à parte, então parte da alta pode vir de registros melhores, não só de mais casos.",
     "anos": {
-      "2018": 1206, "2019": 1326, "2020": 1350, "2021": 1341, "2022": 1437, "2023": 1467, "2024": 1492
+      "2016": 929,
+      "2017": 1075,
+      "2018": 1229,
+      "2019": 1330,
+      "2020": 1354,
+      "2021": 1347,
+      "2022": 1455,
+      "2023": 1475,
+      "2024": 1504,
+      "2025": 1571
     }
   }
 }
