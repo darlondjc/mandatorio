@@ -180,6 +180,27 @@ export function mandatoDaLegislatura(mandatos: Json[], legislatura: number) {
 
 /** Diagnóstico de quem saiu: quantos, e um exemplo do que veio da API. */
 /**
+ * Períodos em exercício de todos os mandatos do senador. Mandato de titular sem a lista de
+ * exercícios na API conta pelas datas das legislaturas; de suplente, só pelos exercícios.
+ */
+export function exerciciosDosMandatos(mandatos: Json[]): { inicio: string; fim: string | null }[] {
+  const out: { inicio: string; fim: string | null }[] = [];
+  for (const m of mandatos) {
+    const exercicios = lista<Json>(m.Exercicios?.Exercicio);
+    if (exercicios.length) {
+      for (const e of exercicios) {
+        const inicio = isoData(e.DataInicio);
+        if (inicio) out.push({ inicio, fim: isoData(e.DataFim) });
+      }
+    } else if (/titular/i.test(String(m.DescricaoParticipacao ?? ''))) {
+      const inicio = isoData(m.PrimeiraLegislaturaDoMandato?.DataInicio);
+      if (inicio) out.push({ inicio, fim: isoData(m.SegundaLegislaturaDoMandato?.DataFim ?? m.PrimeiraLegislaturaDoMandato?.DataFim) });
+    }
+  }
+  return out.sort((a, b) => a.inicio.localeCompare(b.inicio));
+}
+
+/**
  * Fração do ano (até hoje, se for o ano corrente) em que o senador esteve em exercício,
  * de 0 a 1, com duas casas. Períodos com fim null estão em curso.
  */
@@ -557,10 +578,15 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
 
   // Cota de cada ano com a fração do ano em exercício, para o ranking comparar só quem
   // esteve no cargo o ano (quase) todo. Sem os períodos da API, conta desde a primeira votação.
-  for (const s of senadores) {
-    const periodos = s.exercicios?.length
-      ? s.exercicios
-      : [{ inicio: s.exercicioDesde ?? s.resumo.primeiraVotacao ?? s.mandato.inicio, fim: s.saida?.data ?? null }];
+  for (const [i, s] of senadores.entries()) {
+    // Todos os mandatos, não só o atual: quem já era senador antes (2019–2022, por exemplo)
+    // estava em exercício nesses anos, pelo mandato anterior.
+    const deTodos = exerciciosDosMandatos(todosDet[i].listaMandatos);
+    const periodos = deTodos.length
+      ? deTodos
+      : s.exercicios?.length
+        ? s.exercicios
+        : [{ inicio: s.exercicioDesde ?? s.resumo.primeiraVotacao ?? s.mandato.inicio, fim: s.saida?.data ?? null }];
     const cotas: NonNullable<Senador['cotas']> = {};
     for (const ano of anosCeaps) {
       const total = ceaps.get(ano)!.get(s.codigo)?.total ?? 0;

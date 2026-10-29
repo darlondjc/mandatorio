@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { dimensoesImagem } from './fotos.ts';
 import { etapaProjeto, lerCadastro, resumir, situacaoMP, situacaoVeto } from './presidente.ts';
-import { citaSenador, fracaoExercicio, maioriaPorPartido, mandatoDaLegislatura } from './senado.ts';
+import { citaSenador, exerciciosDosMandatos, fracaoExercicio, maioriaPorPartido, mandatoDaLegislatura } from './senado.ts';
 import { assuntoDoVeto, descricaoVotacao, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
 
 test('normaliza votos do Senado', () => {
@@ -193,4 +193,25 @@ test('fração do ano em exercício', () => {
   // Licença de um mês no meio do ano.
   assert.equal(fracaoExercicio([{ inicio: '2023-02-01', fim: '2025-05-31' }, { inicio: '2025-07-01', fim: null }], 2025, '2026-10-28'), 0.92);
   assert.equal(fracaoExercicio(todo, 2018, '2026-10-28'), 0);
+});
+
+test('exercício nos anos de um mandato anterior', () => {
+  const mandatos = [
+    { // mandato atual, com exercícios
+      DescricaoParticipacao: 'Titular',
+      PrimeiraLegislaturaDoMandato: { NumeroLegislatura: '57', DataInicio: '2023-02-01', DataFim: '2027-01-31' },
+      SegundaLegislaturaDoMandato: { NumeroLegislatura: '58', DataInicio: '2027-02-01', DataFim: '2031-01-31' },
+      Exercicios: { Exercicio: [{ DataInicio: '2023-02-01' }] },
+    },
+    { // mandato anterior, sem a lista de exercícios: conta pelas legislaturas
+      DescricaoParticipacao: 'Titular',
+      PrimeiraLegislaturaDoMandato: { NumeroLegislatura: '55', DataInicio: '2015-02-01', DataFim: '2019-01-31' },
+      SegundaLegislaturaDoMandato: { NumeroLegislatura: '56', DataInicio: '2019-02-01', DataFim: '2023-01-31' },
+    },
+    { DescricaoParticipacao: '1º Suplente', PrimeiraLegislaturaDoMandato: { NumeroLegislatura: '53', DataInicio: '2007-02-01' } },
+  ];
+  const periodos = exerciciosDosMandatos(mandatos);
+  assert.deepEqual(periodos, [{ inicio: '2015-02-01', fim: '2023-01-31' }, { inicio: '2023-02-01', fim: null }]);
+  assert.equal(fracaoExercicio(periodos, 2021, '2026-10-28'), 1);
+  assert.equal(fracaoExercicio(periodos, 2023, '2026-10-28'), 1);
 });
