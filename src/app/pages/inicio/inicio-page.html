@@ -1,0 +1,45 @@
+<section class="abertura" aria-labelledby="t-inicio">
+  <h1 class="page-title" id="t-inicio">Quem governa e quem legisla, com dados oficiais</h1>
+  <p class="intro">
+    O Mandatório reúne em um só lugar o que o Presidente e os senadores fazem com o mandato: como votam, o que propõem,
+    quanto gastam e como o país estava em cada governo. Tudo vem de fontes públicas e é atualizado todos os dias.
+  </p>
+  <div class="acoes">
+    <a class="mt-btn mt-btn--brand" routerLink="/senado">Ver o Senado</a>
+    <a class="mt-btn mt-btn--outline" routerLink="/presidente">Ver o Presidente</a>
+  </div>
+</section>
+
+<section aria-labelledby="t-secoes">
+  <h2 class="section-title" id="t-secoes">O que dá para ver</h2>
+  <div class="secoes">
+    @for (s of secoes; track s.link) {
+      <a class="secao" [routerLink]="s.link">
+        <span class="secao__icone" aria-hidden="true"><mt-icon [name]="s.icone" /></span>
+        <span class="secao__titulo">{{ s.titulo }}</span>
+        <span class="secao__texto">{{ s.texto }}</span>
+      </a>
+    }
+  </div>
+</section>
+
+<section class="sobre" aria-labelledby="t-dados">
+  <div class="mt-stack bloco">
+    <h2 class="section-title" id="t-dados">De onde vêm os dados</h2>
+    <ul>
+      <li><b>Senado Federal:</b> senadores, votações nominais, projetos, comissões e a cota parlamentar (CEAPS).</li>
+      <li><b>Câmara dos Deputados e Congresso Nacional:</b> projetos do Executivo, medidas provisórias e vetos.</li>
+      <li><b>IBGE, Banco Central, ANP e INPE:</b> inflação, desemprego, PIB, dívida, salário mínimo, gasolina e desmatamento.</li>
+      <li><b>Fórum Brasileiro de Segurança Pública:</b> feminicídios, do Anuário publicado todo ano.</li>
+    </ul>
+    <p class="muted">Uma coleta automática busca tudo nas fontes todos os dias@if (atualizado()) {; a última foi em {{ atualizado() }}}.</p>
+  </div>
+  <div class="mt-stack bloco">
+    <h2 class="section-title">Como ler</h2>
+    <ul>
+      <li>Os números são os registros oficiais, sem opinião. Cada tela diz o período que cobre.</li>
+      <li>Rankings comparam quem está em exercício no mesmo período; suplentes e quem teve afastamento aparecem sinalizados.</li>
+      <li>Os indicadores mostram o país durante cada mandato, não o efeito direto de cada governo.</li>
+    </ul>
+  </div>
+</section>

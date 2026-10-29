@@ -1,0 +1,38 @@
+:host { display: flex; flex-direction: column; gap: var(--space-8); max-width: 1100px; }
+
+.abertura { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-8) var(--space-8) var(--space-6); border-radius: var(--radius-xl); background: var(--brand-100); }
+.abertura .page-title { max-width: 820px; }
+.intro { max-width: 720px; font-size: 18px; line-height: 1.55; color: var(--ink-muted); }
+.acoes { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+section > .section-title { margin-bottom: var(--space-3); }
+.secoes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.secao {
+  display: flex; flex-direction: column; gap: 6px; padding: var(--space-5);
+  border: 2px solid var(--line); border-radius: var(--radius-lg); background: var(--surface);
+  color: inherit; text-decoration: none;
+}
+.secao:hover, .secao:focus-visible { border-color: var(--brand-700); }
+.secao__icone { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 4px; border-radius: 50%; background: var(--brand-100); color: var(--brand-700); }
+.secao__titulo { font: 500 19px/1.2 var(--font-display); }
+.secao__texto { font-size: 14px; line-height: 1.5; color: var(--ink-muted); }
+
+.sobre { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6); }
+.bloco { gap: var(--space-3); }
+.bloco ul { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.5; }
+.bloco b { font-weight: 600; }
+.bloco .muted { font-size: 14px; }
+
+@media (max-width: 960px) {
+  .secoes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  :host { gap: var(--space-6); }
+  .abertura { padding: var(--space-5) var(--space-4); border-radius: var(--radius-lg); }
+  .intro { font-size: 16px; }
+  .acoes .mt-btn { flex: 1; height: 44px; padding: 0 var(--space-3); font-size: 14px; white-space: nowrap; }
+  .secoes { grid-template-columns: 1fr; gap: var(--space-2); }
+  .secao { padding: var(--space-4); display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: var(--space-3); row-gap: 2px; }
+  .secao__icone { grid-row: span 2; margin: 0; }
+  .sobre { grid-template-columns: 1fr; }
+}

@@ -4,6 +4,7 @@ import { DataSource } from '../../core/data-source';
 import { anoFinal, listaMandatos, MandatoLinha } from '../../core/mandatos';
 import { Avatar } from '../../shared/avatar';
 import { Carregando } from '../../shared/carregando';
+import { Voltar } from '../../shared/voltar';
 import { CRITERIOS_ATUACAO, criteriosDoPais } from './criterios';
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -11,7 +12,7 @@ const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'o
 /** Os mandatos presidenciais lado a lado, um critério por vez (mesmo padrão dos rankings). */
 @Component({
   selector: 'mt-mandatos-page',
-  imports: [Carregando, RouterLink, Avatar],
+  imports: [Carregando, RouterLink, Avatar, Voltar],
   templateUrl: './mandatos-page.html',
   styleUrl: './mandatos-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -6,7 +6,7 @@
   <button class="mt-btn mt-btn--icon" type="button" aria-label="Abrir menu" [attr.aria-expanded]="menuAberto()" aria-controls="menu" (click)="menuAberto.set(true)">
     <mt-icon name="menu" />
   </button>
-  <a class="mt-logo topbar__logo" routerLink="/senado"><span class="mt-logo__mark" aria-hidden="true"></span>mandatório</a>
+  <a class="mt-logo topbar__logo" routerLink="/"><span class="mt-logo__mark" aria-hidden="true"></span>mandatório</a>
   <button class="mt-btn mt-btn--icon" type="button" aria-label="Alternar tema claro ou escuro" (click)="alternarTema()">
     <mt-icon name="tema" />
   </button>
@@ -19,13 +19,16 @@
 <div class="shell">
   <nav id="menu" class="menu" [class.menu--aberto]="menuAberto()" aria-label="Principal">
     <div class="menu__topo">
-      <a class="mt-logo" routerLink="/senado"><span class="mt-logo__mark" aria-hidden="true"></span>mandatório</a>
+      <a class="mt-logo" routerLink="/"><span class="mt-logo__mark" aria-hidden="true"></span>mandatório</a>
       <button class="mt-btn mt-btn--icon menu__fechar" type="button" aria-label="Fechar menu" (click)="menuAberto.set(false)">
         <mt-icon name="fechar" />
       </button>
     </div>
 
     <div class="mt-stack menu__itens">
+      <a class="mt-nav__item" routerLink="/" routerLinkActive [routerLinkActiveOptions]="{ exact: true }" #ri0="routerLinkActive" [attr.aria-current]="ri0.isActive ? 'page' : null">
+        <mt-icon name="inicio" />Início
+      </a>
       <a class="mt-nav__item" routerLink="/presidente" routerLinkActive #rp="routerLinkActive" [attr.aria-current]="rp.isActive ? 'page' : null">
         <mt-icon name="presidente" />Presidente
       </a>

@@ -1,7 +1,12 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'senado' },
+  {
+    path: '',
+    pathMatch: 'full',
+    title: 'Mandatório',
+    loadComponent: () => import('./pages/inicio/inicio-page').then((m) => m.InicioPage),
+  },
   {
     path: 'senado',
     title: 'Senado · Mandatório',

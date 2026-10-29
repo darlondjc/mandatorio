@@ -60,6 +60,9 @@ function caminho(url: string) {
 /** "Voltar ao ranking", "Voltar à votação"… a partir do endereço da página anterior. */
 export function rotuloVoltar(url: string): string {
   const c = caminho(url);
+  if (c === '/' || c === '') return 'Voltar ao início';
+  if (c.startsWith('/indicadores')) return 'Voltar aos indicadores';
+  if (c.startsWith('/presidente/comparar')) return 'Voltar à comparação de mandatos';
   if (c.startsWith('/rankings')) return 'Voltar ao ranking';
   if (c.startsWith('/comparar')) return 'Voltar à comparação';
   if (c.startsWith('/votacao/')) return 'Voltar à votação';

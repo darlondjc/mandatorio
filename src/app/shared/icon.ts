@@ -3,6 +3,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 
 // Ícones de traço 2px, grade 24 (desenho no estilo Lucide). Decorativos: aria-hidden.
 const PATHS: Record<string, string> = {
+  inicio: '<path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-5h4v5"/>',
   presidente: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
   senado: '<path d="M3 20h18"/><path d="M5 20v-8M9.5 20v-8M14.5 20v-8M19 20v-8"/><path d="M3 10l9-6 9 6"/>',
   comparar: '<path d="M8 3v18M16 3v18"/><path d="M3 8h5M16 16h5"/>',
