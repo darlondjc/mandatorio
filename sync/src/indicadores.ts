@@ -226,6 +226,29 @@ export function gasolinaDaPlanilha(linhas: (string | number | null)[][]): Mensal
 
 const ANP = 'https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/precos-revenda-e-de-distribuicao-combustiveis/shlp/mensal';
 
+/**
+ * Planilhas mensais "Brasil" da ANP. Os nomes mudam de tempos em tempos, então procura os
+ * links na própria página da série histórica; sem achar, usa os nomes conhecidos.
+ */
+async function planilhasDaAnp(): Promise<string[]> {
+  const paginas = [
+    'https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/precos-revenda-e-de-distribuicao-combustiveis/serie-historica-do-levantamento-de-precos',
+    'https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/serie-historica-de-precos-de-combustiveis',
+    ANP,
+  ];
+  const achados = new Set<string>();
+  for (const url of paginas) {
+    try {
+      const html = new TextDecoder().decode(await baixar(url));
+      for (const m of html.matchAll(/href="([^"]*mensal[^"]*brasil[^"]*\.xlsx)"/gi)) achados.add(new URL(m[1], url).href);
+    } catch (e) {
+      diagIndicadores.push(`gasolina (página ${url.split('/').at(-1)}): ${String((e as Error).message).slice(0, 80)}`);
+    }
+  }
+  diagIndicadores.push(`gasolina: planilhas achadas nas páginas da ANP: ${[...achados].map((a) => a.split('/').at(-1)).join(', ') || 'nenhuma'}`);
+  return achados.size ? [...achados] : ['mensal-brasil-2001-a-2012.xlsx', 'mensal-brasil-desde-jan2013.xlsx'];
+}
+
 // ---------------------------------------------------------------------------------------
 // Montagem das séries
 
@@ -338,14 +361,14 @@ export async function coletarIndicadores(anterior: Indicadores | null): Promise<
 
   await tentar('gasolina', async () => {
     const meses: Mensal[] = [];
-    for (const arquivo of ['mensal-brasil-2001-a-2012.xlsx', 'mensal-brasil-desde-jan2013.xlsx']) {
+    for (const arquivo of await planilhasDaAnp()) {
       try {
-        const linhas = lerXlsx(await baixar(`${ANP}/${arquivo}`));
+        const linhas = lerXlsx(await baixar(arquivo.startsWith('http') ? arquivo : `${ANP}/${arquivo}`));
         const g = gasolinaDaPlanilha(linhas);
-        diagIndicadores.push(`gasolina (${arquivo}): ${g.length} meses, ${g[0]?.mes}/${g[0]?.ano}–${g.at(-1)?.mes}/${g.at(-1)?.ano}`);
+        diagIndicadores.push(`gasolina (${arquivo.split('/').at(-1)}): ${g.length} meses, ${g[0]?.mes}/${g[0]?.ano}–${g.at(-1)?.mes}/${g.at(-1)?.ano}`);
         meses.push(...g);
       } catch (e) {
-        diagIndicadores.push(`gasolina (${arquivo}): ${String((e as Error).message).slice(0, 150)}`);
+        diagIndicadores.push(`gasolina (${arquivo.split('/').at(-1)}): ${String((e as Error).message).slice(0, 120)}`);
       }
     }
     const unicos = [...new Map(meses.map((m) => [chave(m), m])).values()];
@@ -354,7 +377,7 @@ export async function coletarIndicadores(anterior: Indicadores | null): Promise<
       {
         id: 'gasolina', rotulo: 'Gasolina', titulo: 'Preço médio da gasolina comum, por litro', unidade: 'R$', casas: 2, tipo: 'nivel',
         fonte: 'ANP (levantamento de preços); correção pelo IPCA (IBGE)', url: 'https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos',
-        nota: 'Média dos preços de revenda no ano, no país.',
+        nota: `Média dos preços de revenda no ano, no país.${Math.min(...unicos.map((m) => m.ano)) > 2004 ? ` A série da ANP disponível aqui começa em ${Math.min(...unicos.map((m) => m.ano))}.` : ''}`,
       },
       mediaNoAno(unicos, 6),
       { reais: idx ? mediaNoAno(corrigir(unicos, idx), 6) : null, referenciaReal: idx ? referencia : null, parciais: parciais(unicos) },
