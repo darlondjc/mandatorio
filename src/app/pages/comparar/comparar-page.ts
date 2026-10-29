@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, input, resource, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
+import { Carregando } from '../../shared/carregando';
 import { data, pctExibido, ROTULO_VOTO, ufNome } from '../../core/format';
 import { linhaRanking } from '../../core/ranking';
 import { perfilTematico, VOLTADO_A } from '../../core/temas';
@@ -12,7 +13,7 @@ import { Opcao, SeletorSenador } from './seletor-senador';
 
 @Component({
   selector: 'mt-comparar-page',
-  imports: [RouterLink, Photo, Avatar, SeletorSenador, DescricaoCurtaPipe],
+  imports: [Carregando, RouterLink, Photo, Avatar, SeletorSenador, DescricaoCurtaPipe],
   templateUrl: './comparar-page.html',
   styleUrl: './comparar-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

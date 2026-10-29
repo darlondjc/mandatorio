@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { DataSource } from '../../core/data-source';
+import { Carregando } from '../../shared/carregando';
 import { data, diasAte, pct } from '../../core/format';
 import { EtapaProjeto, MandatoIndice, SituacaoMP, SituacaoVeto } from '../../core/models';
 import { Photo } from '../../shared/avatar';
@@ -38,7 +39,7 @@ const PRAZO_MP_DIAS = 120;
 
 @Component({
   selector: 'mt-presidente-page',
-  imports: [Photo, SplitBar, Tabs],
+  imports: [Carregando, Photo, SplitBar, Tabs],
   templateUrl: './presidente-page.html',
   styleUrl: './presidente-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, resource } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
+import { Carregando } from '../../shared/carregando';
 import { data, ufNome } from '../../core/format';
 import { Historico } from '../../core/historico';
 import type { LinhaRanking } from '../../core/models';
@@ -12,7 +13,7 @@ import { classificar, criterioGastos, CRITERIOS, Ordem, tomDaOrdem } from './cri
 
 @Component({
   selector: 'mt-rankings-page',
-  imports: [RouterLink, Avatar, Tabs, Icon],
+  imports: [Carregando, RouterLink, Avatar, Tabs, Icon],
   templateUrl: './rankings-page.html',
   styleUrl: './rankings-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
