@@ -20,7 +20,6 @@ import type {
   VotoSenador,
 } from '../../src/app/core/models.ts';
 import { escolherFotos } from './fotos.ts';
-import { diagProfissoes, ocupacoesWikidata, profissaoTexto } from './wikidata.ts';
 import { emParalelo, getJson, lista, NaoEncontrado } from './http.ts';
 import { descricaoVotacao, identificacao, isoData, normalizarVoto, resultadoVotacao, semAcento } from './util.ts';
 
@@ -475,11 +474,6 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
 
   console.log('Senado: fotos…');
   const fotos = await escolherFotos(todos);
-  console.log('Senado: profissões (Wikidata)…');
-  const ocupacoes = await ocupacoesWikidata().catch((e) => {
-    diagProfissoes.erro = String(e).slice(0, 300);
-    return new Map<string, { item: string; ocupacoes: { masculino: string; feminino: string | null }[] }>();
-  });
 
   const senadores: Senador[] = todos.map((s, i) => {
     const vs = votosPorSenador.get(s.codigo)!;
@@ -503,14 +497,7 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
       mandato: { ...s.mandato, ordem: d.mandatos },
       nascimento: d.nascimento,
       naturalidade: d.naturalidade,
-      ...(() => {
-        const w = ocupacoes.get(s.codigo);
-        const profissao = profissaoTexto(w?.ocupacoes ?? [], s.sexo);
-        if (profissao) diagProfissoes.comProfissao++;
-        else diagProfissoes.semProfissao++;
-        if (profissao && diagProfissoes.exemplos.length < 8) diagProfissoes.exemplos.push(`${s.nome}: ${profissao} (de ${w!.ocupacoes.map((o) => o.masculino).join(' | ')})`);
-        return { profissao, profissaoFonte: profissao ? w!.item : null };
-      })(),
+      profissao: null,
       comissoes: saiu ? [] : d.comissoes,
       resumo: {
         votacoes: vs.length,
