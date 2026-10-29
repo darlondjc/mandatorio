@@ -128,7 +128,7 @@
         <p class="muted">Os dois não votaram Sim ou Não numa mesma votação: estiveram no Senado em períodos diferentes.</p>
       }
     } @else {
-      <mt-carregando texto="Carregando as votações…" />
+      <mt-esqueleto texto="Carregando as votações…" />
     }
   </section>
 
@@ -160,7 +160,7 @@
     </section>
   }
 } @else if (a() && b() && (senadorA.isLoading() || senadorB.isLoading())) {
-  <mt-carregando pagina texto="Carregando…" />
+  <mt-esqueleto forma="duelo" texto="Carregando os senadores…" />
 } @else if (!a() || !b()) {
   <p class="muted vazio">Escolha {{ a() || b() ? 'mais um senador' : 'dois senadores' }} para comparar.</p>
 }

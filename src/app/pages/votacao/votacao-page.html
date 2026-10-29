@@ -1,7 +1,7 @@
 <mt-voltar padrao="/senado" rotuloPadrao="Ver o plenário" />
 
 @if (votacao.isLoading()) {
-  <mt-carregando pagina texto="Carregando a votação…" />
+  <mt-esqueleto forma="votacao" texto="Carregando a votação…" />
 } @else if (votacao.error()) {
   <p class="aviso-erro" role="alert">Não foi possível carregar esta votação agora. Tente de novo em alguns minutos.</p>
 } @else if (!votacao.value()) {

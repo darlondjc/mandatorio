@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
-import { Carregando } from '../../shared/carregando';
+import { Esqueleto } from '../../shared/esqueleto';
 import { data, diasAte, pct } from '../../core/format';
 import { formatarFaixa, formatarIndicador, listaMandatos, periodoDosAnos, resumoNoMandato, valoresDaSerie } from '../../core/mandatos';
 import { EtapaProjeto, MandatoIndice, SituacaoMP, SituacaoVeto } from '../../core/models';
@@ -42,7 +42,7 @@ const NO_MANDATO = ['inflacao', 'desemprego', 'pib', 'salarioMinimo', 'desmatame
 
 @Component({
   selector: 'mt-presidente-page',
-  imports: [Carregando, Photo, SplitBar, Tabs, RouterLink],
+  imports: [Esqueleto, Photo, SplitBar, Tabs, RouterLink],
   templateUrl: './presidente-page.html',
   styleUrl: './presidente-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

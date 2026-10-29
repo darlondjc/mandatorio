@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
-import { Carregando } from '../../shared/carregando';
+import { Esqueleto } from '../../shared/esqueleto';
 import { data, ROTULO_VOTO, ufNome } from '../../core/format';
 import { Cadeira, PartidoBancada, Voto } from '../../core/models';
 import { SeatMap } from '../../shared/seat-map';
@@ -21,7 +21,7 @@ const ORDEM_VOTOS: Voto[] = ['sim', 'nao', 'abstencao', 'secreto', 'ausente'];
 
 @Component({
   selector: 'mt-votacao-page',
-  imports: [Carregando, RouterLink, SeatMap, SplitBar, Voltar, DescricaoCurtaPipe],
+  imports: [Esqueleto, RouterLink, SeatMap, SplitBar, Voltar, DescricaoCurtaPipe],
   templateUrl: './votacao-page.html',
   styleUrl: './votacao-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, resource, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
-import { Carregando } from '../../shared/carregando';
+import { Esqueleto } from '../../shared/esqueleto';
 import { corPartido, data, ufNome } from '../../core/format';
 import { Historico } from '../../core/historico';
 import type { Cadeira } from '../../core/models';
@@ -10,7 +10,7 @@ import { ModoCor, SeatMap } from '../../shared/seat-map';
 
 @Component({
   selector: 'mt-senado-page',
-  imports: [Carregando, RouterLink, SeatMap, Avatar],
+  imports: [Esqueleto, RouterLink, SeatMap, Avatar],
   templateUrl: './senado-page.html',
   styleUrl: './senado-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

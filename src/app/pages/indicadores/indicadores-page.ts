@@ -3,13 +3,13 @@ import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
 import { data } from '../../core/format';
 import { donoDoAno, formatarFaixa, formatarIndicador, listaMandatos, periodoDosAnos, resumoNoMandato, valoresDaSerie } from '../../core/mandatos';
-import { Carregando } from '../../shared/carregando';
+import { Esqueleto } from '../../shared/esqueleto';
 import { GraficoMandatos } from '../../shared/grafico-mandatos';
 
 /** O país em cada mandato: um indicador por vez, com os mandatos ao fundo. */
 @Component({
   selector: 'mt-indicadores-page',
-  imports: [Carregando, RouterLink, GraficoMandatos],
+  imports: [Esqueleto, RouterLink, GraficoMandatos],
   templateUrl: './indicadores-page.html',
   styleUrl: './indicadores-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
