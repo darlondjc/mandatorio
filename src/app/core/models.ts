@@ -346,5 +346,15 @@ export interface RankingSenado {
   votacoes?: number;
   /** Anos com cota parlamentar coletada, do mais recente ao mais antigo. */
   anosCota?: number[];
+  /** Média do Senado no perfil de atuação, recalculada a cada coleta. */
+  mediaTemas?: MediaTemas | null;
   linhas: LinhaRanking[];
+}
+
+/** Parcela média (%) de cada eixo e tema nos projetos dos senadores. */
+export interface MediaTemas {
+  eixos: Record<'social' | 'economico' | 'estado', number>;
+  temas: Record<string, number>;
+  /** Senadores que entraram na conta (com pelo menos 10 projetos classificados). */
+  senadores: number;
 }

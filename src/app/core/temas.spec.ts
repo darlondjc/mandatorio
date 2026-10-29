@@ -1,4 +1,4 @@
-import { perfilTematico, temaDaEmenta } from './temas';
+import { mediaTematica, perfilTematico, temaDaEmenta } from './temas';
 
 describe('temas', () => {
   it('classifica ementas pelos assuntos', () => {
@@ -24,5 +24,18 @@ describe('temas', () => {
 
   it('não afirma perfil com poucos projetos', () => {
     expect(perfilTematico([{ materia: 'PL 1/2025', ementa: 'SUS' }])).toBeNull();
+  });
+
+  it('calcula a média do Senado e compara cada perfil com ela', () => {
+    const p = (ementa: string, i: number) => ({ materia: `PL ${i}/2025`, ementa });
+    const saude = Array.from({ length: 10 }, (_, i) => p('Dispõe sobre o atendimento no SUS', i));
+    const penal = Array.from({ length: 10 }, (_, i) => p('Altera o Código Penal', i));
+    // 20 senadores só de saúde e 20 só de segurança: média 50% social, 50% Estado.
+    const media = mediaTematica([...Array(20).fill(saude), ...Array(20).fill(penal)])!;
+    expect(media.senadores).toBe(40);
+    expect(media.eixos).toEqual({ social: 50, economico: 0, estado: 50 });
+    expect(perfilTematico(saude, media)!.eixos.find((e) => e.id === 'social')!.media).toBe(50);
+    // Com poucos senadores classificáveis não há média confiável.
+    expect(mediaTematica([saude, penal])).toBeNull();
   });
 });

@@ -64,7 +64,7 @@ export class SenadorPage {
   protected readonly proprios = computed(() => (this.projetos.value() ?? []).filter((p) => !p.materia.startsWith('PEC ')));
   protected readonly pecs = computed(() => (this.projetos.value() ?? []).filter((p) => p.materia.startsWith('PEC ')));
 
-  protected readonly perfilTematico = computed(() => perfilTematico(this.projetos.value() ?? []));
+  protected readonly perfilTematico = computed(() => perfilTematico(this.projetos.value() ?? [], this.ranking.value()?.mediaTemas ?? undefined));
   protected readonly voltadoA = VOLTADO_A;
 
   /** Posição em cada ranking (só para quem está em exercício: os rankings são deles). */

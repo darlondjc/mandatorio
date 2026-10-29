@@ -102,8 +102,8 @@ export class CompararPage {
   });
 
   protected readonly perfis = computed(() => ({
-    a: perfilTematico(this.projetosA.value() ?? []),
-    b: perfilTematico(this.projetosB.value() ?? []),
+    a: perfilTematico(this.projetosA.value() ?? [], this.ranking.value()?.mediaTemas ?? undefined),
+    b: perfilTematico(this.projetosB.value() ?? [], this.ranking.value()?.mediaTemas ?? undefined),
   }));
 
   protected pct(v: number) {

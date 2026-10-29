@@ -7,6 +7,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Presidente, RankingSenado, Sincronizacao, VotoSenador } from '../../src/app/core/models.ts';
 import { linhaRanking } from '../../src/app/core/ranking.ts';
+import { mediaTematica } from '../../src/app/core/temas.ts';
 import { diagnostico } from './http.ts';
 import { coletarPresidentes, deliberacoesVistas, diagFotos } from './presidente.ts';
 import { diagFotosSenado } from './fotos.ts';
@@ -106,9 +107,11 @@ async function main() {
         atualizadoEm: s.plenario.atualizadoEm,
         votacoes: s.votacoes.length,
         anosCota: [...new Set(s.senadores.flatMap((x) => Object.keys(x.cotas ?? {}).map(Number)))].sort((a, b) => b - a),
+        mediaTemas: mediaTematica([...s.proposicoesPorSenador.values()]),
         linhas: s.senadores.filter((x) => x.emExercicio).map(linhaRanking),
       };
       itens.push({ caminho: 'rankings/senado', dados: ranking });
+      anotar('notice', 'Senado — média temática', JSON.stringify(ranking.mediaTemas));
       const repetidas = new Map<string, number>();
       s.votacoes.forEach((v) => repetidas.set(v.materia, (repetidas.get(v.materia) ?? 0) + 1));
       anotar('notice', 'Senado — votações', `${s.votacoes.length} votações (${s.votacoes.filter((v) => v.secreta).length} secretas) · ${s.votacoes.filter((v) => v.descricao).length} com descrição · ${[...repetidas.values()].filter((n) => n > 1).length} matérias votadas mais de uma vez\nexemplos de descrição: ${[...new Set(s.votacoes.map((v) => v.descricao).filter(Boolean))].slice(0, 12).join(' | ').slice(0, 1800)}`);

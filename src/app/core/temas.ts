@@ -2,7 +2,7 @@
 // É uma classificação automática por palavras-chave, simples e verificável; serve para
 // mostrar onde o parlamentar concentra a produção, não para rotular cada projeto.
 
-import type { Proposicao } from './models';
+import type { MediaTemas, Proposicao } from './models';
 
 export type EixoId = 'social' | 'economico' | 'estado';
 
@@ -41,15 +41,21 @@ export const TEMAS: Tema[] = [
 ];
 
 /**
- * Média do Senado (out/2026): parcela de cada eixo e tema nos projetos classificados, na
- * média dos 76 senadores com pelo menos 10 projetos classificados. Serve de referência para
- * dizer se alguém é "mais voltado a" uma área; como quase todo mundo produz mais na área
- * social, olhar só o maior eixo diria a mesma coisa de quase todos.
+ * Média do Senado: parcela de cada eixo e tema nos projetos classificados, na média dos
+ * senadores com pelo menos 10 projetos classificados. Serve de referência para dizer se
+ * alguém é "mais voltado a" uma área; como quase todo mundo produz mais na área social,
+ * olhar só o maior eixo diria a mesma coisa de quase todos. A coleta recalcula a média a
+ * cada rodada (`mediaTematica`, gravada no ranking); estes números (out/2026, 76 senadores)
+ * valem só até a primeira coleta que a grava.
  */
-export const MEDIA_SENADO = {
-  eixos: { social: 45, economico: 33, estado: 22 } as Record<EixoId, number>,
-  temas: { saude: 15, educacao: 10, direitos: 13, trabalho: 7, economia: 22, agro: 4, infraestrutura: 7, seguranca: 12, estado: 10 } as Record<string, number>,
+export const MEDIA_SENADO: MediaTemas = {
+  eixos: { social: 45, economico: 33, estado: 22 },
+  temas: { saude: 15, educacao: 10, direitos: 13, trabalho: 7, economia: 22, agro: 4, infraestrutura: 7, seguranca: 12, estado: 10 },
+  senadores: 76,
 };
+
+/** Mínimo de projetos classificados para um senador entrar na média e ter um foco afirmado. */
+const MIN_CLASSIFICADOS = 10;
 
 /** Homenagens, datas comemorativas e denominações: comuns e pouco informativas sobre o foco. */
 const HOMENAGEM = /institui o dia|dia nacional|semana nacional|mes nacional|ano nacional|denomina|confere (o )?titulo|declara patron|inscreve o nome|livro dos herois|homenage|capital nacional d|patrimonio (cultural|historico)|comend|diploma|premio/;
@@ -84,7 +90,10 @@ export interface PerfilTematico {
  * PECs precisam da assinatura de 27 senadores, então aparecem na autoria de quase todos e
  * diluiriam o perfil. Ficam de fora; os demais projetos (PL, PLP, PDL, PRS…) entram.
  */
-export function perfilTematico(proposicoes: Pick<Proposicao, 'materia' | 'ementa'>[]): PerfilTematico | null {
+export function perfilTematico(
+  proposicoes: Pick<Proposicao, 'materia' | 'ementa'>[],
+  media: MediaTemas = MEDIA_SENADO,
+): PerfilTematico | null {
   const considerados = proposicoes.filter((p) => !p.materia.startsWith('PEC '));
   if (considerados.length < 5) return null;
   const cont = new Map<string, number>();
@@ -98,14 +107,29 @@ export function perfilTematico(proposicoes: Pick<Proposicao, 'materia' | 'ementa
   if (!classificados) return null;
   const pct = (n: number) => Math.round((n / classificados) * 100);
   const temas = TEMAS.filter((t) => cont.get(t.id))
-    .map((t) => ({ id: t.id, rotulo: t.rotulo, eixo: t.eixo, n: cont.get(t.id)!, pct: pct(cont.get(t.id)!), media: MEDIA_SENADO.temas[t.id] ?? 0 }))
+    .map((t) => ({ id: t.id, rotulo: t.rotulo, eixo: t.eixo, n: cont.get(t.id)!, pct: pct(cont.get(t.id)!), media: media.temas[t.id] ?? 0 }))
     .sort((a, b) => b.n - a.n);
   const eixos = (Object.keys(EIXOS) as EixoId[]).map((id) => {
     const n = temas.filter((t) => t.eixo === id).reduce((a, t) => a + t.n, 0);
-    return { id, rotulo: EIXOS[id], n, pct: pct(n), media: MEDIA_SENADO.eixos[id] };
+    return { id, rotulo: EIXOS[id], n, pct: pct(n), media: media.eixos[id] };
   });
   // Com poucos projetos a porcentagem oscila demais para afirmar um foco.
   const acima = [...eixos].sort((a, b) => b.pct - b.media - (a.pct - a.media))[0];
-  const destaque = classificados >= 10 && acima.pct - acima.media >= 10 ? acima.id : null;
+  const destaque = classificados >= MIN_CLASSIFICADOS && acima.pct - acima.media >= 10 ? acima.id : null;
   return { total: considerados.length, classificados, homenagens, temas, eixos, destaque };
+}
+
+/**
+ * Média do Senado a partir dos projetos de cada senador (um item por senador). Fica null
+ * com poucos senadores classificáveis, para não comparar ninguém com uma média frágil.
+ */
+export function mediaTematica(porSenador: Pick<Proposicao, 'materia' | 'ementa'>[][]): MediaTemas | null {
+  const perfis = porSenador.map((ps) => perfilTematico(ps)).filter((p): p is PerfilTematico => !!p && p.classificados >= MIN_CLASSIFICADOS);
+  if (perfis.length < 20) return null;
+  const media = (f: (p: PerfilTematico) => number) => Math.round(perfis.reduce((a, p) => a + f(p), 0) / perfis.length);
+  return {
+    eixos: Object.fromEntries((Object.keys(EIXOS) as EixoId[]).map((e) => [e, media((p) => p.eixos.find((x) => x.id === e)!.pct)])) as Record<EixoId, number>,
+    temas: Object.fromEntries(TEMAS.map((t) => [t.id, media((p) => p.temas.find((x) => x.id === t.id)?.pct ?? 0)])),
+    senadores: perfis.length,
+  };
 }
