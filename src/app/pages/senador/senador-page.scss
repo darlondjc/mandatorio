@@ -17,6 +17,7 @@
 .dados > div { display: flex; gap: 6px; padding: 8px 14px; border-radius: var(--radius-pill); background: var(--brand-100); }
 .dados dt { color: var(--ink-muted); }
 .dados dd { margin: 0; font-weight: 600; }
+.dados .fonte { margin-left: 6px; font-size: 12px; font-weight: 500; color: var(--ink-muted); }
 
 .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 

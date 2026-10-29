@@ -39,9 +39,6 @@
         } @else {
           Foi {{ tratamento().toLowerCase() }} na legislatura atual@if (s.saida?.data) {, até {{ data(s.saida!.data!) }}}. Os números abaixo cobrem o período em exercício.
         }
-        @if (s.profissao) {
-          {{ s.profissao }}.
-        }
         @if (s.nomeCompleto !== s.nome) {
           Nome civil: {{ s.nomeCompleto }}.
         }
@@ -58,6 +55,12 @@
   <dl class="dados">
     @if (s.nascimento) {
       <div><dt>Nasceu</dt><dd>{{ data(s.nascimento) }}@if (s.naturalidade) {, {{ s.naturalidade }}}</dd></div>
+    }
+    @if (s.profissao) {
+      <div>
+        <dt>Profissão</dt>
+        <dd>{{ s.profissao }}@if (s.profissaoFonte) { <a class="fonte" [href]="s.profissaoFonte" target="_blank" rel="noopener">Wikidata</a>}</dd>
+      </div>
     }
     <div><dt>Mandato</dt><dd>{{ data(s.mandato.inicio) }} a {{ data(s.mandato.fim) }}@if (s.participacao && s.participacao !== 'Titular') { · {{ s.participacao }}}</dd></div>
     @if (periodos().length) {

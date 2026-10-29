@@ -4,6 +4,7 @@ import { dimensoesImagem } from './fotos.ts';
 import { etapaProjeto, lerCadastro, resumir, situacaoMP, situacaoVeto } from './presidente.ts';
 import { citaSenador, exerciciosDosMandatos, fracaoExercicio, maioriaPorPartido, mandatoDaLegislatura } from './senado.ts';
 import { assuntoDoVeto, descricaoVotacao, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
+import { profissaoTexto } from './wikidata.ts';
 
 test('normaliza votos do Senado', () => {
   assert.equal(normalizarVoto('Sim'), 'sim');
@@ -214,4 +215,12 @@ test('exercício nos anos de um mandato anterior', () => {
   assert.deepEqual(periodos, [{ inicio: '2015-02-01', fim: '2023-01-31' }, { inicio: '2023-02-01', fim: null }]);
   assert.equal(fracaoExercicio(periodos, 2021, '2026-10-28'), 1);
   assert.equal(fracaoExercicio(periodos, 2023, '2026-10-28'), 1);
+});
+
+test('profissão: tira cargos políticos, usa o feminino e limita a três', () => {
+  const o = (masculino: string, feminino: string | null = null) => ({ masculino, feminino });
+  assert.equal(profissaoTexto([o('político', 'política'), o('advogado', 'advogada'), o('senador')], 'F'), 'Advogada');
+  assert.equal(profissaoTexto([o('médico'), o('professor universitário'), o('empresário'), o('engenheiro')], 'M'), 'Empresário, Engenheiro, Médico');
+  assert.equal(profissaoTexto([o('político'), o('deputado federal')], 'M'), null);
+  assert.equal(profissaoTexto([o('Q12345')], 'M'), null);
 });

@@ -3,6 +3,7 @@
 // pequena, usa a imagem do senador no Wikidata/Wikimedia Commons, se houver uma boa.
 
 import { getJson, lista } from './http.ts';
+import { propriedadesSenado, sparql } from './wikidata.ts';
 
 type Json = Record<string, any>;
 
@@ -53,22 +54,11 @@ async function dimensoesUrl(url: string): Promise<{ largura: number; altura: num
   return dimensoesImagem(new Uint8Array(await res.arrayBuffer()));
 }
 
-/**
- * Imagens (P18) dos senadores no Wikidata, pelo código do senador no Senado. Descobre a
- * propriedade de identificador pelo endereço de formatação (senado.leg.br) em vez de fixar
- * o número dela.
- */
+/** Imagens (P18) dos senadores no Wikidata, pelo código do senador no Senado. */
 async function imagensWikidata(): Promise<Map<string, string>> {
-  const sparql = async (q: string) =>
-    lista<Json>((await getJson<Json>(`https://query.wikidata.org/sparql?format=json&query=${encodeURIComponent(q)}`))?.results?.bindings);
-  const props = await sparql(
-    'SELECT ?p ?f WHERE { ?p wikibase:propertyType wikibase:ExternalId; wdt:P1630 ?f . FILTER(CONTAINS(LCASE(STR(?f)), "senado.leg.br")) }',
-  );
   const out = new Map<string, string>();
-  for (const p of props) {
-    const pid = String(p.p?.value ?? '').split('/').at(-1);
-    if (!pid?.startsWith('P')) continue;
-    diagFotosSenado.propriedades.push(`${pid} ${p.f?.value}`);
+  for (const { pid, formato } of await propriedadesSenado()) {
+    diagFotosSenado.propriedades.push(`${pid} ${formato}`);
     for (const r of await sparql(`SELECT ?id ?img WHERE { ?item wdt:${pid} ?id; wdt:P18 ?img . }`)) {
       const id = String(r.id?.value ?? '');
       const arquivo = decodeURIComponent(String(r.img?.value ?? '').split('/').at(-1) ?? '');

@@ -122,7 +122,10 @@ export interface Senador {
   mandato: { inicio: DataISO; fim: DataISO; legislaturas: number[]; ordem: number };
   nascimento: DataISO | null;
   naturalidade: string | null;
+  /** Ocupações no Wikidata, sem cargos políticos (a API do Senado não traz profissão). */
   profissao: string | null;
+  /** Item do Wikidata de onde veio a profissão. */
+  profissaoFonte?: string | null;
   bloco: string | null;
   comissoes: Comissao[];
   resumo: ResumoSenador;
