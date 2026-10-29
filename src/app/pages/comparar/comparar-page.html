@@ -160,7 +160,7 @@
     </section>
   }
 } @else if (a() && b() && (senadorA.isLoading() || senadorB.isLoading())) {
-  <mt-carregando texto="Carregando…" />
+  <mt-carregando pagina texto="Carregando…" />
 } @else if (!a() || !b()) {
   <p class="muted vazio">Escolha {{ a() || b() ? 'mais um senador' : 'dois senadores' }} para comparar.</p>
 }
