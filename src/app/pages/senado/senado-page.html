@@ -24,7 +24,7 @@
       </div>
     </div>
 
-    <mt-seat-map [cadeiras]="p.cadeiras" [partidos]="p.partidos" [modo]="modo()" [filtroPartido]="partido()" [realce]="realce()" />
+    <mt-seat-map [cadeiras]="p.cadeiras" [partidos]="p.partidos" [modo]="modo()" [filtroPartido]="partido()" [realce]="realce()" [apagadas]="apagadas()" [centro]="centro()" />
 
     @if (modo() === 'partido') {
       <div class="legenda" role="group" aria-label="Filtrar por partido">
@@ -73,7 +73,7 @@
             (focus)="realce.set(c.codigo)"
             (blur)="realce.set(null)"
           >
-            <mt-avatar [nome]="c.nome" [partido]="c.partido" />
+            <mt-avatar [nome]="c.nome" [partido]="c.partido" [foto]="c.foto ?? null" />
             <span class="mt-stack nome">
               <span class="mt-sencard__name">{{ c.nome }}</span>
               <span class="mt-sencard__sub">{{ c.partido }} · {{ ufNome(c.uf) }}</span>
@@ -99,7 +99,7 @@
         <div class="grade">
           @for (c of saidas(); track c.codigo) {
             <a class="mt-sencard saiu" [routerLink]="['/senado', c.codigo]">
-              <mt-avatar [nome]="c.nome" [partido]="c.partido" />
+              <mt-avatar [nome]="c.nome" [partido]="c.partido" [foto]="c.foto ?? null" />
               <span class="mt-stack nome">
                 <span class="mt-sencard__name">{{ c.nome }}</span>
                 <span class="mt-sencard__sub">{{ c.partido }} · {{ ufNome(c.uf) }}</span>

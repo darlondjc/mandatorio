@@ -37,6 +37,8 @@ export interface Cadeira {
   partido: string;
   uf: string;
   sexo: 'M' | 'F';
+  /** Foto escolhida pela coleta; ausente nos dados gravados antes dela. */
+  foto?: string | null;
 }
 
 export interface Plenario {

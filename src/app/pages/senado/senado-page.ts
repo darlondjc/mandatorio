@@ -36,6 +36,21 @@ export class SenadoPage {
     this.filtrar(this.plenario.value()?.cadeiras ?? []).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
   );
 
+  /**
+   * Busca e estado também valem para o plenário: as cadeiras de fora se apagam e o centro
+   * conta as encontradas. O filtro de partido o próprio plenário já trata.
+   */
+  protected readonly apagadas = computed(() => {
+    if (!this.busca().trim() && !this.uf()) return null;
+    const ficam = new Set(this.lista().map((c) => c.codigo));
+    return new Set((this.plenario.value()?.cadeiras ?? []).filter((c) => !ficam.has(c.codigo)).map((c) => c.codigo));
+  });
+  protected readonly centro = computed(() => {
+    if (!this.apagadas()) return null;
+    const n = this.lista().length;
+    return { numero: n, legenda: n === 1 ? 'senador encontrado' : 'senadores encontrados' };
+  });
+
   /** Quem saiu nesta legislatura, com os mesmos filtros; a ordem (saída mais recente primeiro) vem da coleta. */
   protected readonly saidas = computed(() => this.filtrar(this.plenario.value()?.exSenadores ?? []));
 

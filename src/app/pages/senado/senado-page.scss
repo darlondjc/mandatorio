@@ -31,4 +31,9 @@
 @media (max-width: 720px) {
   .painel { padding: var(--space-4); border-radius: var(--radius-lg); }
   .busca { width: 100%; }
+  /* Dois por linha: foto em cima, nome e partido embaixo, centralizados. */
+  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+  .grade .mt-sencard { flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-2); text-align: center; }
+  .grade .nome { align-items: center; width: 100%; }
+  .grade .mt-sencard__name { white-space: normal; overflow-wrap: anywhere; line-height: 1.25; }
 }

@@ -555,7 +555,8 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
   const partidos: PartidoBancada[] = [...contagem]
     .map(([sigla, total]) => ({ sigla, total }))
     .sort((a, b) => posicao(a.sigla) - posicao(b.sigla) || b.total - a.total);
-  const cadeiras: Cadeira[] = base.map((s) => ({ codigo: s.codigo, nome: s.nome, partido: s.partido, uf: s.uf, sexo: s.sexo }));
+  const fotoDe = (s: { codigo: string; foto: string | null }) => fotos.get(s.codigo)?.foto ?? s.foto;
+  const cadeiras: Cadeira[] = base.map((s) => ({ codigo: s.codigo, nome: s.nome, partido: s.partido, uf: s.uf, sexo: s.sexo, foto: fotoDe(s) }));
   const exSenadores: ExSenador[] = ex
     .map((s) => ({
       codigo: s.codigo,
@@ -563,6 +564,7 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
       partido: s.partido,
       uf: s.uf,
       sexo: s.sexo,
+      foto: fotoDe(s),
       saida: s.saida,
       votacoes: votosPorSenador.get(s.codigo)!.length,
     }))
