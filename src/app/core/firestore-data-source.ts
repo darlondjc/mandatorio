@@ -19,11 +19,38 @@ import {
 
 type FirestoreModule = typeof import('firebase/firestore');
 
+/**
+ * Dados que só mudam com a coleta diária ficam guardados no aparelho por algumas horas: ao
+ * voltar a uma tela (ou reabrir o app), ela aparece na hora em vez de esperar o banco.
+ */
+const PREFIXO_CACHE = 'mt:cache:v1:';
+const HORA = 3_600_000;
+
+function lerGuardado<T>(chave: string, validade: number): T | undefined {
+  try {
+    const bruto = localStorage.getItem(PREFIXO_CACHE + chave);
+    if (!bruto) return undefined;
+    const { em, valor } = JSON.parse(bruto) as { em: number; valor: T };
+    return Date.now() - em < validade ? valor : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function guardar(chave: string, valor: unknown) {
+  try {
+    localStorage.setItem(PREFIXO_CACHE + chave, JSON.stringify({ em: Date.now(), valor }));
+  } catch {
+    // Sem espaço ou sem acesso ao armazenamento: segue só com a memória.
+  }
+}
+
 /** Lê do Firestore. O SDK é carregado sob demanda para não pesar no carregamento inicial. */
 export class FirestoreDataSource extends DataSource {
   readonly exemplo = false;
   private conn?: Promise<{ db: Firestore; fs: FirestoreModule }>;
   private readonly atos = new Map<string, Promise<AtosMandato | null>>();
+  private readonly memoria = new Map<string, Promise<unknown>>();
 
   constructor(
     private readonly config: FirebaseOptions,
@@ -61,12 +88,32 @@ export class FirestoreDataSource extends DataSource {
     return snap.docs.map((d) => d.data() as T);
   }
 
+  /**
+   * Uma leitura por sessão (na memória) e, com `noAparelho`, guardada no aparelho por
+   * `horas`. Se a leitura falhar, nada fica guardado e a próxima tenta de novo.
+   */
+  private emCache<T>(chave: string, carregar: () => Promise<T>, noAparelho: { horas: number } | null): Promise<T> {
+    let p = this.memoria.get(chave) as Promise<T> | undefined;
+    if (!p) {
+      p = (async () => {
+        const salvo = noAparelho ? lerGuardado<T>(chave, noAparelho.horas * HORA) : undefined;
+        if (salvo !== undefined) return salvo;
+        const valor = await carregar();
+        if (noAparelho && valor) guardar(chave, valor);
+        return valor;
+      })();
+      p.catch(() => this.memoria.delete(chave));
+      this.memoria.set(chave, p);
+    }
+    return p;
+  }
+
   sincronizacao() {
-    return this.getDoc<Sincronizacao>('meta/sincronizacao');
+    return this.emCache('sincronizacao', () => this.getDoc<Sincronizacao>('meta/sincronizacao'), { horas: 3 });
   }
 
   plenario() {
-    return this.getDoc<Plenario>('plenario/senado');
+    return this.emCache('plenario', () => this.getDoc<Plenario>('plenario/senado'), { horas: 3 });
   }
 
   senador(codigo: string) {
@@ -93,7 +140,12 @@ export class FirestoreDataSource extends DataSource {
     return this.getDoc<Votacao>(`votacoes/${id}`);
   }
 
-  async ranking(): Promise<RankingSenado | null> {
+  ranking(): Promise<RankingSenado | null> {
+    // Grande demais para guardar no aparelho; fica só na memória da sessão.
+    return this.emCache('ranking', () => this.lerRanking(), null);
+  }
+
+  private async lerRanking(): Promise<RankingSenado | null> {
     const pronto = await this.getDoc<RankingSenado>('rankings/senado');
     if (pronto) return pronto;
     // Antes da primeira sincronização que grava o ranking: monta a partir dos perfis.
@@ -111,7 +163,7 @@ export class FirestoreDataSource extends DataSource {
   }
 
   presidentes() {
-    return this.getAll<Presidente>('presidentes');
+    return this.emCache('presidentes', () => this.getAll<Presidente>('presidentes'), { horas: 3 });
   }
 
   private atosDoMandato(presidenteId: string, mandato: string) {
@@ -133,6 +185,6 @@ export class FirestoreDataSource extends DataSource {
   }
 
   indicadores() {
-    return this.getDoc<Indicadores>('indicadores/brasil');
+    return this.emCache('indicadores', () => this.getDoc<Indicadores>('indicadores/brasil'), { horas: 3 });
   }
 }

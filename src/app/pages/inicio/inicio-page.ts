@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, resource } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, resource } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
 import { data } from '../../core/format';
@@ -26,6 +26,16 @@ export class InicioPage {
     const s = this.sinc.value();
     return s ? data(s.atualizadoEm) : null;
   });
+
+  constructor() {
+    // Enquanto a pessoa lê, adianta os dados (pequenos) de Presidente e Indicadores: ficam
+    // guardados e essas telas abrem sem esperar o banco.
+    const t = setTimeout(() => {
+      this.ds.presidentes().catch(() => {});
+      this.ds.indicadores().catch(() => {});
+    }, 1500);
+    inject(DestroyRef).onDestroy(() => clearTimeout(t));
+  }
 
   protected readonly secoes: Secao[] = [
     { link: '/presidente', icone: 'presidente', titulo: 'Presidente', texto: 'O que cada presidente fez desde 2003: projetos enviados ao Congresso, medidas provisórias e vetos, e quantos viraram lei.' },
