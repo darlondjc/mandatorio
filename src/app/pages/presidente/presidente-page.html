@@ -4,12 +4,12 @@
   <p class="aviso-erro" role="alert">Não foi possível carregar os dados da Presidência agora. Tente de novo em alguns minutos.</p>
 } @else if (selecionado(); as sel) {
   <div class="topo">
-    <span class="muted orgao">Presidência da República · <a class="comparar" routerLink="/presidente/comparar">Comparar mandatos</a></span>
+    <span class="muted orgao">Presidência da República</span>
     <div class="mt-row">
       <label class="orgao muted" for="mandato">Mandato</label>
       <select id="mandato" class="seletor" [value]="sel.chave" (change)="trocarMandato($any($event.target).value)">
         @for (m of indice(); track m.presidenteId + m.mandatoId) {
-          <option [value]="m.presidenteId + '/' + m.mandatoId">
+          <option [value]="m.presidenteId + '/' + m.mandatoId" [selected]="m.presidenteId + '/' + m.mandatoId === sel.chave">
             {{ m.mandatoId.replace('-', '–') }} · {{ m.nome }}{{ m.atual ? ' (atual)' : '' }}
           </option>
         }
@@ -35,9 +35,20 @@
         <p class="resumo">{{ sel.presidente.perfil }}</p>
       }
     </div>
+    @if (sel.presidente.perfil) {
+      <!-- No celular o texto sai de baixo do nome e ocupa a largura toda. -->
+      <p class="resumo resumo--celular">{{ sel.presidente.perfil }}</p>
+    }
+    <div class="perfil__acoes">
+      <a class="mt-btn mt-btn--outline" routerLink="/presidente/comparar">Comparar mandatos</a>
+      <a class="mt-btn mt-btn--outline" routerLink="/indicadores">Indicadores do país</a>
+    </div>
   </section>
 
   <dl class="dados">
+    @if (sel.presidente.nomeCompleto && sel.presidente.nomeCompleto !== sel.presidente.nome) {
+      <div><dt>Nome civil</dt><dd>{{ sel.presidente.nomeCompleto }}</dd></div>
+    }
     @if (sel.presidente.nascimento) {
       <div><dt>Nasceu</dt><dd>{{ data(sel.presidente.nascimento) }}@if (sel.presidente.naturalidade) {, {{ sel.presidente.naturalidade }}}</dd></div>
     }
