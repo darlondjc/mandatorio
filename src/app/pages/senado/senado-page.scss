@@ -21,6 +21,8 @@
   height: 40px; padding: 0 var(--space-4); border: 2px solid var(--line); border-radius: var(--radius-pill);
   background: var(--surface-raised); color: var(--ink); font: 600 14px var(--font-sans);
 }
+.filtro--alterna { cursor: pointer; }
+.filtro--alterna[aria-pressed="true"] { background: var(--brand-700); border-color: var(--brand-700); color: var(--on-brand); }
 .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-3); }
 .nome { gap: 0; min-width: 0; flex: 1; }
 .saiu mt-avatar { filter: grayscale(0.6); opacity: 0.85; }

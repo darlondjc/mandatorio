@@ -53,7 +53,7 @@ export class SenadoPage {
   protected readonly centro = computed(() => {
     if (!this.apagadas()) return null;
     const n = this.lista().length;
-    return { numero: n, legenda: n === 1 ? 'senador encontrado' : 'senadores encontrados' };
+    return { numero: n, legenda: n === 1 ? 'encontrado' : 'encontrados' };
   });
 
   /** Quem saiu nesta legislatura, com os mesmos filtros; a ordem (saída mais recente primeiro) vem da coleta. */

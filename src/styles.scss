@@ -1,6 +1,10 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body { height: 100%; }
+/* Sem zoom de toque duplo no celular (o de pinça é bloqueado pela meta viewport). */
+html { touch-action: manipulation; }
+/* Campo com fonte menor que 16px faz o iPhone dar zoom ao tocar nele. */
+@media (pointer: coarse) { input, select, textarea { font-size: 16px !important; } }
 
 body {
   margin: 0;

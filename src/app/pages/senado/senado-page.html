@@ -57,7 +57,7 @@
           }
         </select>
         @if (temForaDoPadrao()) {
-          <button class="mt-chip" type="button" [attr.aria-pressed]="soForaDoPadrao()" (click)="soForaDoPadrao.update((v) => !v)"
+          <button class="filtro filtro--alterna" type="button" [attr.aria-pressed]="soForaDoPadrao()" (click)="soForaDoPadrao.update((v) => !v)"
             title="Quem teve despesa da cota muito acima do comum nesta legislatura">Gastos fora do padrão</button>
         }
         @if (partido() || uf() || busca() || soForaDoPadrao()) {
