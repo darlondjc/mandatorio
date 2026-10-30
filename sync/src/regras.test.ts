@@ -245,24 +245,27 @@ test('indicadores: soma as taxas do PRODES por ano (fim do período ago–jul)',
 });
 
 test('cota: fornecedores, valores muito acima do comum e documentos repetidos', () => {
+  let n = 0;
   const it = (cod: string, categoria: string, valor: number, extra: Partial<ItemCeaps> = {}): ItemCeaps =>
-    ({ cod, categoria, fornecedor: 'Posto X', cnpj: '11222333000181', documento: `NF${Math.random()}`, data: '2026-03-10', mes: 3, valor, ...extra });
-  // 200 abastecimentos comuns (R$ 200–299) entre vários senadores e um de R$ 4.000.
-  const comuns = Array.from({ length: 200 }, (_, i) => it(String(i % 10), 'Combustíveis', 200 + (i % 100)));
+    ({ cod, categoria, fornecedor: 'Posto X', cnpj: '11222333000181', documento: `NF${n++}`, data: '2026-03-10', mes: 3, valor, ...extra });
+  // 1.000 abastecimentos comuns (R$ 200–299) entre vários senadores e um de R$ 4.000.
+  const comuns = Array.from({ length: 1000 }, (_, i) => it(String(i % 10), 'Combustíveis', 200 + (i % 100)));
   const fora = it('1', 'Combustíveis', 4000, { fornecedor: 'Posto Y', cnpj: '99888777000166' });
-  const limites = limitesPorCategoria([...comuns, fora]);
-  assert.ok(limites.get('Combustíveis')!.mediana > 200 && limites.get('Combustíveis')!.mediana < 300);
-  const doSenador1 = [...comuns.filter((x) => x.cod === '1'), fora];
-  const achados = foraDoPadrao(doSenador1, limites);
-  assert.equal(achados.length, 1);
-  assert.equal(achados[0].motivo, 'valor');
+  // Locação mensal de R$ 5.000: alta, mas é contrato (todo mês), não exceção.
+  const locacao = [3, 4, 5].map((mes) => it('1', 'Combustíveis', 5000, { fornecedor: 'Locadora', cnpj: '55444333000122', mes, data: `2026-0${mes}-01` }));
+  const limites = limitesPorCategoria([...comuns, fora, ...locacao]);
+  const achados = foraDoPadrao([...comuns.filter((x) => x.cod === '1'), fora, ...locacao], limites);
+  assert.deepEqual(achados.map((x) => [x.motivo, x.fornecedor]), [['valor', 'Posto Y']]);
   assert.ok(achados[0].vezes > 10);
-  // Mesmo fornecedor, mesmo documento e mesmo valor duas vezes; "s/n" não conta.
-  const rep = [it('2', 'Combustíveis', 250, { documento: '000123' }), it('2', 'Combustíveis', 250, { documento: '000123' }), it('2', 'Combustíveis', 250, { documento: 's/n' }), it('2', 'Combustíveis', 250, { documento: 's/n' })];
-  const r = foraDoPadrao(rep, limites);
-  assert.deepEqual(r.map((x) => [x.motivo, x.vezes, x.documento]), [['repetida', 2, '000123']]);
+  // O mesmo recibo duas vezes (mesma data) conta; parcelas com o mesmo número em datas
+  // diferentes, "sem numero" e passagens (ida e volta no mesmo localizador) não.
+  const rep = [
+    it('2', 'Combustíveis', 250, { documento: '000123' }), it('2', 'Combustíveis', 250, { documento: '000123' }),
+    it('2', 'Aluguel', 90, { documento: 'IPTU-9', data: '2026-01-10', mes: 1 }), it('2', 'Aluguel', 90, { documento: 'IPTU-9', data: '2026-02-10', mes: 2 }),
+    it('2', 'Combustíveis', 40, { documento: 'SEM NUMERO' }), it('2', 'Combustíveis', 40, { documento: 'SEM NUMERO' }),
+    it('2', 'Passagens aéreas', 900, { documento: 'ABC123' }), it('2', 'Passagens aéreas', 900, { documento: 'ABC123' }),
+  ];
+  assert.deepEqual(foraDoPadrao(rep, limites).map((x) => [x.motivo, x.vezes, x.documento]), [['repetida', 2, '000123']]);
   // Fornecedores agrupados pelo CNPJ, do que mais recebeu ao que menos.
-  const f = fornecedores(doSenador1);
-  assert.deepEqual(f.map((x) => x.nome), ['Posto X', 'Posto Y']);
-  assert.equal(f[1].valor, 4000);
+  assert.deepEqual(fornecedores([fora, ...locacao]).map((x) => [x.nome, x.valor]), [['Locadora', 15000], ['Posto Y', 4000]]);
 });

@@ -380,8 +380,9 @@
               <section class="mt-stack bloco-gasto" aria-labelledby="t-fora">
                 <h3 class="subtitulo" id="t-fora">Fora do padrão</h3>
                 <p class="muted nota-gasto">
-                  Despesas que fogem muito do comum entre os senadores no ano: valor acima de 99% das despesas do mesmo tipo e de pelo menos
-                  3 vezes o valor típico (e mais de R$ 1.000), ou o mesmo documento reembolsado mais de uma vez.
+                  Despesas que fogem muito do comum entre os senadores no ano: valor acima de 99,5% das despesas do mesmo tipo, de pelo menos
+                  5 vezes o valor típico e de mais de R$ 2.000 (pagamentos que se repetem todo mês, como aluguel, não entram), ou o mesmo
+                  recibo reembolsado mais de uma vez na mesma data.
                   <strong>Fora do padrão não quer dizer irregular</strong>: são casos que merecem uma segunda olhada.
                 </p>
                 @if (g.foraDoPadrao.length) {
@@ -398,7 +399,7 @@
                         </span>
                         <span class="fora__explica">
                           @if (d.motivo === 'repetida') {
-                            Reembolsado {{ d.vezes }} vezes com o mesmo documento@if (d.documento) { (nº {{ d.documento }})}: {{ dinheiro(d.referencia) }} no total.
+                            Reembolsado {{ d.vezes }} vezes com o mesmo documento e a mesma data@if (d.documento) { (nº {{ d.documento }})}: {{ dinheiro(d.referencia) }} no total.
                           } @else {
                             {{ vezes(d.vezes) }} o valor típico desse tipo de despesa em {{ g.ano }} ({{ dinheiro(d.referencia) }}).
                           }
