@@ -23,7 +23,9 @@ type FirestoreModule = typeof import('firebase/firestore/lite');
  * Dados que só mudam com a coleta diária ficam guardados no aparelho por algumas horas: ao
  * voltar a uma tela (ou reabrir o app), ela aparece na hora em vez de esperar o banco.
  */
-const PREFIXO_CACHE = 'mt:cache:v1:';
+// Troque a versão quando os documentos ganharem campos novos que a tela usa: senão o aparelho
+// segue mostrando a cópia antiga (sem o campo) até a validade vencer.
+const PREFIXO_CACHE = 'mt:cache:v2:';
 const HORA = 3_600_000;
 
 function lerGuardado<T>(chave: string, validade: number): T | undefined {
