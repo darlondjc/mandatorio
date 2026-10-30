@@ -181,3 +181,4 @@ a.posicao:hover { outline: 2px solid var(--line); }
   .topo, .secoes { grid-column: 1; }
   .lateral { grid-column: 2; grid-row: 2 / span 2; grid-template-columns: 1fr; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; }
 }
+.link-ano { padding: 0; border: 0; background: none; color: var(--brand-700); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }

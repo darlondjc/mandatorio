@@ -39,6 +39,8 @@ export interface Cadeira {
   sexo: 'M' | 'F';
   /** Foto escolhida pela coleta; ausente nos dados gravados antes dela. */
   foto?: string | null;
+  /** Despesas da cota fora do padrão nesta legislatura (ausente quando nenhuma). */
+  foraDoPadrao?: number;
 }
 
 export interface Plenario {

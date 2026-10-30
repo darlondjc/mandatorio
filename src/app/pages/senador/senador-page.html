@@ -398,7 +398,12 @@
                     }
                   </ul>
                 } @else {
-                  <p class="muted">Nenhuma despesa fora do padrão em {{ g.ano }}.</p>
+                  <p class="muted">
+                    Nenhuma despesa fora do padrão em {{ g.ano }}.
+                    @for (o of anosComForaDoPadrao(); track o.ano; let ultimo = $last; let primeiro = $first) {
+                      @if (primeiro) {Teve em }<button class="link-ano" type="button" (click)="anoGasto.set(o.ano)">{{ o.ano }} ({{ o.n }})</button>{{ ultimo ? '.' : ', ' }}
+                    }
+                  </p>
                 }
                 <p class="muted nota-gasto">Fonte: <a href="https://www12.senado.leg.br/transparencia/dados-abertos-transparencia/dados-abertos-ceaps" target="_blank" rel="noopener">dados abertos da cota parlamentar (Senado)</a>.</p>
               </section>

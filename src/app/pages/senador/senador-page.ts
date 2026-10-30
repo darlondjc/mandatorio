@@ -256,6 +256,10 @@ export class SenadorPage {
     const anos = this.gastos.value() ?? [];
     return anos.find((g) => g.ano === this.anoGasto()) ?? anos[0] ?? null;
   });
+  /** Anos com despesa fora do padrão, para levar até eles quando o ano escolhido não tem. */
+  protected readonly anosComForaDoPadrao = computed(() =>
+    (this.gastos.value() ?? []).map((g) => ({ ano: g.ano, n: this.foraDoPadrao(g).length })).filter((o) => o.n),
+  );
   protected readonly maiorCategoria = computed(() => Math.max(1, ...(this.gastoSelecionado()?.porCategoria.map((c) => c.valor) ?? [])));
   protected readonly maiorMes = computed(() => Math.max(1, ...(this.gastoSelecionado()?.porMes ?? [])));
   protected readonly meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];

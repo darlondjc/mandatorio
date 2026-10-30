@@ -590,6 +590,12 @@ export async function coletarSenado(): Promise<ResultadoSenado> {
     );
   }
 
+  // Para o filtro do plenário: quantas despesas fora do padrão cada um teve nesta legislatura.
+  for (const c of [...cadeiras, ...exSenadores]) {
+    const n = (gastosPorSenador.get(c.codigo) ?? []).filter((g) => g.ano >= anoInicio).reduce((a, g) => a + (g.foraDoPadrao?.length ?? 0), 0);
+    if (n) c.foraDoPadrao = n;
+  }
+
   // Cota de cada ano com a fração do ano em exercício, para o ranking comparar só quem
   // esteve no cargo o ano (quase) todo. Sem os períodos da API, conta desde a primeira votação.
   for (const [i, s] of senadores.entries()) {

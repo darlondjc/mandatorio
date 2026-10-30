@@ -56,7 +56,11 @@
             <option [value]="u">{{ ufNome(u) }}</option>
           }
         </select>
-        @if (partido() || uf() || busca()) {
+        @if (temForaDoPadrao()) {
+          <button class="mt-chip" type="button" [attr.aria-pressed]="soForaDoPadrao()" (click)="soForaDoPadrao.update((v) => !v)"
+            title="Quem teve despesa da cota muito acima do comum nesta legislatura">Gastos fora do padrão</button>
+        }
+        @if (partido() || uf() || busca() || soForaDoPadrao()) {
           <button class="mt-btn mt-btn--ghost mt-btn--sm" type="button" (click)="limparFiltros()">Limpar filtros</button>
         }
       </div>
@@ -68,6 +72,7 @@
           <a
             class="mt-sencard"
             [routerLink]="['/senado', c.codigo]"
+            [queryParams]="soForaDoPadrao() ? { aba: 'gastos' } : null"
             (mouseenter)="realce.set(c.codigo)"
             (mouseleave)="realce.set(null)"
             (focus)="realce.set(c.codigo)"
@@ -77,6 +82,9 @@
             <span class="mt-stack nome">
               <span class="mt-sencard__name">{{ c.nome }}</span>
               <span class="mt-sencard__sub">{{ c.partido }} · {{ ufNome(c.uf) }}</span>
+              @if (soForaDoPadrao()) {
+                <span class="mt-sencard__sub fora">{{ c.foraDoPadrao }} {{ c.foraDoPadrao === 1 ? 'gasto fora do padrão' : 'gastos fora do padrão' }}</span>
+              }
             </span>
           </a>
         }
@@ -98,11 +106,14 @@
       @if (saidas().length) {
         <div class="grade">
           @for (c of saidas(); track c.codigo) {
-            <a class="mt-sencard saiu" [routerLink]="['/senado', c.codigo]">
+            <a class="mt-sencard saiu" [routerLink]="['/senado', c.codigo]" [queryParams]="soForaDoPadrao() ? { aba: 'gastos' } : null">
               <mt-avatar [nome]="c.nome" [partido]="c.partido" [foto]="c.foto ?? null" />
               <span class="mt-stack nome">
                 <span class="mt-sencard__name">{{ c.nome }}</span>
                 <span class="mt-sencard__sub">{{ c.partido }} · {{ ufNome(c.uf) }}</span>
+                @if (soForaDoPadrao()) {
+                  <span class="mt-sencard__sub fora">{{ c.foraDoPadrao }} {{ c.foraDoPadrao === 1 ? 'gasto fora do padrão' : 'gastos fora do padrão' }}</span>
+                }
                 <span class="mt-sencard__sub saida">
                   @if (c.saida.data) {Saiu em {{ data(c.saida.data) }}} @else {Fora de exercício}@if (c.saida.motivo) { · {{ c.saida.motivo }}}
                 </span>

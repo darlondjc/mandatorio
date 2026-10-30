@@ -23,12 +23,17 @@ export class SenadoPage {
   protected readonly partido = signal<string | null>(null);
   protected readonly busca = signal('');
   protected readonly uf = signal('');
+  /** Só quem teve despesa da cota fora do padrão nesta legislatura. */
+  protected readonly soForaDoPadrao = signal(false);
   /** Senador sob o mouse (ou com foco) na lista: realça a cadeira no plenário. */
   protected readonly realce = signal<string | null>(null);
 
   protected readonly corPartido = corPartido;
   protected readonly ufNome = ufNome;
   protected readonly data = data;
+
+  /** O filtro só aparece quando a coleta já contou os casos. */
+  protected readonly temForaDoPadrao = computed(() => this.plenario.value()?.cadeiras.some((c) => c.foraDoPadrao) ?? false);
 
   protected readonly ufs = computed(() => [...new Set(this.plenario.value()?.cadeiras.map((c) => c.uf) ?? [])].sort());
 
@@ -41,7 +46,7 @@ export class SenadoPage {
    * conta as encontradas. O filtro de partido o próprio plenário já trata.
    */
   protected readonly apagadas = computed(() => {
-    if (!this.busca().trim() && !this.uf()) return null;
+    if (!this.busca().trim() && !this.uf() && !this.soForaDoPadrao()) return null;
     const ficam = new Set(this.lista().map((c) => c.codigo));
     return new Set((this.plenario.value()?.cadeiras ?? []).filter((c) => !ficam.has(c.codigo)).map((c) => c.codigo));
   });
@@ -59,6 +64,7 @@ export class SenadoPage {
     return lista
       .filter((c) => !this.partido() || c.partido === this.partido())
       .filter((c) => !this.uf() || c.uf === this.uf())
+      .filter((c) => !this.soForaDoPadrao() || !!c.foraDoPadrao)
       .filter((c) => !termo || normalizar(`${c.nome} ${c.partido} ${c.uf} ${ufNome(c.uf)}`).includes(termo));
   }
 
@@ -81,6 +87,7 @@ export class SenadoPage {
     this.partido.set(null);
     this.uf.set('');
     this.busca.set('');
+    this.soForaDoPadrao.set(false);
   }
 }
 
