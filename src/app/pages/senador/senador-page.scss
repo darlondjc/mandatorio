@@ -61,6 +61,24 @@
 .meses { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; height: 180px; align-items: end; }
 .mes { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; }
 .mes__barra { width: 100%; min-height: 2px; border-radius: 6px 6px 2px 2px; background: var(--brand-700); }
+.bloco-gasto { gap: var(--space-3); margin-top: var(--space-6); }
+.nota-gasto { font-size: 13px; max-width: 760px; line-height: 1.5; }
+.nota-gasto a { color: inherit; }
+.fornecedores { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.fornecedor { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px var(--space-4); align-items: baseline; }
+.fornecedor__nome { font-size: 14px; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+.fornecedor__doc { display: block; font-size: 12px; font-weight: 400; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.fornecedor__valor { display: flex; flex-direction: column; align-items: flex-end; font-size: 14px; }
+.fornecedor__valor .muted { font-size: 12px; }
+.fornecedor__barra { grid-column: 1 / -1; height: 6px; }
+.fora { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-3); }
+.fora__item { display: flex; flex-direction: column; gap: 4px; padding: var(--space-4); border: 2px solid var(--line); border-left: 4px solid var(--ink); border-radius: var(--radius-lg); }
+.fora__topo { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); }
+.fora__motivo { font-size: 12px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-muted); }
+.fora__valor { font: 500 20px/1.2 var(--font-display); }
+.fora__fornecedor { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
+.fora__nota { font-size: 13px; }
+.fora__explica { font-size: 13px; line-height: 1.45; }
 .mes__rotulo { font-size: 11px; color: var(--ink-muted); }
 
 .aviso-erro { padding: var(--space-4); border-radius: var(--radius-lg); background: var(--coral-100); color: var(--coral-900); }

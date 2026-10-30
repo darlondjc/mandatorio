@@ -12,7 +12,7 @@ import { diagnostico } from './http.ts';
 import { coletarPresidentes, deliberacoesVistas, diagFotos } from './presidente.ts';
 import { diagFotosSenado } from './fotos.ts';
 import { coletarIndicadores, diagIndicadores } from './indicadores.ts';
-import { coletarSenado, diagAutorias, diagSaidas } from './senado.ts';
+import { coletarSenado, diagAutorias, diagCeaps, diagSaidas } from './senado.ts';
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
@@ -116,6 +116,12 @@ async function main() {
         itens.push({ caminho: `senadores/${sen.codigo}/listas/proposicoes`, dados: { itens: s.proposicoesPorSenador.get(sen.codigo) ?? [] } });
       }
       for (const v of s.votacoes) itens.push({ caminho: `votacoes/${v.id}`, dados: v });
+      {
+        const anoAtual = new Date().getFullYear();
+        const doAno = s.senadores.map((x) => ({ x, g: s.gastosPorSenador.get(x.codigo)?.find((g) => g.ano === anoAtual) })).filter((p) => p.g);
+        const fora = doAno.flatMap((p) => (p.g!.foraDoPadrao ?? []).map((d) => ({ nome: p.x.nome, d })));
+        anotar('notice', 'Senado — gastos fora do padrão', `${diagCeaps.join(' | ')}\n${anoAtual}: ${fora.length} despesas fora do padrão em ${new Set(fora.map((f) => f.nome)).size} senadores (${fora.filter((f) => f.d.motivo === 'repetida').length} repetidas)\nexemplos: ${fora.slice(0, 6).map((f) => `${f.nome}: ${f.d.categoria.slice(0, 30)} · ${f.d.fornecedor.slice(0, 30)} · R$ ${f.d.valor} · ${f.d.motivo} ${f.d.vezes}×`).join(' | ')}`);
+      }
       const ranking: RankingSenado = {
         legislatura: s.plenario.legislatura,
         inicio: s.plenario.inicio,

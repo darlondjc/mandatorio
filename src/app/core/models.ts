@@ -161,6 +161,34 @@ export interface GastoAno {
   total: number;
   porCategoria: { categoria: string; valor: number }[];
   porMes: number[]; // 12 posições, jan–dez
+  /** Quem mais recebeu da cota no ano (gravado a partir da coleta que olha despesa por despesa). */
+  fornecedores?: FornecedorCeaps[];
+  /** Despesas que fogem muito do comum; não quer dizer irregular. */
+  foraDoPadrao?: DespesaForaPadrao[];
+}
+
+export interface FornecedorCeaps {
+  nome: string;
+  /** CNPJ ou CPF, só os dígitos (pode vir vazio). */
+  cnpj: string;
+  valor: number;
+  despesas: number;
+}
+
+export interface DespesaForaPadrao {
+  data: DataISO | null;
+  mes: number;
+  categoria: string;
+  fornecedor: string;
+  cnpj: string;
+  documento: string;
+  valor: number;
+  /** valor: muito acima do comum na categoria; repetida: mesmo documento reembolsado mais de uma vez. */
+  motivo: 'valor' | 'repetida';
+  /** valor: quantas vezes o valor típico (mediana) da categoria; repetida: quantas vezes foi reembolsada. */
+  vezes: number;
+  /** valor: o valor típico da categoria no ano; repetida: o total reembolsado somando as repetições. */
+  referencia: number;
 }
 
 export interface Proposicao {

@@ -5,6 +5,7 @@ import { etapaProjeto, lerCadastro, resumir, situacaoMP, situacaoVeto } from './
 import { citaSenador, exerciciosDosMandatos, fracaoExercicio, maioriaPorPartido, mandatoDaLegislatura } from './senado.ts';
 import { assuntoDoVeto, descricaoVotacao, identificacao, isoData, materiaDoVeto, normalizarVoto, resultadoVotacao, somarDiasSemRecesso } from './util.ts';
 import { readFileSync } from 'node:fs';
+import { foraDoPadrao, fornecedores, limitesPorCategoria, type ItemCeaps } from './ceaps.ts';
 import { acumuladoNoAno, corrigir, gasolinaDaPlanilha, indicePrecos, lerXlsx, mediaNoAno, taxasPorAno, ultimoDoAno } from './indicadores.ts';
 
 test('normaliza votos do Senado', () => {
@@ -241,4 +242,27 @@ test('indicadores: lê a planilha mensal da ANP (.xlsx) e pega só a gasolina co
 test('indicadores: soma as taxas do PRODES por ano (fim do período ago–jul)', () => {
   const p = (ano: number, ...areas: number[]) => ({ endDate: { year: ano }, features: areas.map((area) => ({ areas: [{ area }] })) });
   assert.deepEqual(taxasPorAno([p(2023, 4000, 3000.4, 2063.7), p(2024, 6518)]), { 2023: 9064, 2024: 6518 });
+});
+
+test('cota: fornecedores, valores muito acima do comum e documentos repetidos', () => {
+  const it = (cod: string, categoria: string, valor: number, extra: Partial<ItemCeaps> = {}): ItemCeaps =>
+    ({ cod, categoria, fornecedor: 'Posto X', cnpj: '11222333000181', documento: `NF${Math.random()}`, data: '2026-03-10', mes: 3, valor, ...extra });
+  // 200 abastecimentos comuns (R$ 200–299) entre vários senadores e um de R$ 4.000.
+  const comuns = Array.from({ length: 200 }, (_, i) => it(String(i % 10), 'Combustíveis', 200 + (i % 100)));
+  const fora = it('1', 'Combustíveis', 4000, { fornecedor: 'Posto Y', cnpj: '99888777000166' });
+  const limites = limitesPorCategoria([...comuns, fora]);
+  assert.ok(limites.get('Combustíveis')!.mediana > 200 && limites.get('Combustíveis')!.mediana < 300);
+  const doSenador1 = [...comuns.filter((x) => x.cod === '1'), fora];
+  const achados = foraDoPadrao(doSenador1, limites);
+  assert.equal(achados.length, 1);
+  assert.equal(achados[0].motivo, 'valor');
+  assert.ok(achados[0].vezes > 10);
+  // Mesmo fornecedor, mesmo documento e mesmo valor duas vezes; "s/n" não conta.
+  const rep = [it('2', 'Combustíveis', 250, { documento: '000123' }), it('2', 'Combustíveis', 250, { documento: '000123' }), it('2', 'Combustíveis', 250, { documento: 's/n' }), it('2', 'Combustíveis', 250, { documento: 's/n' })];
+  const r = foraDoPadrao(rep, limites);
+  assert.deepEqual(r.map((x) => [x.motivo, x.vezes, x.documento]), [['repetida', 2, '000123']]);
+  // Fornecedores agrupados pelo CNPJ, do que mais recebeu ao que menos.
+  const f = fornecedores(doSenador1);
+  assert.deepEqual(f.map((x) => x.nome), ['Posto X', 'Posto Y']);
+  assert.equal(f[1].valor, 4000);
 });

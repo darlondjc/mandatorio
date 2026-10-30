@@ -20,6 +20,7 @@ import type {
   VotoSenador,
 } from '../../src/app/core/models.ts';
 import { escolherFotos } from './fotos.ts';
+import { foraDoPadrao, fornecedores, itemCeaps, limitesPorCategoria, type ItemCeaps } from './ceaps.ts';
 import { emParalelo, getJson, lista, NaoEncontrado } from './http.ts';
 import { descricaoVotacao, identificacao, isoData, normalizarVoto, resultadoVotacao, semAcento } from './util.ts';
 
@@ -338,6 +339,9 @@ function maioriaPorPartido(v: Votacao): Map<string, Voto | null> {
 
 // ---------------------------------------------------------------- CEAPS
 
+/** Resumo da análise das despesas, para o aviso do sync. */
+export const diagCeaps: string[] = [];
+
 async function despesas(ano: number): Promise<Map<string, GastoAno>> {
   const out = new Map<string, GastoAno>();
   let itens: Json[] = [];
@@ -359,13 +363,23 @@ async function despesas(ano: number): Promise<Map<string, GastoAno>> {
     if (mes >= 0 && mes < 12) reg.mes[mes] += valor;
     porSenador.set(cod, reg);
   }
+  // Despesa por despesa: fornecedores e o que foge do padrão (comparando com todos no ano).
+  const todos = itens.map(itemCeaps).filter((x): x is ItemCeaps => !!x);
+  const limites = limitesPorCategoria(todos);
+  const itensDe = new Map<string, ItemCeaps[]>();
+  for (const it of todos) itensDe.set(it.cod, [...(itensDe.get(it.cod) ?? []), it]);
+  diagCeaps.push(`${ano}: ${todos.length} despesas · ${limites.size} categorias com padrão`);
+
   for (const [cod, r] of porSenador) {
     const porCategoria = [...r.cat].map(([categoria, valor]) => ({ categoria, valor: Math.round(valor) })).sort((a, b) => b.valor - a.valor);
+    const meus = itensDe.get(cod) ?? [];
     out.set(cod, {
       ano,
       total: Math.round(porCategoria.reduce((s, c) => s + c.valor, 0)),
       porCategoria,
       porMes: r.mes.map(Math.round),
+      fornecedores: fornecedores(meus),
+      foraDoPadrao: foraDoPadrao(meus, limites),
     });
   }
   return out;

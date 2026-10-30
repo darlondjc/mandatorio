@@ -88,6 +88,23 @@ export class SenadorPage {
   protected readonly data = data;
   protected readonly dinheiro = dinheiro;
   protected readonly ufNome = ufNome;
+
+  /** CNPJ completo; CPF (fornecedor pessoa física) só com os dígitos do meio. */
+  protected documentoFornecedor(d: string): string | null {
+    if (d.length === 14) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+    if (d.length === 11) return `CPF ***.${d.slice(3, 6)}.${d.slice(6, 9)}-**`;
+    return null;
+  }
+
+  protected parteDoTotal(valor: number, total: number): string {
+    const p = total ? (valor / total) * 100 : 0;
+    return `${p < 1 ? '<1' : Math.round(p)}% do total`;
+  }
+
+  /** 12.4 → "12 vezes"; 3.5 → "3,5 vezes" */
+  protected vezes(v: number): string {
+    return `${v >= 10 ? Math.round(v) : v.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} vezes`;
+  }
   protected readonly rotuloVoto = ROTULO_VOTO;
 
   protected readonly tratamento = computed(() => (this.senador.value()?.sexo === 'F' ? 'Senadora' : 'Senador'));
