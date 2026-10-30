@@ -120,7 +120,7 @@ async function main() {
         const anoAtual = new Date().getFullYear();
         const doAno = s.senadores.map((x) => ({ x, g: s.gastosPorSenador.get(x.codigo)?.find((g) => g.ano === anoAtual) })).filter((p) => p.g);
         const fora = doAno.flatMap((p) => (p.g!.foraDoPadrao ?? []).map((d) => ({ nome: p.x.nome, d })));
-        anotar('notice', 'Senado — gastos fora do padrão', `${diagCeaps.join(' | ')}\n${anoAtual}: ${fora.length} despesas fora do padrão em ${new Set(fora.map((f) => f.nome)).size} senadores (${fora.filter((f) => f.d.motivo === 'repetida').length} repetidas)\nexemplos: ${fora.slice(0, 6).map((f) => `${f.nome}: ${f.d.categoria.slice(0, 30)} · ${f.d.fornecedor.slice(0, 30)} · R$ ${f.d.valor} · ${f.d.motivo} ${f.d.vezes}×`).join(' | ')}`);
+        anotar('notice', 'Senado — gastos fora do padrão', `${diagCeaps.join(' | ')}\n${anoAtual}: ${fora.length} despesas fora do padrão em ${new Set(fora.map((f) => f.nome)).size} senadores\nexemplos: ${fora.slice(0, 6).map((f) => `${f.nome}: ${f.d.categoria.slice(0, 30)} · ${f.d.fornecedor.slice(0, 30)} · R$ ${f.d.valor} · ${f.d.motivo} ${f.d.vezes}×`).join(' | ')}`);
       }
       const ranking: RankingSenado = {
         legislatura: s.plenario.legislatura,

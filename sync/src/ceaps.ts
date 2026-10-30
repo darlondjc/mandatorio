@@ -1,6 +1,10 @@
 // Despesas da cota parlamentar (CEAPS), uma a uma: para quem foi o dinheiro e quais
 // despesas fogem muito do comum. "Fora do padrão" não quer dizer irregular: é só o que
 // merece uma segunda olhada, com o critério dito na tela.
+//
+// Não há critério de "documento repetido": o Senado divide uma mesma nota em vários
+// lançamentos (diárias de hotel, parcelas de IPTU, assinaturas), e nos dados isso não se
+// distingue de uma nota lançada duas vezes.
 
 import type { DespesaForaPadrao, FornecedorCeaps } from '../../src/app/core/models.ts';
 import { isoData } from './util.ts';
@@ -42,8 +46,6 @@ export const VEZES_MINIMO = 5;
 export const QUANTIL = 0.995;
 /** Mesmo fornecedor e mesmo valor em tantos meses ou mais é contrato (aluguel, locação), não exceção. */
 const MESES_RECORRENTE = 3;
-/** Na mesma passagem, ida e volta podem ter o mesmo localizador e o mesmo valor. */
-const SEM_REPETICAO = /passage/i;
 /** Categorias com poucas despesas no ano não têm um "comum" confiável. */
 const MIN_DESPESAS_CATEGORIA = 50;
 const MAX_POR_ANO = 20;
@@ -65,9 +67,6 @@ export function limitesPorCategoria(itens: ItemCeaps[]): Map<string, { mediana: 
   }
   return out;
 }
-
-/** Documentos que não identificam nada ("0", "s/n"…) não servem para achar repetição. */
-const documentoUtil = (d: string) => d.replace(/[^0-9a-z]/gi, '').length >= 3 && !/^(s\/?n|0+)$/i.test(d.trim()) && !/sem\s*n/i.test(d);
 
 /** Fornecedores do senador no ano, do que mais recebeu ao que menos. */
 export function fornecedores(itens: ItemCeaps[], max = 10): FornecedorCeaps[] {
@@ -106,20 +105,6 @@ export function foraDoPadrao(itens: ItemCeaps[], limites: ReturnType<typeof limi
   }
 
   const repetidas = new Map<string, ItemCeaps[]>();
-  // O mesmo recibo lançado de novo: mesmo fornecedor, documento, valor e data. Parcelas e
-  // mensalidades usam o mesmo número em datas diferentes, e não contam.
-  for (const it of itens) {
-    if (!documentoUtil(it.documento) || SEM_REPETICAO.test(it.categoria)) continue;
-    const chave = `${it.cnpj || it.fornecedor.toUpperCase()}|${it.documento.toUpperCase()}|${it.valor.toFixed(2)}|${it.data ?? it.mes}`;
-    repetidas.set(chave, [...(repetidas.get(chave) ?? []), it]);
-  }
-  for (const grupo of repetidas.values()) {
-    if (grupo.length < 2) continue;
-    out.push({ ...base(grupo[0]), motivo: 'repetida', vezes: grupo.length, referencia: Math.round(grupo[0].valor * grupo.length * 100) / 100 });
-  }
-
-  // Repetidas primeiro (mais objetivas); depois as de valor, das que mais destoam.
-  return out
-    .sort((a, b) => (a.motivo === b.motivo ? b.vezes - a.vezes || b.valor - a.valor : a.motivo === 'repetida' ? -1 : 1))
-    .slice(0, MAX_POR_ANO);
+  // Das que mais destoam para as que menos.
+  return out.sort((a, b) => b.vezes - a.vezes || b.valor - a.valor).slice(0, MAX_POR_ANO);
 }

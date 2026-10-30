@@ -5,7 +5,7 @@ import { DataSource } from '../../core/data-source';
 import { Esqueleto } from '../../shared/esqueleto';
 import { inicioDaLegislatura, mesAno, situacaoExercicio } from '../../core/ranking';
 import { data, dinheiro, dinheiroCurto, pct, ROTULO_VOTO, ufNome } from '../../core/format';
-import { Voto, VotoSenador } from '../../core/models';
+import { DespesaForaPadrao, GastoAno, Voto, VotoSenador } from '../../core/models';
 import { Avatar, Photo } from '../../shared/avatar';
 import { CabecalhoFixo } from '../../shared/cabecalho-fixo';
 import { Segmento, SplitBar } from '../../shared/split-bar';
@@ -99,6 +99,11 @@ export class SenadorPage {
   protected parteDoTotal(valor: number, total: number): string {
     const p = total ? (valor / total) * 100 : 0;
     return `${p < 1 ? '<1' : Math.round(p)}% do total`;
+  }
+
+  /** Só o critério de valor: coletas antigas gravaram também "documento repetido", que saiu. */
+  protected foraDoPadrao(g: GastoAno): DespesaForaPadrao[] {
+    return (g.foraDoPadrao ?? []).filter((d) => d.motivo === 'valor');
   }
 
   /** 12.4 → "12 vezes"; 3.5 → "3,5 vezes" */

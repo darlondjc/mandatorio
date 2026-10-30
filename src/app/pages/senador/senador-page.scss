@@ -73,8 +73,7 @@
 .fornecedor__barra { grid-column: 1 / -1; height: 6px; }
 .fora { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-3); }
 .fora__item { display: flex; flex-direction: column; gap: 4px; padding: var(--space-4); border: 2px solid var(--line); border-left: 4px solid var(--ink); border-radius: var(--radius-lg); }
-.fora__topo { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); }
-.fora__motivo { font-size: 12px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-muted); }
+.fora__topo { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
 .fora__valor { font: 500 20px/1.2 var(--font-display); }
 .fora__fornecedor { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
 .fora__nota { font-size: 13px; }

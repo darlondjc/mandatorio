@@ -381,29 +381,19 @@
                 <h3 class="subtitulo" id="t-fora">Fora do padrão</h3>
                 <p class="muted nota-gasto">
                   Despesas que fogem muito do comum entre os senadores no ano: valor acima de 99,5% das despesas do mesmo tipo, de pelo menos
-                  5 vezes o valor típico e de mais de R$ 2.000 (pagamentos que se repetem todo mês, como aluguel, não entram), ou o mesmo
-                  recibo reembolsado mais de uma vez na mesma data.
+                  5 vezes o valor típico e de mais de R$ 2.000. Pagamentos que se repetem todo mês, como aluguel, não entram.
                   <strong>Fora do padrão não quer dizer irregular</strong>: são casos que merecem uma segunda olhada.
                 </p>
-                @if (g.foraDoPadrao.length) {
+                @if (foraDoPadrao(g).length) {
                   <ul class="fora">
-                    @for (d of g.foraDoPadrao; track $index) {
+                    @for (d of foraDoPadrao(g); track $index) {
                       <li class="fora__item">
                         <div class="fora__topo">
-                          <span class="fora__motivo">{{ d.motivo === 'repetida' ? 'Documento repetido' : 'Valor muito acima do comum' }}</span>
+                          <span class="fora__fornecedor">{{ d.fornecedor || 'Fornecedor não informado' }}@if (documentoFornecedor(d.cnpj); as doc) {<span class="fornecedor__doc">{{ doc }}</span>}</span>
                           <strong class="mt-num fora__valor">{{ dinheiro(d.valor) }}</strong>
                         </div>
-                        <span class="fora__fornecedor">{{ d.fornecedor || 'Fornecedor não informado' }}@if (documentoFornecedor(d.cnpj); as doc) {<span class="fornecedor__doc">{{ doc }}</span>}</span>
-                        <span class="muted fora__nota">
-                          {{ d.data ? data(d.data) : meses[d.mes - 1] + '/' + g.ano }} · {{ d.categoria }}
-                        </span>
-                        <span class="fora__explica">
-                          @if (d.motivo === 'repetida') {
-                            Reembolsado {{ d.vezes }} vezes com o mesmo documento e a mesma data@if (d.documento) { (nº {{ d.documento }})}: {{ dinheiro(d.referencia) }} no total.
-                          } @else {
-                            {{ vezes(d.vezes) }} o valor típico desse tipo de despesa em {{ g.ano }} ({{ dinheiro(d.referencia) }}).
-                          }
-                        </span>
+                        <span class="muted fora__nota">{{ d.data ? data(d.data) : meses[d.mes - 1] + '/' + g.ano }} · {{ d.categoria }}</span>
+                        <span class="fora__explica">{{ vezes(d.vezes) }} o valor típico desse tipo de despesa em {{ g.ano }} ({{ dinheiro(d.referencia) }}).</span>
                       </li>
                     }
                   </ul>

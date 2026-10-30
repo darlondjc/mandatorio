@@ -244,7 +244,7 @@ test('indicadores: soma as taxas do PRODES por ano (fim do período ago–jul)',
   assert.deepEqual(taxasPorAno([p(2023, 4000, 3000.4, 2063.7), p(2024, 6518)]), { 2023: 9064, 2024: 6518 });
 });
 
-test('cota: fornecedores, valores muito acima do comum e documentos repetidos', () => {
+test('cota: fornecedores e valores muito acima do comum, sem contar contratos mensais', () => {
   let n = 0;
   const it = (cod: string, categoria: string, valor: number, extra: Partial<ItemCeaps> = {}): ItemCeaps =>
     ({ cod, categoria, fornecedor: 'Posto X', cnpj: '11222333000181', documento: `NF${n++}`, data: '2026-03-10', mes: 3, valor, ...extra });
@@ -257,15 +257,6 @@ test('cota: fornecedores, valores muito acima do comum e documentos repetidos', 
   const achados = foraDoPadrao([...comuns.filter((x) => x.cod === '1'), fora, ...locacao], limites);
   assert.deepEqual(achados.map((x) => [x.motivo, x.fornecedor]), [['valor', 'Posto Y']]);
   assert.ok(achados[0].vezes > 10);
-  // O mesmo recibo duas vezes (mesma data) conta; parcelas com o mesmo número em datas
-  // diferentes, "sem numero" e passagens (ida e volta no mesmo localizador) não.
-  const rep = [
-    it('2', 'Combustíveis', 250, { documento: '000123' }), it('2', 'Combustíveis', 250, { documento: '000123' }),
-    it('2', 'Aluguel', 90, { documento: 'IPTU-9', data: '2026-01-10', mes: 1 }), it('2', 'Aluguel', 90, { documento: 'IPTU-9', data: '2026-02-10', mes: 2 }),
-    it('2', 'Combustíveis', 40, { documento: 'SEM NUMERO' }), it('2', 'Combustíveis', 40, { documento: 'SEM NUMERO' }),
-    it('2', 'Passagens aéreas', 900, { documento: 'ABC123' }), it('2', 'Passagens aéreas', 900, { documento: 'ABC123' }),
-  ];
-  assert.deepEqual(foraDoPadrao(rep, limites).map((x) => [x.motivo, x.vezes, x.documento]), [['repetida', 2, '000123']]);
   // Fornecedores agrupados pelo CNPJ, do que mais recebeu ao que menos.
   assert.deepEqual(fornecedores([fora, ...locacao]).map((x) => [x.nome, x.valor]), [['Locadora', 15000], ['Posto Y', 4000]]);
 });

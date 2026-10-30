@@ -183,11 +183,11 @@ export interface DespesaForaPadrao {
   cnpj: string;
   documento: string;
   valor: number;
-  /** valor: muito acima do comum na categoria; repetida: mesmo documento reembolsado mais de uma vez. */
-  motivo: 'valor' | 'repetida';
-  /** valor: quantas vezes o valor típico (mediana) da categoria; repetida: quantas vezes foi reembolsada. */
+  /** Por enquanto só "valor": muito acima do comum na categoria (ver sync/src/ceaps.ts). */
+  motivo: 'valor';
+  /** Quantas vezes o valor típico (mediana) da categoria. */
   vezes: number;
-  /** valor: o valor típico da categoria no ano; repetida: o total reembolsado somando as repetições. */
+  /** O valor típico da categoria no ano. */
   referencia: number;
 }
 
