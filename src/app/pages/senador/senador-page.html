@@ -12,6 +12,36 @@
 } @else if (senador.value(); as s) {
   <div class="topo">
   <section class="perfil">
+    <!-- Quem o suplente substitui, logo abaixo do nome: é a primeira pergunta sobre um suplente.
+         Aparece em dois lugares: junto do texto (desktop) e na largura toda (celular). -->
+    <ng-template #cartaoTitular let-onde>
+      @if (titular(); as t) {
+        @if (t.interno) {
+          <a [class]="'substitui substitui--' + onde" [routerLink]="['/senado', t.codigo]">
+            <ng-container *ngTemplateOutlet="conteudoTitular; context: { $implicit: t }" />
+          </a>
+        } @else {
+          <a [class]="'substitui substitui--' + onde" [href]="'https://www25.senado.leg.br/web/senadores/senador/-/perfil/' + t.codigo" target="_blank" rel="noopener">
+            <ng-container *ngTemplateOutlet="conteudoTitular; context: { $implicit: t }" />
+          </a>
+        }
+      }
+    </ng-template>
+    <ng-template #conteudoTitular let-t>
+      <mt-avatar [nome]="t.nome" [partido]="t.partido" [foto]="t.foto" />
+      <span class="substitui__texto">
+        <span class="substitui__rotulo">Ocupa a vaga de</span>
+        <span class="substitui__nome">{{ t.nome }}</span>
+        <span class="substitui__nota">
+          @if (t.saida) {
+            {{ t.saida.motivo ?? 'Saiu' }}@if (t.saida.data) { em {{ data(t.saida.data) }}}
+          } @else {
+            Titular do mandato {{ s.mandato.inicio.slice(0, 4) }}–{{ s.mandato.fim.slice(0, 4) }}@if (!t.interno) { · página no Senado}
+          }
+        </span>
+      </span>
+      <span class="substitui__seta" aria-hidden="true">›</span>
+    </ng-template>
     <figure class="foto">
       <mt-photo [nome]="s.nome" [foto]="s.foto" />
       @if (s.fotoFonte) {
@@ -32,7 +62,7 @@
       <p class="resumo">
         @if (s.emExercicio) {
           @if (suplente()) {
-            {{ s.participacao }}@if (s.titular) { de <a [routerLink]="['/senado', s.titular.codigo]">{{ s.titular.nome }}</a>}, em exercício desde {{ data(s.exercicioDesde!) }}. A vaga é do mandato {{ s.mandato.inicio.slice(0, 4) }}–{{ s.mandato.fim.slice(0, 4) }}.
+            {{ s.participacao }}, em exercício desde {{ data(s.exercicioDesde!) }}. A vaga é do mandato {{ s.mandato.inicio.slice(0, 4) }}–{{ s.mandato.fim.slice(0, 4) }}.
           } @else {
             {{ tratamento() }} em {{ s.mandato.ordem }}º mandato ({{ s.mandato.inicio.slice(0, 4) }}–{{ s.mandato.fim.slice(0, 4) }}).
           }
@@ -40,7 +70,13 @@
           Foi {{ tratamento().toLowerCase() }} na legislatura atual@if (s.saida?.data) {, até {{ data(s.saida!.data!) }}}. Os números abaixo cobrem o período em exercício.
         }
       </p>
+      @if (titular()) {
+        <ng-container *ngTemplateOutlet="cartaoTitular; context: { $implicit: 'largo' }" />
+      }
     </div>
+    @if (titular()) {
+      <ng-container *ngTemplateOutlet="cartaoTitular; context: { $implicit: 'celular' }" />
+    }
     <div class="perfil__acoes">
       <a class="mt-btn mt-btn--outline" routerLink="/comparar" [queryParams]="{ a: s.codigo }">Comparar com…</a>
       <a class="mt-btn mt-btn--outline" [href]="'https://www25.senado.leg.br/web/senadores/senador/-/perfil/' + s.codigo" target="_blank" rel="noopener">

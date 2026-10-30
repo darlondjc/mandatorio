@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, resource, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { DataSource } from '../../core/data-source';
 import { Esqueleto } from '../../shared/esqueleto';
 import { inicioDaLegislatura, mesAno, situacaoExercicio } from '../../core/ranking';
 import { data, dinheiro, dinheiroCurto, pct, ROTULO_VOTO, ufNome } from '../../core/format';
 import { Voto, VotoSenador } from '../../core/models';
-import { Photo } from '../../shared/avatar';
+import { Avatar, Photo } from '../../shared/avatar';
 import { Segmento, SplitBar } from '../../shared/split-bar';
 import { Aba, Tabs } from '../../shared/tabs';
 import { Voltar } from '../../shared/voltar';
@@ -26,7 +27,7 @@ const ABAS: Aba[] = [
 
 @Component({
   selector: 'mt-senador-page',
-  imports: [Esqueleto, RouterLink, Photo, SplitBar, Tabs, Voltar, Icon, DescricaoCurtaPipe],
+  imports: [Esqueleto, RouterLink, NgTemplateOutlet, Photo, Avatar, SplitBar, Tabs, Voltar, Icon, DescricaoCurtaPipe],
   templateUrl: './senador-page.html',
   styleUrl: './senador-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -94,6 +95,32 @@ export class SenadorPage {
   protected readonly suplente = computed(() => {
     const s = this.senador.value();
     return !!s?.emExercicio && /suplente/i.test(s.participacao ?? '') && !!s.exercicioDesde;
+  });
+
+  /** Só para o suplente: quem está no plenário e quem saiu, para achar o titular. */
+  private readonly plenario = resource({
+    params: () => (this.suplente() && this.senador.value()?.titular ? true : undefined),
+    loader: () => this.ds.plenario(),
+  });
+
+  /**
+   * O titular da vaga, em destaque no perfil do suplente. Quem saiu nesta legislatura tem
+   * perfil aqui (com o motivo da saída); quem saiu antes leva à página do Senado.
+   */
+  protected readonly titular = computed(() => {
+    const s = this.senador.value();
+    if (!this.suplente() || !s?.titular) return null;
+    const p = this.plenario.value();
+    const ex = p?.exSenadores?.find((x) => x.codigo === s.titular!.codigo);
+    const noPlenario = p?.cadeiras.find((x) => x.codigo === s.titular!.codigo);
+    const conhecido = ex ?? noPlenario;
+    return {
+      ...s.titular,
+      partido: conhecido?.partido ?? s.partido,
+      foto: conhecido?.foto ?? `https://www.senado.leg.br/senadores/img/fotos-oficiais/senador${s.titular.codigo}.jpg`,
+      interno: !!conhecido,
+      saida: ex?.saida ?? null,
+    };
   });
 
   /** Assumiu (ou voltou ao cargo) bem depois do início do mandato. */
