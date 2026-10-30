@@ -6,6 +6,7 @@ import { data, diasAte, pct } from '../../core/format';
 import { formatarFaixa, formatarIndicador, listaMandatos, periodoDosAnos, resumoNoMandato, valoresDaSerie } from '../../core/mandatos';
 import { EtapaProjeto, MandatoIndice, SituacaoMP, SituacaoVeto } from '../../core/models';
 import { Photo } from '../../shared/avatar';
+import { CabecalhoFixo } from '../../shared/cabecalho-fixo';
 import { Segmento, SplitBar } from '../../shared/split-bar';
 import { Aba, Tabs } from '../../shared/tabs';
 
@@ -42,7 +43,7 @@ const NO_MANDATO = ['inflacao', 'desemprego', 'pib', 'salarioMinimo', 'desmatame
 
 @Component({
   selector: 'mt-presidente-page',
-  imports: [Esqueleto, Photo, SplitBar, Tabs, RouterLink],
+  imports: [Esqueleto, Photo, SplitBar, Tabs, RouterLink, CabecalhoFixo],
   templateUrl: './presidente-page.html',
   styleUrl: './presidente-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

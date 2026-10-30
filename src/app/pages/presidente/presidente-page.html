@@ -17,7 +17,9 @@
     </div>
   </div>
 
-  <section class="perfil">
+  <mt-cabecalho-fixo [alvo]="perfilEl" [nome]="sel.presidente.nome" [partido]="sel.mandato.partido" [foto]="sel.presidente.foto"
+    [sub]="'Presidente · ' + sel.mandato.id.replace('-', '–') + ' · ' + sel.mandato.partido" />
+  <section class="perfil" #perfilEl>
     <figure class="foto">
       <mt-photo [nome]="sel.presidente.nome" [foto]="sel.presidente.foto" />
       @if (sel.presidente.fotoFonte) {

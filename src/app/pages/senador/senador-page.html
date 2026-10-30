@@ -11,7 +11,9 @@
   </section>
 } @else if (senador.value(); as s) {
   <div class="topo">
-  <section class="perfil">
+  <mt-cabecalho-fixo [alvo]="perfilEl" [nome]="s.nome" [partido]="s.partido" [foto]="s.foto"
+    [sub]="s.partido + ' · ' + ufNome(s.uf) + (suplente() ? ' · ' + s.participacao : '') + (s.emExercicio ? '' : ' · fora de exercício')" />
+  <section class="perfil" #perfilEl>
     <!-- Quem o suplente substitui, logo abaixo do nome: é a primeira pergunta sobre um suplente.
          Aparece em dois lugares: junto do texto (desktop) e na largura toda (celular). -->
     <ng-template #cartaoTitular let-onde>

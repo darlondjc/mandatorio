@@ -7,6 +7,7 @@ import { inicioDaLegislatura, mesAno, situacaoExercicio } from '../../core/ranki
 import { data, dinheiro, dinheiroCurto, pct, ROTULO_VOTO, ufNome } from '../../core/format';
 import { Voto, VotoSenador } from '../../core/models';
 import { Avatar, Photo } from '../../shared/avatar';
+import { CabecalhoFixo } from '../../shared/cabecalho-fixo';
 import { Segmento, SplitBar } from '../../shared/split-bar';
 import { Aba, Tabs } from '../../shared/tabs';
 import { Voltar } from '../../shared/voltar';
@@ -27,7 +28,7 @@ const ABAS: Aba[] = [
 
 @Component({
   selector: 'mt-senador-page',
-  imports: [Esqueleto, RouterLink, NgTemplateOutlet, Photo, Avatar, SplitBar, Tabs, Voltar, Icon, DescricaoCurtaPipe],
+  imports: [Esqueleto, RouterLink, NgTemplateOutlet, Photo, Avatar, CabecalhoFixo, SplitBar, Tabs, Voltar, Icon, DescricaoCurtaPipe],
   templateUrl: './senador-page.html',
   styleUrl: './senador-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
